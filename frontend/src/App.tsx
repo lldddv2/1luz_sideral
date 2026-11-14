@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import MapView from './components/MapView'
-import PolygonPanel from './components/PolygonPanel'
+import Sidebar from './components/Sidebar'
 import InfoBox from './components/InfoBox'
 import ShapeInfo from './components/ShapeInfo'
 import ToolInfo from './components/ToolInfo'
@@ -9,6 +9,8 @@ import { useRegionPicker } from './useRegionPicker'
 import type { MapViewport } from './useRegionPicker'
 import type { BBox, PlaceResult } from './nominatim'
 import type { AoiPolygon, DrawMode, LngLat, RegionGeometry } from './types'
+import { BASEMAPS } from './basemaps'
+import type { BasemapId } from './basemaps'
 
 const LABELS: Record<DrawMode, string> = { polygon: 'Polígono', rectangle: 'Rectángulo', region: 'Región' }
 
@@ -18,6 +20,7 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [hoveredTool, setHoveredTool] = useState<DrawMode | null>(null)
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null)
+  const [basemap, setBasemap] = useState<BasemapId>('gray')
   // Search: last result picked (dashed outline) and the camera target for it.
   const [preview, setPreview] = useState<PlaceResult | null>(null)
   const [flyTo, setFlyTo] = useState<{ bbox: BBox; key: number } | null>(null)
@@ -59,57 +62,62 @@ export default function App() {
 
   return (
     <div className="app">
-      <MapView
-        polygons={polygons}
-        mode={mode}
-        regionCountries={mode === 'region' ? regions.countries : null}
-        regionSubdivisions={mode === 'region' ? regions.subdivisions : null}
-        onShapeComplete={(kind, coords) => addShape(kind, coords)}
-        onRegionClick={handleRegionClick}
-        onHoverRegion={setHoveredRegion}
-        onViewChange={setView}
-        onCancelDrawing={() => setMode(null)}
-        onDelete={deletePolygon}
-        onHover={setHoveredId}
-        onUpdate={(id, coords) => setPolygons((prev) => prev.map((p) => (p.id === id ? { ...p, coords } : p)))}
-        previewGeometry={preview?.geometry ?? null}
-        flyToBbox={flyTo}
-      />
-      <SearchBar
-        onPreview={(r) => {
-          setPreview(r)
-          setFlyTo((prev) => ({ bbox: r.bbox, key: (prev?.key ?? 0) + 1 }))
-        }}
-        onAdd={(r) => {
-          if (!r.geometry) return
-          addShape('region', [], r.name, r.geometry)
-          setPreview(null)
-        }}
-      />
-      <PolygonPanel
+      <Sidebar
         polygons={polygons}
         mode={mode}
         regions={regions}
+        basemap={basemap}
         onSelectMode={(m) => setMode((current) => (current === m ? null : m))}
         onDelete={deletePolygon}
         onHoverTool={setHoveredTool}
+        onBasemapChange={setBasemap}
       />
-      {hoveredTool ? (
-        <InfoBox>
-          <ToolInfo tool={hoveredTool} />
-        </InfoBox>
-      ) : regionHover ? (
-        <InfoBox>
-          <h3>{regionHover.properties.name}</h3>
-          <p className="info-hint">{regionHint}</p>
-        </InfoBox>
-      ) : (
-        hovered && (
+      <div className="map-area">
+        <MapView
+          basemap={BASEMAPS[basemap].style}
+          polygons={polygons}
+          mode={mode}
+          regionCountries={mode === 'region' ? regions.countries : null}
+          regionSubdivisions={mode === 'region' ? regions.subdivisions : null}
+          onShapeComplete={(kind, coords) => addShape(kind, coords)}
+          onRegionClick={handleRegionClick}
+          onHoverRegion={setHoveredRegion}
+          onViewChange={setView}
+          onCancelDrawing={() => setMode(null)}
+          onDelete={deletePolygon}
+          onHover={setHoveredId}
+          onUpdate={(id, coords) => setPolygons((prev) => prev.map((p) => (p.id === id ? { ...p, coords } : p)))}
+          previewGeometry={preview?.geometry ?? null}
+          flyToBbox={flyTo}
+        />
+        <SearchBar
+          onPreview={(r) => {
+            setPreview(r)
+            setFlyTo((prev) => ({ bbox: r.bbox, key: (prev?.key ?? 0) + 1 }))
+          }}
+          onAdd={(r) => {
+            if (!r.geometry) return
+            addShape('region', [], r.name, r.geometry)
+            setPreview(null)
+          }}
+        />
+        {hoveredTool ? (
           <InfoBox>
-            <ShapeInfo shape={hovered} />
+            <ToolInfo tool={hoveredTool} />
           </InfoBox>
-        )
-      )}
+        ) : regionHover ? (
+          <InfoBox>
+            <h3>{regionHover.properties.name}</h3>
+            <p className="info-hint">{regionHint}</p>
+          </InfoBox>
+        ) : (
+          hovered && (
+            <InfoBox>
+              <ShapeInfo shape={hovered} />
+            </InfoBox>
+          )
+        )}
+      </div>
     </div>
   )
 }

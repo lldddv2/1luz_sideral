@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapPin, Plus, Search } from 'lucide-react'
+import { Loader2, MapPin, Plus, Search, X } from 'lucide-react'
 import { searchPlaces } from '../nominatim'
 import type { PlaceResult } from '../nominatim'
 
@@ -31,11 +31,44 @@ export default function SearchBar({ onPreview, onAdd }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [activeId, setActiveId] = useState<PlaceResult['id'] | null>(null)
   const controller = useRef<AbortController | null>(null)
   const lastStart = useRef(0)
+  const root = useRef<HTMLDivElement>(null)
+  const input = useRef<HTMLInputElement>(null)
 
   // Cancel the pending request on unmount.
   useEffect(() => () => controller.current?.abort(), [])
+
+  // Ctrl/Cmd+K focuses the search; a click outside closes the results.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        input.current?.focus()
+        input.current?.select()
+      }
+    }
+    const onDown = (e: PointerEvent) => {
+      if (root.current && !root.current.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onDown)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onDown)
+    }
+  }, [])
+
+  const clear = () => {
+    controller.current?.abort()
+    setQuery('')
+    setResults(null)
+    setError(null)
+    setLoading(false)
+    setActiveId(null)
+    input.current?.focus()
+  }
 
   const search = async () => {
     const q = query.trim()
@@ -61,7 +94,8 @@ export default function SearchBar({ onPreview, onAdd }: Props) {
 
   return (
     <div
-      className="search-bar"
+      ref={root}
+      className={`search-bar${open && (loading || error || results) ? ' is-open' : ''}`}
       onKeyDown={(e) => {
         if (e.key === 'Escape') setOpen(false)
         // MapView listens on window for Enter, Backspace and Escape (drawing and selection); keep typing here out of it.
@@ -75,18 +109,28 @@ export default function SearchBar({ onPreview, onAdd }: Props) {
           search()
         }}
       >
+        <span className="search-icon" aria-hidden="true">
+          {loading ? <Loader2 size={17} className="spin" /> : <Search size={17} />}
+        </span>
         <input
+          ref={input}
           className="search-input"
           type="text"
-          placeholder="Buscar lugar, p. ej. Antioquia o Bogotá"
+          placeholder="Buscar lugar…"
           aria-label="Buscar lugar"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setOpen(true)}
         />
-        <button type="submit" className="search-submit" disabled={loading || !query.trim()}>
-          <Search size={16} />
-          Buscar
+        {query ? (
+          <button type="button" className="search-clear" aria-label="Limpiar búsqueda" onClick={clear}>
+            <X size={15} />
+          </button>
+        ) : (
+          <kbd className="search-kbd">Ctrl K</kbd>
+        )}
+        <button type="submit" className="search-submit" aria-label="Buscar" disabled={loading || !query.trim()}>
+          <Search size={15} />
         </button>
       </form>
       {open && (loading || error || results) && (
@@ -96,8 +140,16 @@ export default function SearchBar({ onPreview, onAdd }: Props) {
           {!loading && results?.length === 0 && <li className="search-status">Sin resultados.</li>}
           {!loading &&
             results?.map((r) => (
-              <li key={r.id} className="search-row">
-                <button type="button" className="search-row-main" title={r.label} onClick={() => onPreview(r)}>
+              <li key={r.id} className={`search-row${activeId === r.id ? ' is-active' : ''}`}>
+                <button
+                  type="button"
+                  className="search-row-main"
+                  title={r.label}
+                  onClick={() => {
+                    setActiveId(r.id)
+                    onPreview(r)
+                  }}
+                >
                   <MapPin size={16} />
                   <span className="search-text">
                     <span className="search-name">{r.name}</span>

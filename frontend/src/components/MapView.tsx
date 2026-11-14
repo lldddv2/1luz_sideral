@@ -12,20 +12,6 @@ import type { MapViewport } from '../useRegionPicker'
 import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } from '../editing'
 import type { XY } from '../editing'
 
-// Generic OpenStreetMap raster basemap. NISAR overlays will be added on top later.
-const basemap: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      attribution: '© OpenStreetMap contributors',
-    },
-  },
-  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-}
-
 // Pixel tolerances for drawing interactions.
 const DUPLICATE_PX = 5 // clicks this close to the last vertex are ignored (double-click)
 const CLOSE_PX = 10 // clicking this close to the first vertex closes the polygon
@@ -52,6 +38,7 @@ const resizeCursor = (dx: number, dy: number): string => {
 }
 
 interface Props {
+  basemap: StyleSpecification
   polygons: AoiPolygon[]
   mode: DrawMode | null
   regionCountries: RegionCollection | null
@@ -91,6 +78,7 @@ interface ContextMenu {
 }
 
 export default function MapView({
+  basemap,
   polygons,
   mode,
   regionCountries,
