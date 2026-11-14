@@ -1,0 +1,343 @@
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+}
+
+.app {
+  position: relative;
+  height: 100%;
+}
+
+.panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 260px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+}
+
+.btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 8px;
+  border: 1px solid #0078ff;
+  border-radius: 6px;
+  background: #fff;
+  color: #0078ff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-active {
+  background: #0078ff;
+  color: #fff;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: #555;
+  font-size: 12px;
+}
+
+.polygon-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.polygon-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-top: 1px solid #eee;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: #c00;
+  cursor: pointer;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.context-menu {
+  position: absolute;
+  z-index: 10;
+  min-width: 140px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.context-menu-title {
+  padding: 6px 10px;
+  color: #666;
+  border-bottom: 1px solid #eee;
+}
+
+.context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  text-align: left;
+  color: #c00;
+  cursor: pointer;
+}
+
+.context-menu button:hover {
+  background: #fdecec;
+}
+
+.info-box {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 260px;
+  min-height: 60px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.info-box h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.info-box dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  margin: 0;
+}
+
+.info-box dt {
+  color: #666;
+}
+
+.info-box dd {
+  margin: 0;
+}
+
+.info-hint {
+  margin: 6px 0 0;
+  color: #888;
+  font-size: 12px;
+}
+
+.info-text {
+  margin: 0;
+}
+
+.panel {
+  width: 300px;
+}
+
+.btn {
+  padding: 8px 4px;
+}
+
+.region-options {
+  margin-top: 8px;
+}
+
+.level-auto .active {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid #7c3aed;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.segmented button {
+  flex: 1;
+  padding: 6px 2px;
+  border: none;
+  background: #fff;
+  color: #7c3aed;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.segmented button + button {
+  border-left: 1px solid #7c3aed;
+}
+
+.segmented button.active {
+  background: #7c3aed;
+  color: #fff;
+}
+
+/* Place search: top center; pushed right on narrow windows so it never covers the left panel.
+   .panel spans 12px to 336px (300px content + 12px padding per side), so the bar starts 12px past it.
+   Right margin stays 12px: width = 100vw - 360px = (100vw - 12px) - 348px. */
+.search-bar {
+  position: absolute;
+  top: 12px;
+  left: max(348px, calc(50% - 210px));
+  width: min(420px, calc(100vw - 360px));
+  z-index: 5;
+}
+
+.search-form {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.search-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #0078ff;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 60vh;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  list-style: none;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+}
+
+.search-status {
+  padding: 8px 12px;
+  color: #555;
+  font-size: 13px;
+}
+
+.search-error {
+  color: #c00;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+}
+
+.search-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-row-main:hover {
+  background: #f0f7ff;
+}
+
+.search-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.search-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-type {
+  color: #888;
+  font-size: 11px;
+}
+
+.search-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 10px;
+  padding: 0;
+  border: 1px solid #0078ff;
+  border-radius: 6px;
+  background: #fff;
+  color: #0078ff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-add:hover {
+  background: #0078ff;
+  color: #fff;
+}

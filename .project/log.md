@@ -1,4 +1,23 @@
 # 錄（倒序）
 
+- 2026-11-14 claude: 鈕加圖示（lucide-react）。用戶求。
+- 2026-11-14 claude: 立前端則：鈕皆附圖示（frontend-rules.md）。用戶求。
+- 2026-11-14 claude: 試 jose 之 NISAR 抽取器成。EDL netrc 通；search 得 GCOV PR 一顆（20261030）；extract HHHH GeoTIFF 80x105 EPSG:32613 35KB，job 2942e152。未下 h5。
+- 2026-11-14 claude: 搜欄窄窗不遮面板：left max(348px, 50%-210px)，width min(420px, 100vw-360px)。因面板實寬 324px，右緣 336px，留隙 12px。
+- 2026-11-14 claude: 加地名搜於頂中（Nominatim）。得界則虛線預覽，可入區列。因：免手繪行政界。
+- 2026-11-14 claude: 區級隨 zoom 定：<5 國、5–8 省、≥8 市；去分段鈕；中心所在國自選。因：省手擇，地圖即見之。
+- 2026-11-14 claude: 加選區：國（Natural Earth 50m，jsDelivr）、ADM1/ADM2（geoBoundaries API；檔在 LFS，github.com/raw 轉址無 CORS，故改 media.githubusercontent.com）。區層 beforeId=aoi-fill；點用原集幾何（渲染要素為瓦片裁切）；區不可編唯可刪。旋柄錨於矩邊中/多邊頂，自質心外向，拖旋時錨索引固定。實測：國、省入列（哥 1.14M km²，Antioquia 63.6k km²），右鍵刪、旋柄連邊皆通。
+- 2026-11-14 claude: 加旋（綠把手於形上，繞質心）與單邊縮（矩形邊中把手，沿法線）。幾何於 Web Mercator 算（editing.ts），故直角於屏保。矩形旋後非軸齊，角縮依自身軸。游標：旋用自製 SVG；縮箭依屏向取 45° 扇區。實測：旋（矩、多邊）、單邊、旋後角縮皆通。
+- 2026-11-14 claude: 改形全之：游標（形 pointer、選形 grab/grabbing、頂 move、矩角 nwse/nesw-resize 依屏對角、中點 copy）；懸把手則大而藍；多邊形中點拖則增頂；拖選形則整移。實測：游標皆驗（JS 讀 canvas cursor），增頂、整移通，圖不隨移。
+- 2026-11-14 claude: 加改形：點形則選，示頂把手，拖之改形；矩形拖角保軸齊。Esc／點空處去選。dragPan 須懸把手時即禁（mousedown 時禁已遲，圖隨移）。實測：矩形、多邊形改形通，圖仍可拖。
+- 2026-11-14 claude: 懸「Polígono」「Rectángulo」鈕則 InfoBox 示工具說明（ToolInfo）。鈕懸優先於形懸。實測通。
+- 2026-11-14 claude: OSM 屬名移左下（compact），右下讓 InfoBox。屬名不可去：OSM 授權所需。
+- 2026-11-14 claude: InfoBox 移右下，唯懸形時現（無預設文）。用戶求。
+- 2026-11-14 claude: 加 InfoBox 定於左下（泛用容器，children）。懸形則示 ShapeInfo：類、面積 km²（球面，同 turf）、頂數、bbox（點小數）。實測通。
+- 2026-11-14 claude: 加右鍵選單於形上：「Eliminar」。interactiveLayerIds=aoi-fill，繪時禁。實測：矩形、多邊形皆刪；空處右鍵無單。
+- 2026-11-14 claude: 加繪矩形（二角對頂，軸齊＝bbox）。用戶言「cuadrado」，取矩形，因 bbox 合 ASF 搜。瀏覽器實測通。
+- 2026-11-14 claude: 加繪多邊形（自製，無 draw 庫）；狀於 App。maplibre-gl 6 須 optimizeDeps.exclude，否則 worker 載敗、圖白。瀏覽器實測：繪、閉、刪皆通。
+- 2026-11-14 claude: 搭前端骨架：唯 OSM 底圖可拖。tsc、build 皆過。dev 於 5173。
+- 2026-11-14 claude: 定前端棧：Vite+React+TS+MapLibre（react-map-gl）+recharts。層預渲 PNG 由 notebook 出，manifest.json 為約。因：速、免 tile server。
 - 2026-11-14 claude: 立 AGENTS.md、CLAUDE.md、.agent/rules/project.md、.project/。因：唯支 Claude、Codex、Antigravity；記憶求簡、索引加檔。
 - 2026-11-14 claude: caveman-init `--only agents` 入 AGENTS.md。因：Codex、Antigravity 皆讀 AGENTS.md；他 IDE 規則不需。
