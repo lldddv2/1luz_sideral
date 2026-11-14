@@ -35,3 +35,6 @@ data/
 *.tiff
 *.nc
 *.zarr/
+
+# OPERA products and generated inspection artifacts
+/opera/datos_opera/
