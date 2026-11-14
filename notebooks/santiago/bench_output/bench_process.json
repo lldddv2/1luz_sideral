@@ -1,0 +1,90 @@
+{
+  "python": "3.14.3",
+  "n_hh": 6,
+  "n_hv": 6,
+  "src_shape": [
+    996,
+    1000
+  ],
+  "src_dtype": "float32",
+  "src_crs": "EPSG:32613",
+  "src_res": [
+    10.0,
+    10.0
+  ],
+  "src_compress": "Compression.lzw",
+  "src_tiled": true,
+  "src_bytes": 4782834,
+  "rss_before_mb": 62.6,
+  "load_stack_s": 0.202,
+  "stack_shape": [
+    6,
+    996,
+    1000
+  ],
+  "stack_mb": 22.8,
+  "change_detect_s": 0.165,
+  "changed_pct": 27.45,
+  "per_date_mean_db": [
+    -13.02,
+    -12.99,
+    -13.2,
+    -12.12,
+    -11.37,
+    -12.39
+  ],
+  "temporal_std_db_median": 1.84,
+  "polarization_ratio_s": 0.253,
+  "hv_hh_ratio_median_db": -6.45,
+  "rss_after_mb": 187.1,
+  "cog_translate_s": 0.518,
+  "cog_bytes": 4483811,
+  "tile_render_ms": [
+    {
+      "z": 12,
+      "ms": 63.7
+    },
+    {
+      "z": 13,
+      "ms": 86.0
+    },
+    {
+      "z": 14,
+      "ms": 33.2
+    }
+  ],
+  "zoom_range": [
+    12,
+    14
+  ],
+  "synthetic_32dates_x1area": {
+    "shape": [
+      32,
+      996,
+      1000
+    ],
+    "array_mb": 121.6,
+    "compute_s": 0.719,
+    "rss_delta_mb": 247.0
+  },
+  "synthetic_32dates_x4area": {
+    "shape": [
+      32,
+      1992,
+      2000
+    ],
+    "array_mb": 486.3,
+    "compute_s": 2.77,
+    "rss_delta_mb": 984.1
+  },
+  "synthetic_64dates_x4area": {
+    "shape": [
+      64,
+      1992,
+      2000
+    ],
+    "array_mb": 972.7,
+    "compute_s": 5.274,
+    "rss_delta_mb": 1944.7
+  }
+}

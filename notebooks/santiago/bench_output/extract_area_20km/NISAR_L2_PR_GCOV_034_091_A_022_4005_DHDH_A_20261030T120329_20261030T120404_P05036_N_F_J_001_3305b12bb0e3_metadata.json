@@ -1,0 +1,290 @@
+{
+  "capabilities_snapshot_path": "C:\\Users\\zacsh\\OneDrive\\Documentos\\VS Code Projects\\proyecto nasa app 2026\\notebooks\\santiago\\bench_output\\extract_area_20km\\NISAR_L2_GCOV_V1_3305b12bb0e3_capabilities.json",
+  "harmony": {
+    "bbox_supported": true,
+    "capabilities_version": "3",
+    "job_id": "c17907c8-0e83-4ba3-b721-f95db424d695",
+    "local_mask_applied": false,
+    "output_format": "image/tiff",
+    "outputs": [
+      {
+        "bytes": 20378486,
+        "content_type": "image/tiff",
+        "integrity": "Content-Length (when supplied), TIFF signature and Rasterio open verified",
+        "path": "C:\\Users\\zacsh\\OneDrive\\Documentos\\VS Code Projects\\proyecto nasa app 2026\\notebooks\\santiago\\bench_output\\extract_area_20km\\NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001_0_HHHH_NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001_science_LSAR_GCOV_grids_frequencyA_HHHH_subsetted.tif",
+        "raster": {
+          "bands": 1,
+          "bounds": [
+            489980.0,
+            4417800.0,
+            510020.0,
+            4437730.0
+          ],
+          "crs": "EPSG:32613",
+          "dtype": "float32",
+          "height": 1993,
+          "nodata": null,
+          "width": 2004
+        },
+        "reused": false,
+        "sha256": "1d39004a4ed3cf427d4841a99b6f3adeb121eb35ed8837808e195d91824d4498",
+        "variable": "/science/LSAR/GCOV/grids/frequencyA/HHHH"
+      }
+    ],
+    "polygon_service_supported": false,
+    "state": "successful"
+  },
+  "limits": {
+    "max_output_bytes": 536870912,
+    "source_hdf5_downloaded": false
+  },
+  "metadata_path": "C:\\Users\\zacsh\\OneDrive\\Documentos\\VS Code Projects\\proyecto nasa app 2026\\notebooks\\santiago\\bench_output\\extract_area_20km\\NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001_3305b12bb0e3_metadata.json",
+  "product": {
+    "acquisition_start": "2026-10-30T12:03:29Z",
+    "acquisition_stop": "2026-10-30T12:04:04Z",
+    "cmr_granule_id": "G4411496618-ASF",
+    "collection_concept_id": "C3622241360-ASF",
+    "collection_short_name": "NISAR_L2_GCOV_V1",
+    "collection_variables": [
+      {
+        "concept_id": "V4137651715-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHHH"
+      },
+      {
+        "concept_id": "V4132622337-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHHV"
+      },
+      {
+        "concept_id": "V4137625794-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHVH"
+      },
+      {
+        "concept_id": "V4137625795-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHVV"
+      },
+      {
+        "concept_id": "V4137651725-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HVHV"
+      },
+      {
+        "concept_id": "V4137625796-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HVVH"
+      },
+      {
+        "concept_id": "V4137625797-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HVVV"
+      },
+      {
+        "concept_id": "V4137651736-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/mask"
+      },
+      {
+        "concept_id": "V4137651748-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/numberOfLooks"
+      },
+      {
+        "concept_id": "V4137651754-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/rtcGammaToSigmaFactor"
+      },
+      {
+        "concept_id": "V4137651763-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/VHVH"
+      },
+      {
+        "concept_id": "V4137625798-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/VHVV"
+      },
+      {
+        "concept_id": "V4137651771-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/VVVV"
+      },
+      {
+        "concept_id": "V4137650465-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/HHHH"
+      },
+      {
+        "concept_id": "V4137650467-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/HVHV"
+      },
+      {
+        "concept_id": "V4137650471-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/mask"
+      },
+      {
+        "concept_id": "V4137650474-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/numberOfLooks"
+      },
+      {
+        "concept_id": "V4137650475-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/rtcGammaToSigmaFactor"
+      },
+      {
+        "concept_id": "V4137650477-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/VHVH"
+      },
+      {
+        "concept_id": "V4137650481-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/VVVV"
+      }
+    ],
+    "data_url": "https://nisar.asf.earthdatacloud.nasa.gov/NISAR/NISAR_L2_GCOV_V1/NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001/NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001.h5",
+    "estimated_size_bytes": 6945556911,
+    "geometry": {
+      "coordinates": [
+        [
+          [
+            -102.67931,
+            39.85724
+          ],
+          [
+            -103.54215,
+            41.95902
+          ],
+          [
+            -106.59203,
+            41.18222
+          ],
+          [
+            -105.647,
+            39.10316
+          ],
+          [
+            -102.67931,
+            39.85724
+          ]
+        ]
+      ],
+      "type": "Polygon"
+    },
+    "processing_configuration": "PR",
+    "producer_granule_id": "NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001",
+    "product_id": "NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001",
+    "product_type": "GCOV",
+    "properties": {
+      "collectionName": "NISAR_L2_GCOV_V1",
+      "fileID": "NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001",
+      "fileName": "NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001.h5",
+      "flightDirection": "ASCENDING",
+      "frameNumber": 22,
+      "mainBandPolarization": [
+        "HH",
+        "HV"
+      ],
+      "pathNumber": 91,
+      "processingLevel": "GCOV",
+      "productionConfiguration": "PR",
+      "sideBandPolarization": [
+        "HH",
+        "HV"
+      ],
+      "startTime": "2026-10-30T12:03:29Z",
+      "stopTime": "2026-10-30T12:04:04Z"
+    },
+    "size_mb_cmr": 6945.5569105148315,
+    "variables": [
+      {
+        "concept_id": "V4137651715-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHHH"
+      },
+      {
+        "concept_id": "V4132622337-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHHV"
+      },
+      {
+        "concept_id": "V4137625794-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHVH"
+      },
+      {
+        "concept_id": "V4137625795-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HHVV"
+      },
+      {
+        "concept_id": "V4137651725-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HVHV"
+      },
+      {
+        "concept_id": "V4137625796-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HVVH"
+      },
+      {
+        "concept_id": "V4137625797-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/HVVV"
+      },
+      {
+        "concept_id": "V4137651736-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/mask"
+      },
+      {
+        "concept_id": "V4137651748-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/numberOfLooks"
+      },
+      {
+        "concept_id": "V4137651754-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/rtcGammaToSigmaFactor"
+      },
+      {
+        "concept_id": "V4137651763-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/VHVH"
+      },
+      {
+        "concept_id": "V4137625798-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/VHVV"
+      },
+      {
+        "concept_id": "V4137651771-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyA/VVVV"
+      },
+      {
+        "concept_id": "V4137650465-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/HHHH"
+      },
+      {
+        "concept_id": "V4137650467-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/HVHV"
+      },
+      {
+        "concept_id": "V4137650471-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/mask"
+      },
+      {
+        "concept_id": "V4137650474-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/numberOfLooks"
+      },
+      {
+        "concept_id": "V4137650475-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/rtcGammaToSigmaFactor"
+      },
+      {
+        "concept_id": "V4137650477-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/VHVH"
+      },
+      {
+        "concept_id": "V4137650481-ASF",
+        "name": "/science/LSAR/GCOV/grids/frequencyB/VVVV"
+      }
+    ],
+    "variables_scope": "Harmony collection variables filtered for bands present in ASF polarization metadata; Harmony validates each term's file presence"
+  },
+  "region": {
+    "area_km2_wgs84_geodesic": 399.5253991316681,
+    "bounds_wsen": [
+      -105.1172661955922,
+      39.9101688825009,
+      -104.8827338044078,
+      40.0898311174991
+    ],
+    "source_kind": "bbox",
+    "wkt": "POLYGON ((-104.8827338044078 39.9101688825009, -104.8827338044078 40.0898311174991, -105.1172661955922 40.0898311174991, -105.1172661955922 39.9101688825009, -104.8827338044078 39.9101688825009))"
+  },
+  "request": {
+    "collection_id": "C3622241360-ASF",
+    "format": "image/tiff",
+    "granule_id": "G4411496618-ASF",
+    "output_crs": null,
+    "region_wkt": "POLYGON ((-104.8827338044078 39.9101688825009, -104.8827338044078 40.0898311174991, -105.1172661955922 40.0898311174991, -105.1172661955922 39.9101688825009, -104.8827338044078 39.9101688825009))",
+    "variables": [
+      "/science/LSAR/GCOV/grids/frequencyA/HHHH"
+    ]
+  },
+  "schema_version": 1
+}
