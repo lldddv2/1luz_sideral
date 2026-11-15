@@ -77,6 +77,18 @@ export function useRegionPicker(active: boolean, view: MapViewport): RegionPicke
     if (country?.iso !== iso) setCountry({ iso, name })
   }
 
+  // Prefetch the next level so it is cached before the user zooms in. State stays untouched.
+  useEffect(() => {
+    if (!active || !countries) return
+    const next: Exclude<AdminLevel, 'ADM0'> | null =
+      view.zoom >= ADM2_MIN_ZOOM - 1 ? 'ADM2' : view.zoom >= ADM1_MIN_ZOOM - 1 ? 'ADM1' : null
+    if (!next || next === level) return
+    // At zoom 4..5 the active country is not resolved yet, so look under the map center.
+    const iso = country?.iso ?? findCountryAt(countries, view.center)?.properties.iso
+    if (!iso) return
+    loadSubdivisions(iso, next).catch(() => {})
+  }, [active, countries, level, country, view])
+
   // Below ADM0, the country under the map center becomes the active country.
   useEffect(() => {
     if (!active || !countries || level === 'ADM0') return

@@ -18,9 +18,39 @@ const COUNTRIES_URL =
   'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.2/geojson/ne_50m_admin_0_countries.geojson'
 const GEOBOUNDARIES_API = 'https://www.geoboundaries.org/api/current/gbOpen'
 
-const getJson = async (url: string) => {
+// Raw GeoJSON persisted in the Cache API. Bump the name if the URL format changes.
+const CACHE_NAME = 'boundaries-v1'
+
+// Cache API is optional: missing (insecure context) or failing (private mode, quota) just means network.
+const cacheJson = async (url: string) => {
+  if (typeof caches === 'undefined') return null
+  try {
+    const cache = await caches.open(CACHE_NAME)
+    const hit = await cache.match(url)
+    return hit ? await hit.json() : null
+  } catch {
+    return null
+  }
+}
+
+const storeJson = async (url: string, res: Response) => {
+  if (typeof caches === 'undefined') return
+  try {
+    const cache = await caches.open(CACHE_NAME)
+    await cache.put(url, res)
+  } catch {
+    // Ignore: the network response is already usable.
+  }
+}
+
+const getJson = async (url: string, useCache = false) => {
+  if (useCache) {
+    const cached = await cacheJson(url)
+    if (cached) return cached
+  }
   const res = await fetch(url)
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`)
+  if (useCache) void storeJson(url, res.clone())
   return res.json()
 }
 
@@ -28,7 +58,7 @@ let countries: Promise<RegionCollection> | null = null
 
 export function loadCountries(): Promise<RegionCollection> {
   if (!countries) {
-    countries = getJson(COUNTRIES_URL).then((fc) => ({
+    countries = getJson(COUNTRIES_URL, true).then((fc) => ({
       type: 'FeatureCollection',
       features: fc.features.map((f: { geometry: RegionGeometry; properties: Record<string, string> }) => {
         const p = f.properties
@@ -51,14 +81,30 @@ export function loadCountries(): Promise<RegionCollection> {
 const toMediaUrl = (url: string) =>
   url.replace(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/raw\//, 'https://media.githubusercontent.com/media/$1/$2/')
 
+// geoBoundaries release paths are deterministic, so the metadata API call (~3.5 s) is skipped.
+const DIRECT_COMMIT = '9469f09'
+const directUrl = (iso: string, level: Exclude<AdminLevel, 'ADM0'>) =>
+  toMediaUrl(
+    `https://github.com/wmgeolab/geoBoundaries/raw/${DIRECT_COMMIT}/releaseData/gbOpen/${iso}/${level}/geoBoundaries-${iso}-${level}_simplified.geojson`,
+  )
+
+// Direct URL first; fall back to the metadata API once if the pinned file moved.
+const fetchSubdivisions = async (iso: string, level: Exclude<AdminLevel, 'ADM0'>) => {
+  try {
+    return await getJson(directUrl(iso, level), true)
+  } catch {
+    const meta = await getJson(`${GEOBOUNDARIES_API}/${iso}/${level}/`)
+    return getJson(toMediaUrl(meta.simplifiedGeometryGeoJSON), true)
+  }
+}
+
 const subdivisions = new Map<string, Promise<RegionCollection>>()
 
 export function loadSubdivisions(iso: string, level: Exclude<AdminLevel, 'ADM0'>): Promise<RegionCollection> {
   const key = `${iso}/${level}`
   let promise = subdivisions.get(key)
   if (!promise) {
-    promise = getJson(`${GEOBOUNDARIES_API}/${iso}/${level}/`)
-      .then((meta) => getJson(toMediaUrl(meta.simplifiedGeometryGeoJSON)))
+    promise = fetchSubdivisions(iso, level)
       .then((fc) => ({
         type: 'FeatureCollection',
         features: fc.features.map(
