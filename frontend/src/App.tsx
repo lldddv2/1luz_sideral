@@ -32,6 +32,8 @@ export default function App() {
   const download = useDownload(polygons.at(-1) ?? null)
   const hovered = polygons.find((p) => p.id === hoveredId)
   const deletePolygon = (id: string) => setPolygons((prev) => prev.filter((p) => p.id !== id))
+  // Same toggle for the sidebar buttons and the map tool palette: picking the active tool clears it.
+  const selectMode = (m: DrawMode) => setMode((current) => (current === m ? null : m))
 
   const addShape = (kind: DrawMode, coords: LngLat[], name?: string, geometry?: RegionGeometry) => {
     setPolygons((prev) => [
@@ -71,7 +73,7 @@ export default function App() {
         regions={regions}
         download={download}
         basemap={basemap}
-        onSelectMode={(m) => setMode((current) => (current === m ? null : m))}
+        onSelectMode={selectMode}
         onDelete={deletePolygon}
         onHoverTool={setHoveredTool}
         onBasemapChange={setBasemap}
@@ -81,6 +83,7 @@ export default function App() {
           basemap={BASEMAPS[basemap].style}
           polygons={polygons}
           mode={mode}
+          onSelectMode={selectMode}
           regionCountries={mode === 'region' ? regions.countries : null}
           regionSubdivisions={mode === 'region' ? regions.subdivisions : null}
           onShapeComplete={(kind, coords) => addShape(kind, coords)}

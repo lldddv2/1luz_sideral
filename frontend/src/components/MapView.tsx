@@ -11,10 +11,16 @@ import type { RegionCollection } from '../regions'
 import type { MapViewport } from '../useRegionPicker'
 import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } from '../editing'
 import type { XY } from '../editing'
+import { TOOLS } from './Sidebar'
 
 // Pixel tolerances for drawing interactions.
 const DUPLICATE_PX = 5 // clicks this close to the last vertex are ignored (double-click)
 const CLOSE_PX = 10 // clicking this close to the first vertex closes the polygon
+
+// Approximate palette size, used to clamp it inside the map container.
+const PALETTE_W = 112
+const PALETTE_H = 44
+const PALETTE_MARGIN = 8
 
 // Axis-aligned rectangle from two opposite corners, as an open ring.
 const rectangleFrom = ([x1, y1]: LngLat, [x2, y2]: LngLat): LngLat[] => [
@@ -41,6 +47,7 @@ interface Props {
   basemap: StyleSpecification
   polygons: AoiPolygon[]
   mode: DrawMode | null
+  onSelectMode: (mode: DrawMode) => void
   regionCountries: RegionCollection | null
   regionSubdivisions: RegionCollection | null
   onRegionClick: (rid: string) => void
@@ -84,6 +91,7 @@ export default function MapView({
   basemap,
   polygons,
   mode,
+  onSelectMode,
   regionCountries,
   regionSubdivisions,
   onRegionClick,
@@ -102,6 +110,8 @@ export default function MapView({
   const [vertices, setVertices] = useState<LngLat[]>([])
   const [cursor, setCursor] = useState<LngLat | null>(null)
   const [menu, setMenu] = useState<ContextMenu | null>(null)
+  const [palette, setPalette] = useState<{ x: number; y: number } | null>(null)
+  const paletteRef = useRef<HTMLDivElement>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [drag, setDrag] = useState<Drag | null>(null)
   const [hoverHandle, setHoverHandle] = useState<string | null>(null)
@@ -144,7 +154,24 @@ export default function MapView({
     return resizeCursor(c.x - o.x, c.y - o.y)
   }
 
+  // Keeps the tool palette inside the map container.
+  const clampPalette = (x: number, y: number) => {
+    const el = mapRef.current?.getMap().getContainer()
+    if (!el) return { x, y }
+    return {
+      x: Math.max(PALETTE_MARGIN, Math.min(x, el.clientWidth - PALETTE_W - PALETTE_MARGIN)),
+      y: Math.max(PALETTE_MARGIN, Math.min(y, el.clientHeight - PALETTE_H - PALETTE_MARGIN)),
+    }
+  }
+
   const handleMouseDown = (e: MapLayerMouseEvent) => {
+    if (e.originalEvent.button === 1) {
+      // Middle click opens the tool palette; preventDefault blocks Chrome's autoscroll.
+      e.originalEvent.preventDefault()
+      setMenu(null)
+      setPalette(clampPalette(e.point.x, e.point.y))
+      return
+    }
     if (drawing || !selected || e.originalEvent.button !== 0) return
     const top = e.features?.[0]
     const p: LngLat = [e.lngLat.lng, e.lngLat.lat]
@@ -175,16 +202,62 @@ export default function MapView({
     mapRef.current?.getMap().dragPan.disable()
   }
 
-  // Close the context menu with Escape.
+  // Close the context menu and the tool palette with Escape.
   useEffect(() => {
-    if (!menu) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenu(null)
+    if (!menu && !palette) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setMenu(null)
+      setPalette(null)
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [menu])
+  }, [menu, palette])
+
+  // Chrome shows its autoscroll widget on middle click; block the follow-up auxclick too.
+  // The map instance is not ready during mount effects, so the container is resolved per event.
+  useEffect(() => {
+    const onAux = (e: MouseEvent) => {
+      if (e.button !== 1) return
+      const container = mapRef.current?.getMap().getContainer()
+      if (!container || !(e.target instanceof Node) || !container.contains(e.target)) return
+      e.preventDefault()
+    }
+    window.addEventListener('auxclick', onAux)
+    return () => window.removeEventListener('auxclick', onAux)
+  }, [])
+
+  // Shift+T opens the palette at the map center; ignored while typing.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.key.toLowerCase() !== 't') return
+      const target = e.target as HTMLElement | null
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return
+      const el = mapRef.current?.getMap().getContainer()
+      if (!el) return
+      e.preventDefault()
+      setMenu(null)
+      setPalette(clampPalette(el.clientWidth / 2 - PALETTE_W / 2, el.clientHeight / 2 - PALETTE_H / 2))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Focus the first tool so Tab and Enter work as soon as the palette opens.
+  // On close, give focus back to where it was if it would otherwise fall to <body>.
+  const paletteOpen = palette !== null
+  useEffect(() => {
+    if (!paletteOpen) return
+    const previous = document.activeElement as HTMLElement | null
+    paletteRef.current?.querySelector('button')?.focus()
+    return () => {
+      if (document.activeElement === document.body || !document.activeElement) previous?.focus()
+    }
+  }, [paletteOpen])
 
   const handleContextMenu = (e: MapLayerMouseEvent) => {
     e.originalEvent.preventDefault()
+    setPalette(null)
     const feature = e.features?.find((f) => isAoiFill(f.layer.id))
     if (drawing || !feature) {
       setMenu(null)
@@ -253,6 +326,7 @@ export default function MapView({
 
   const handleClick = (e: MapLayerMouseEvent) => {
     setMenu(null)
+    setPalette(null)
     if (mode === 'region') {
       // Geometry comes from the full collection in App: rendered features are tile-clipped.
       const rid = e.features?.[0]?.properties.rid
@@ -471,7 +545,10 @@ export default function MapView({
         }
       }}
       onContextMenu={handleContextMenu}
-      onMoveStart={() => setMenu(null)}
+      onMoveStart={() => {
+        setMenu(null)
+        setPalette(null)
+      }}
       onLoad={reportView}
       onMoveEnd={reportView}
       interactiveLayerIds={
@@ -601,6 +678,37 @@ export default function MapView({
           }}
         />
       </Source>
+      {palette && (
+        <div
+          ref={paletteRef}
+          className="map-toolbar"
+          role="toolbar"
+          aria-label="Herramientas de dibujo"
+          style={{ left: palette.x, top: palette.y }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+        >
+          {TOOLS.map((t) => (
+            <button
+              key={t.mode}
+              type="button"
+              title={t.label}
+              aria-label={t.label}
+              aria-pressed={mode === t.mode}
+              onClick={() => {
+                onSelectMode(t.mode)
+                setPalette(null)
+              }}
+            >
+              <t.Icon size={16} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      )}
       {menu && (
         <div className="context-menu" style={{ left: menu.x, top: menu.y }} onContextMenu={(e) => e.preventDefault()}>
           <div className="context-menu-title">{menu.name}</div>

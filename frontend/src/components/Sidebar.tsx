@@ -53,7 +53,8 @@ const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
   { id: 'about', label: 'Acerca', Icon: Info },
 ]
 
-const TOOLS: { mode: DrawMode; label: string; Icon: LucideIcon }[] = [
+// Shared with the map tool palette so icons and labels are never duplicated.
+export const TOOLS: { mode: DrawMode; label: string; Icon: LucideIcon }[] = [
   { mode: 'polygon', label: 'Polígono', Icon: Pentagon },
   { mode: 'rectangle', label: 'Rectángulo', Icon: RectangleHorizontal },
   { mode: 'region', label: 'Región', Icon: MapIcon },
