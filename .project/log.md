@@ -1,4 +1,5 @@
 # 錄（倒序）
+- 2026-11-15 claude: README 填全，含 readthedocs 鏈。用戶請。
 - 2026-11-15 claude: 容器 NISAR 502 拒憑修：啟時 ensure_netrc 由 EARTHDATA env 寫臨時 netrc 設 NETRC（requests 唯讀 netrc）。新測四過；全測 130 過，test_dem 二敗舊。因：Lightsail 唯傳 env。
 - 2026-11-15 claude: 前端全譯英（四子代理並行分檔），html lang=en，地覆示 name_en，搜同義詞西英並存。tsc、build 過；未瀏覽器驗。後端 regions type 與 water 錯訊仍西，未觸（範圍外）。因：用戶令。
 - 2026-11-15 claude: 部署 AWS Lightsail 容器 luzsi（micro），一鏡像前後同源，ECR 拉，Earthdata 秘自 SSM 入 env。因：App Runner 帳戶不許（SubscriptionRequired），勿 S3。
