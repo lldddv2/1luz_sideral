@@ -1,4 +1,5 @@
 # 錄（倒序）
+- 2026-11-15 claude: 部署 AWS Lightsail 容器 luzsi（micro），一鏡像前後同源，ECR 拉，Earthdata 秘自 SSM 入 env。因：App Runner 帳戶不許（SubscriptionRequired），勿 S3。
 - 2026-11-15 claude: Modelo propio 唯 curl 七步連（去 luzsi_model.py、pip、U-Net 例），任意模約不變；PowerShell hello 用 hello.json。用戶令 solo CURL。
 - 2026-11-15 claude: 模離後台→model_service/water_unet 獨程，HTTP 拉+SSE 接 /api/models（token 2h）；前端「Modelo propio」示 token、命令 `python -m water_unet`（dev --url 直 :8000）、片合 409 序。驗：端到端 Okavango 工 3 s 成（input 快取），PNG 200；tsc/build 過；test_dem 二敗於 main 亦敗，舊疾。因：模可換、用戶本機跑。
 - 2026-11-15 claude: 導覽改側欄每節一步（study→about 七節，自開節，防閉以 aria-current），panel 步併入 layers，鍵升 tour-seen-v2 令舊用戶再見。tsc、build 過；未瀏覽器驗。

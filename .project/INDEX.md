@@ -18,3 +18,4 @@
 - [外模後台](model-backend.md) — store/raster/router 實、快取、錯碼
 - [離模客](model-service.md) — model_service/water_unet 獨程 U-Net 客、跑法、測
 - [外模前端](model-ui.md) — 節「Modelo propio」：token、SSE、工態、命令片
+- [部署](deploy.md) — Lightsail 容器 luzsi、ECR、deploy_lightsail.sh、URL、秘於 SSM
