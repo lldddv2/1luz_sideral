@@ -2005,6 +2005,85 @@ select {
   filter: drop-shadow(0 0 3px rgba(157, 23, 77, 0.8));
 }
 
+/* Tools button on the selected square: round, just outside its top-right corner, so it clears
+   the corner handle (the translate is the anchored offset in pixels: right and up). */
+.zone-menu {
+  position: relative;
+  transform: translate(7px, -7px);
+}
+
+.zone-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid #9d174d;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  color: #9d174d;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.zone-menu-toggle:hover {
+  background: #db2777;
+  color: #ffffff;
+}
+
+.zone-menu-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A list, so more tools can be added later. */
+.zone-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 10;
+  min-width: 210px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--overlay);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+}
+
+.zone-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.zone-menu-item:hover {
+  background: var(--surface-2);
+}
+
+.zone-menu-item-danger {
+  color: var(--danger);
+}
+
+.zone-menu-item-danger:hover {
+  background: var(--danger-soft);
+}
+
 .zone-list {
   display: flex;
   flex-direction: column;

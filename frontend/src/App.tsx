@@ -270,6 +270,7 @@ export default function App() {
           zonePlacing={zonePlacing}
           onZonePlace={placeZone}
           onZoneChange={changeZone}
+          onDeleteZone={deleteZone}
           onCancelZone={() => setZonePlacing(false)}
         />
         <SearchBar

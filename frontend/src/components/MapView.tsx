@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { EllipsisVertical, Plus, Trash2 } from 'lucide-react'
 import Map, { AttributionControl, Layer, Marker, Source } from 'react-map-gl/maplibre'
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
 import type { Map as MaplibreMap, StyleSpecification } from 'maplibre-gl'
@@ -98,6 +98,7 @@ interface Props {
   zonePlacing: boolean // next map click adds a zone center
   onZonePlace: (center: LngLat) => void
   onZoneChange: (zone: UserZone) => void
+  onDeleteZone: (id: string) => void
   onCancelZone: () => void
 }
 
@@ -159,6 +160,7 @@ export default function MapView({
   zonePlacing,
   onZonePlace,
   onZoneChange,
+  onDeleteZone,
   onCancelZone,
 }: Props) {
   // Placing the zone center blocks the same interactions as shape drawing.
@@ -169,6 +171,9 @@ export default function MapView({
   const [menu, setMenu] = useState<ContextMenu | null>(null)
   const [palette, setPalette] = useState<{ x: number; y: number } | null>(null)
   const paletteRef = useRef<HTMLDivElement>(null)
+  // Tools menu of the selected square (round button at its top-right corner).
+  const [zoneMenuOpen, setZoneMenuOpen] = useState(false)
+  const zoneMenuRef = useRef<HTMLDivElement>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [drag, setDrag] = useState<Drag | null>(null)
   const [hoverHandle, setHoverHandle] = useState<string | null>(null)
@@ -247,6 +252,29 @@ export default function MapView({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedId])
+
+  // Zone tools menu: an outside click or Escape closes it.
+  useEffect(() => {
+    if (!zoneMenuOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (zoneMenuRef.current?.contains(e.target as Node)) return
+      setZoneMenuOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setZoneMenuOpen(false)
+    }
+    window.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('mousedown', onDown)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [zoneMenuOpen])
+
+  // The menu belongs to the selected point: deselecting it (or zooming out to its pin) closes it.
+  useEffect(() => {
+    setZoneMenuOpen(false)
+  }, [selectedZoneId])
 
   // End a drag even if the mouse is released outside the map.
   useEffect(() => {
@@ -1075,6 +1103,53 @@ export default function MapView({
             <span className={`zone-corner zone-corner-${i}`} />
           </Marker>
         ))}
+      {/* Round tools button just outside the top-right corner of the selected square. It is a
+          marker, so it follows the square when moved, resized, or the map pans and zooms. */}
+      {selectedZone && (
+        <Marker longitude={zoneCornerList[2][0]} latitude={zoneCornerList[2][1]} anchor="bottom-left">
+          <div
+            ref={zoneMenuRef}
+            className="zone-menu"
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+          >
+            <button
+              type="button"
+              className="zone-menu-toggle"
+              title="Herramientas del punto de interés"
+              aria-label="Herramientas del punto de interés"
+              aria-haspopup="menu"
+              aria-expanded={zoneMenuOpen}
+              onClick={() => setZoneMenuOpen((open) => !open)}
+            >
+              <EllipsisVertical size={14} aria-hidden="true" />
+            </button>
+            {zoneMenuOpen && (
+              <ul className="zone-menu-list" role="menu" aria-label="Herramientas del punto de interés">
+                <li>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="zone-menu-item zone-menu-item-danger"
+                    onClick={() => {
+                      onDeleteZone(selectedZone.id)
+                      setZoneMenuOpen(false)
+                    }}
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                    Eliminar punto de interés
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
+        </Marker>
+      )}
       <Source id="pois" type="geojson" data={poisGeo}>
         <Layer
           id="poi-circle"
