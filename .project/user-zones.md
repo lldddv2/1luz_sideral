@@ -9,3 +9,4 @@
 - 圖：源 `user-zone` 含諸方（properties id、selected），層 `zone-fill`、`zone-outline`，粉 #db2777；選中者填 0.3、邊 #9d174d 粗 3。名置心右。層序 aoi 上、labels 下。
 - 與 DrawMode 互斥：入一則出他。
 - 縮示：方屏上邊（map.project 取 bbox 西南東北，取短軸）小則化為 pin（粉，可拖移心，點則 fitBounds 至方，padding 60）；隱方層與角把手。滯回：大於 44 px 現方，小於 36 px 化 pin（`ZONE_SQUARE_SHOW_PX`/`ZONE_SQUARE_HIDE_PX`，MapView.tsx）。每點各算，態為 `zoneExpanded: Set<id>`。onMove、onLoad、zones 變時重算。拖後之 click 以 ref 略之（onDragEnd setTimeout 清）。
+- 工具鈕：唯選中且方態者，於方東北角外 7 px 置圓鈕（`EllipsisVertical`，`.zone-menu`），為 Marker 故隨方移、縮、圖移縮而動；offset 以 CSS transform 代 Marker offset 免符號之疑。點則展 `.zone-menu-list`（`<ul role=menu>`，備後增）；今唯「Eliminar punto de interés」（`Trash2`，`--danger`），走 MapView prop `onDeleteZone`＝App `deleteZone`（與 Sidebar 同路）。外點、Esc、失選（選 id 變）皆閉；鈕與列之 mousedown/pointerdown/click 皆 stopPropagation，免啟圖拖與失選。styles.css `.zone-menu*`。

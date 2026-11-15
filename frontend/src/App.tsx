@@ -35,7 +35,7 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredTool, setHoveredTool] = useState<DrawMode | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
-  const [basemap, setBasemap] = useState<BasemapId>("gray");
+  const [basemap, setBasemap] = useState<BasemapId>("s2cloudless");
   const [overlays, setOverlays] = useState(DEFAULT_OVERLAYS);
   const changeOverlay = (id: OverlayId, patch: Partial<OverlayState>) =>
     setOverlays((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));

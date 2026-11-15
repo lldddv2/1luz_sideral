@@ -812,7 +812,7 @@ export default function MapView({
             : ['poi-circle', 'edit-handles', 'aoi-fill', 'aoi-region-fill']
       }
     >
-      {/* OSM license requires attribution; kept bottom-left so the right corner is free for InfoBox. */}
+      {/* Basemap licenses require attribution; kept bottom-left so the right corner is free for InfoBox. */}
       <AttributionControl position="bottom-left" compact />
       {/* Region picker layers; beforeId keeps them under the AOI shapes even when mounted later. */}
       {mode === 'region' && regionCountries && (

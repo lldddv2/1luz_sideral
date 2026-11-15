@@ -1,5 +1,7 @@
 # 錄（倒序）
-
+- 2026-11-15 claude: 光學底圖名改「Óptico」為預設；刪OSM。用戶求。
+- 2026-11-15 claude: 搜欄點行（地名／自然地物）亦閉下拉，保 query；經 opencode big-pickle（本地 qwen 敗）。因用戶求。tsc、build 過；瀏覽器未驗。
+- 2026-11-15 charles: 選中方形右上外置圓鈕（⋮），點展工具列；今唯「Eliminar punto de interés」（紅 Trash），經新 MapView prop `onDeleteZone`＝App `deleteZone`；外點、Esc、失選則閉，鈕列不啟圖拖不失選。因用戶就地刪點。build 過；瀏覽器未驗。
 - 2026-11-15 claude: 刪HLS光學層，唯留S2無雲。用戶求。
 - 2026-11-15 claude: 去 S3 管線。因用戶棄 S3。
 - 2026-11-15 claude: 去代理聊天；諸改入 main。因用戶不整合代理。

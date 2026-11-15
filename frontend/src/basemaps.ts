@@ -1,6 +1,6 @@
 import type { StyleSpecification } from 'maplibre-gl'
 
-export type BasemapId = 'gray' | 'osm' | 's2cloudless'
+export type BasemapId = 'gray' | 's2cloudless'
 
 interface Basemap {
   id: BasemapId
@@ -37,33 +37,10 @@ export const BASEMAPS: Record<BasemapId, Basemap> = {
       layers: [{ id: 'esri-gray', type: 'raster', source: 'esri' }],
     },
   },
-  osm: {
-    id: 'osm',
-    label: 'OpenStreetMap',
-    hint: 'Mapa estándar con calles y lugares',
-    // OSM has no label-only tiles; Esri boundaries and places is the keyless stand-in.
-    labels: {
-      tiles: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-      maxzoom: 19,
-      withOverlaysOnly: true,
-    },
-    style: {
-      version: 8,
-      sources: {
-        osm: {
-          type: 'raster',
-          tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-          tileSize: 256,
-          attribution: '© OpenStreetMap contributors',
-        },
-      },
-      layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-    },
-  },
   // EOX Sentinel-2 cloudless: one cloud-free annual mosaic (keyless), not tied to any date.
   s2cloudless: {
     id: 's2cloudless',
-    label: 'Óptico sin nubes',
+    label: 'Óptico',
     hint: 'Sentinel-2 2025, mosaico anual, no es de la fecha',
     labels: {
       tiles: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
@@ -85,4 +62,4 @@ export const BASEMAPS: Record<BasemapId, Basemap> = {
   },
 }
 
-export const BASEMAP_IDS: BasemapId[] = ['gray', 'osm', 's2cloudless']
+export const BASEMAP_IDS: BasemapId[] = ['s2cloudless', 'gray']
