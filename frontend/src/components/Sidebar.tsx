@@ -29,6 +29,8 @@ import type { DownloadController, RunPhase, RunState } from '../useDownload'
 import { MAX_SEARCH_PRODUCTS, POLL_MS, POLS, fileUrl, formatKm2, warningsFor, yesterdayIso } from '../download'
 import { BASEMAPS } from '../basemaps'
 import type { BasemapId } from '../basemaps'
+import { OVERLAYS, OVERLAY_IDS } from '../layers'
+import type { OverlayId, OverlayState } from '../layers'
 
 type SectionId = 'study' | 'download' | 'nisar' | 'layers' | 'analysis' | 'about'
 
@@ -42,6 +44,8 @@ interface Props {
   onDelete: (id: string) => void
   onHoverTool: (tool: DrawMode | null) => void
   onBasemapChange: (basemap: BasemapId) => void
+  overlays: Record<OverlayId, OverlayState>
+  onOverlayChange: (id: OverlayId, patch: Partial<OverlayState>) => void
 }
 
 const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
@@ -254,8 +258,9 @@ function NisarSection() {
 function LayersSection({
   basemap,
   onBasemapChange,
-}: Pick<Props, 'basemap' | 'onBasemapChange'>) {
-  const [opacity, setOpacity] = useState(70)
+  overlays,
+  onOverlayChange,
+}: Pick<Props, 'basemap' | 'onBasemapChange' | 'overlays' | 'onOverlayChange'>) {
   return (
     <>
       <h3 className="section-title">Mapa base</h3>
@@ -278,27 +283,72 @@ function LayersSection({
         ))}
       </div>
 
-      <h3 className="section-title">Opacidad de capas de radar</h3>
-      <div className="field">
-        <div className="field-row field-row-label">
-          <label className="field-label" htmlFor="radar-opacity">
-            Opacidad
-          </label>
-          <span className="field-value">{opacity}%</span>
-        </div>
-        <input
-          id="radar-opacity"
-          className="slider"
-          type="range"
-          min={0}
-          max={100}
-          step={5}
-          value={opacity}
-          onChange={(e) => setOpacity(Number(e.target.value))}
-          aria-valuetext={`${opacity}%`}
-        />
-      </div>
-      <p className="hint">Aún no hay capas de radar cargadas; el valor se aplicará cuando existan.</p>
+      <h3 className="section-title">Capas de agua</h3>
+      {OVERLAY_IDS.map((id) => {
+        const o = OVERLAYS[id]
+        const st = overlays[id]
+        return (
+          <div className="field" key={id}>
+            <label className="field-row field-row-label">
+              <input type="checkbox" checked={st.on} onChange={(e) => onOverlayChange(id, { on: e.target.checked })} />
+              <span className="field-label" title={o.hint}>
+                {o.label}
+              </span>
+              <span className="field-value">{st.opacity}%</span>
+            </label>
+            <input
+              className="slider"
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={st.opacity}
+              disabled={!st.on}
+              onChange={(e) => onOverlayChange(id, { opacity: Number(e.target.value) })}
+              aria-label={`Opacidad ${o.label}`}
+              aria-valuetext={`${st.opacity}%`}
+            />
+            {o.needsDate && (
+              <input
+                type="date"
+                value={st.date}
+                disabled={!st.on}
+                onChange={(e) => e.target.value && onOverlayChange(id, { date: e.target.value })}
+                aria-label={`Fecha ${o.label}`}
+              />
+            )}
+            {(id === 'nisar' || id === 'dswx') && <p className="hint">mosaico de 12 días hasta esta fecha</p>}
+            {id === 'nisar' && <p className="hint">alejado: contorno de órbitas · cerca: mosaico a color</p>}
+            {id === 'nisar' && (
+              <div className="segmented" role="group" aria-label="Modo NISAR">
+                {(
+                  [
+                    ['water', 'Agua (umbral)'],
+                    ['color', 'Color (suavizado)'],
+                  ] as const
+                ).map(([m, label]) => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={(st.mode ?? 'color') === m ? 'active' : undefined}
+                    aria-pressed={(st.mode ?? 'color') === m}
+                    disabled={!st.on}
+                    onClick={() => onOverlayChange(id, { mode: m })}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {id === 'nisar' && (st.mode ?? 'color') === 'water' && (
+              <p className="hint">
+                <span style={{ color: '#2b8cbe' }}>■</span> azul = baja retrodispersión banda L (agua/superficie lisa)
+              </p>
+            )}
+            <p className="hint">{o.hint}</p>
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -514,6 +564,8 @@ export default function Sidebar({
   onDelete,
   onHoverTool,
   onBasemapChange,
+  overlays,
+  onOverlayChange,
 }: Props) {
   const [collapsed, setCollapsed] = useState(readStoredCollapsed)
   const [section, setSection] = useState<SectionId>(readStoredSection)
@@ -603,7 +655,14 @@ export default function Sidebar({
           )}
           {active.id === 'download' && <DownloadSection download={download} />}
           {active.id === 'nisar' && <NisarSection />}
-          {active.id === 'layers' && <LayersSection basemap={basemap} onBasemapChange={onBasemapChange} />}
+          {active.id === 'layers' && (
+            <LayersSection
+              basemap={basemap}
+              onBasemapChange={onBasemapChange}
+              overlays={overlays}
+              onOverlayChange={onOverlayChange}
+            />
+          )}
           {active.id === 'analysis' && <AnalysisSection />}
           {active.id === 'about' && <AboutSection />}
         </div>

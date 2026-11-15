@@ -12,6 +12,8 @@ import type { BBox, PlaceResult } from './nominatim'
 import type { AoiPolygon, DrawMode, LngLat, RegionGeometry } from './types'
 import { BASEMAPS } from './basemaps'
 import type { BasemapId } from './basemaps'
+import { DEFAULT_OVERLAYS } from './layers'
+import type { OverlayId, OverlayState } from './layers'
 
 const LABELS: Record<DrawMode, string> = { polygon: 'Polígono', rectangle: 'Rectángulo', region: 'Región' }
 
@@ -22,6 +24,9 @@ export default function App() {
   const [hoveredTool, setHoveredTool] = useState<DrawMode | null>(null)
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null)
   const [basemap, setBasemap] = useState<BasemapId>('gray')
+  const [overlays, setOverlays] = useState(DEFAULT_OVERLAYS)
+  const changeOverlay = (id: OverlayId, patch: Partial<OverlayState>) =>
+    setOverlays((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }))
   // Search: last result picked (dashed outline) and the camera target for it.
   const [preview, setPreview] = useState<PlaceResult | null>(null)
   const [flyTo, setFlyTo] = useState<{ bbox: BBox; key: number } | null>(null)
@@ -77,10 +82,13 @@ export default function App() {
         onDelete={deletePolygon}
         onHoverTool={setHoveredTool}
         onBasemapChange={setBasemap}
+        overlays={overlays}
+        onOverlayChange={changeOverlay}
       />
       <div className="map-area">
         <MapView
           basemap={BASEMAPS[basemap].style}
+          labels={BASEMAPS[basemap].labels}
           polygons={polygons}
           mode={mode}
           onSelectMode={selectMode}
@@ -98,6 +106,7 @@ export default function App() {
           flyToBbox={flyTo}
           searchStart={download.params.start}
           searchEnd={download.params.end}
+          overlays={overlays}
         />
         <SearchBar
           start={download.params.start}

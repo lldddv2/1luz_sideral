@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre'
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
@@ -14,6 +14,14 @@ import type { MapViewport } from '../useRegionPicker'
 import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } from '../editing'
 import type { XY } from '../editing'
 import { TOOLS } from './Sidebar'
+import { addProtocol } from 'maplibre-gl'
+import { NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, nisarDate, overlayTiles, registerNisarProtocol } from '../layers'
+import type { OverlayId, OverlayState } from '../layers'
+
+// Overlay tile failures (e.g. GIBS hiccups) are expected; keep them out of the console.
+registerNisarProtocol(addProtocol)
+
+const OVERLAY_SOURCES = new Set(OVERLAY_IDS.map((id) => `ov-${id}`))
 
 // Pixel tolerances for drawing interactions.
 const DUPLICATE_PX = 5 // clicks this close to the last vertex are ignored (double-click)
@@ -47,6 +55,7 @@ const resizeCursor = (dx: number, dy: number): string => {
 
 interface Props {
   basemap: StyleSpecification
+  labels: { tiles: string; maxzoom: number; withOverlaysOnly?: boolean }
   polygons: AoiPolygon[]
   mode: DrawMode | null
   onSelectMode: (mode: DrawMode) => void
@@ -64,6 +73,7 @@ interface Props {
   flyToBbox: { bbox: BBox; key: number } | null // camera target; a new key flies there again
   searchStart: string // search date range (YYYY-MM-DD), drives the POI popup timeline
   searchEnd: string
+  overlays: Record<OverlayId, OverlayState>
 }
 
 // Active drag while editing the selected shape.
@@ -93,6 +103,7 @@ interface ContextMenu {
 
 export default function MapView({
   basemap,
+  labels,
   polygons,
   mode,
   onSelectMode,
@@ -110,6 +121,7 @@ export default function MapView({
   flyToBbox,
   searchStart,
   searchEnd,
+  overlays,
 }: Props) {
   const drawing = mode !== null
   const mapRef = useRef<MapRef>(null)
@@ -588,6 +600,10 @@ export default function MapView({
         setPalette(null)
       }}
       onLoad={reportView}
+      onError={(e) => {
+        const src = (e as unknown as { sourceId?: string }).sourceId
+        if (!src || !OVERLAY_SOURCES.has(src)) console.error(e.error)
+      }}
       onMoveEnd={reportView}
       interactiveLayerIds={
         mode === 'region'
@@ -655,6 +671,67 @@ export default function MapView({
         <Layer id="aoi-region-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.25 }} />
         <Layer id="aoi-region-outline" type="line" paint={{ 'line-color': '#ff7a00', 'line-width': 2 }} />
       </Source>
+      {/* Water overlays sit under the AOI shapes; mounted after aoi-regions so beforeId exists. */}
+      {OVERLAY_IDS.filter((id) => overlays[id].on).map((id) => {
+        const base = overlayTiles(id, overlays[id].date)
+        const mode = id === 'nisar' ? overlays[id].mode ?? 'color' : undefined
+        const url = mode
+          ? `${NISAR_PROTOCOL}://${mode}/${nisarDate(overlays[id].date)}/{z}/{x}/{y}`
+          : id === 'dswx'
+            ? `${DSWX_PROTOCOL}://${overlays[id].date}/{z}/{x}/{y}`
+            : base
+        const opacity = overlays[id].opacity / 100
+        // NISAR fades in from NISAR_FADE_START to NISAR_FADE_END while the swath outline fades out.
+        const imgOpacity = mode
+          ? (['interpolate', ['linear'], ['zoom'], NISAR_FADE_START, 0, NISAR_FADE_END, opacity] as unknown as number)
+          : opacity
+        // 'color' mode tones down speckle, stripes and hard swath edges of the false-color preview.
+        const paint =
+          mode === 'color'
+            ? {
+                'raster-opacity': imgOpacity,
+                'raster-contrast': -0.2,
+                'raster-saturation': -0.25,
+                'raster-resampling': 'linear' as const,
+                'raster-fade-duration': 300,
+              }
+            : { 'raster-opacity': imgOpacity }
+        const outlineUrl = mode && `${NISAR_PROTOCOL}://outline/${nisarDate(overlays[id].date)}/{z}/{x}/{y}`
+        return (
+          <Fragment key={`${id}-${url}`}>
+          {outlineUrl && (
+            <Source id="ov-nisar-outline" type="raster" tiles={[outlineUrl]} tileSize={256} maxzoom={NISAR_OUTLINE_MAXZOOM}>
+              <Layer
+                id="ov-nisar-outline-layer"
+                type="raster"
+                beforeId="aoi-region-fill"
+                maxzoom={NISAR_OUTLINE_MAXZOOM}
+                paint={{
+                  'raster-opacity': ['interpolate', ['linear'], ['zoom'], NISAR_FADE_START, opacity, NISAR_FADE_END, 0] as unknown as number,
+                }}
+              />
+            </Source>
+          )}
+          <Source
+            key={`${id}-${url}`}
+            id={`ov-${id}`}
+            type="raster"
+            tiles={[url]}
+            tileSize={256}
+            maxzoom={OVERLAYS[id].maxzoom}
+            attribution={OVERLAYS[id].attribution}
+          >
+            <Layer
+              id={`ov-${id}-layer`}
+              type="raster"
+              beforeId="aoi-region-fill"
+              minzoom={mode ? NISAR_FADE_START : 0}
+              paint={paint}
+            />
+          </Source>
+          </Fragment>
+        )
+      })}
       <Source id="aoi-polygons" type="geojson" data={polygonsGeo}>
         <Layer id="aoi-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.25 }} />
         <Layer
@@ -684,6 +761,18 @@ export default function MapView({
           }}
         />
       </Source>
+      {/* Place-name labels above overlays and AOI shapes, under POIs and edit handles. */}
+      {/* No fade: cross-fading parent/child label tiles while zooming shows names twice. */}
+      {(!labels.withOverlaysOnly || OVERLAY_IDS.some((id) => overlays[id].on)) && (
+        <Source id="basemap-labels" key={labels.tiles} type="raster" tiles={[labels.tiles]} tileSize={256} maxzoom={labels.maxzoom}>
+          <Layer
+            id="basemap-labels-layer"
+            type="raster"
+            beforeId="poi-circle"
+            paint={{ 'raster-opacity': 1, 'raster-fade-duration': 0 }}
+          />
+        </Source>
+      )}
       <Source id="aoi-edit-handles" type="geojson" data={handlesGeo}>
         <Layer
           id="edit-rotate-stem"

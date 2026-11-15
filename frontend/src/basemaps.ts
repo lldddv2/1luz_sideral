@@ -7,6 +7,9 @@ interface Basemap {
   label: string
   hint: string
   style: StyleSpecification
+  // Label-only tiles drawn above the overlays so place names stay readable.
+  // withOverlaysOnly: the basemap already bakes in names, so only draw them when overlays hide it.
+  labels: { tiles: string; maxzoom: number; withOverlaysOnly?: boolean }
 }
 
 // Raster basemaps only: NISAR overlays will be added on top later.
@@ -16,6 +19,10 @@ export const BASEMAPS: Record<BasemapId, Basemap> = {
     id: 'gray',
     label: 'Esri Gris claro',
     hint: 'Neutro, deja resaltar las capas de radar',
+    labels: {
+      tiles: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+      maxzoom: 16,
+    },
     style: {
       version: 8,
       sources: {
@@ -34,6 +41,12 @@ export const BASEMAPS: Record<BasemapId, Basemap> = {
     id: 'osm',
     label: 'OpenStreetMap',
     hint: 'Mapa estándar con calles y lugares',
+    // OSM has no label-only tiles; Esri boundaries and places is the keyless stand-in.
+    labels: {
+      tiles: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      maxzoom: 19,
+      withOverlaysOnly: true,
+    },
     style: {
       version: 8,
       sources: {
