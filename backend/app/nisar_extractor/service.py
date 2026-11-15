@@ -70,9 +70,10 @@ class NisarExtractor:
                 f"AOI {region.area_km2:.2f} km² exceeds configured limit "
                 f"{self.config.max_area_km2:.2f} km²"
             )
-        if max_results > self.config.max_products:
+        if max_results > self.config.max_discover_results:
             raise ValueError(
-                f"max_results={max_results} exceeds configured max_products={self.config.max_products}"
+                f"max_results={max_results} exceeds configured "
+                f"max_discover_results={self.config.max_discover_results}"
             )
         inventory = self.catalog.discover(
             region,

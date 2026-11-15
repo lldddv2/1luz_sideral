@@ -10,6 +10,7 @@ import rasterio
 from rasterio.io import MemoryFile
 from shapely.geometry import Polygon
 
+from app.nisar_extractor import NisarExtractor
 from app.nisar_extractor.geometry import from_bbox, from_geojson, from_wkt
 from app.nisar_extractor.harmony_service import HarmonyRunner, stable_request_key, validate_capabilities
 from app.nisar_extractor.models import ExtractionConfig, ProductRecord, parse_utc
@@ -117,6 +118,25 @@ class GeometryAndConfigTests(unittest.TestCase):
     def test_config_rejects_non_positive_limits(self):
         with self.assertRaises(ValueError):
             ExtractionConfig(max_output_bytes=0)
+
+    def test_discovery_limit_is_separate_from_extraction_limit(self):
+        config = ExtractionConfig()
+        self.assertEqual((config.max_discover_results, config.max_products), (200, 100))
+        with self.assertRaises(ValueError):
+            ExtractionConfig(max_discover_results=0)
+
+    def test_discover_accepts_200_results_and_rejects_more(self):
+        region = from_bbox([-105.01, 39.99, -104.99, 40.01])
+        with tempfile.TemporaryDirectory() as temp:
+            extractor = NisarExtractor(ExtractionConfig(output_dir=temp))
+            try:
+                with mock.patch.object(extractor.catalog, "discover", return_value="inventory") as discover:
+                    self.assertEqual(extractor.discover(region, start=None, stop=None, max_results=200), "inventory")
+                discover.assert_called_once()
+                with self.assertRaises(ValueError):
+                    extractor.discover(region, start=None, stop=None, max_results=201)
+            finally:
+                extractor.close()
 
 
 class CapabilityAndIdempotencyTests(unittest.TestCase):

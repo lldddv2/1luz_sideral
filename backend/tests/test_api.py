@@ -23,11 +23,32 @@ AOI = {
 }
 
 
+def make_product(product_id: str, properties: dict | None = None) -> ProductRecord:
+    return ProductRecord(
+        product_id=product_id,
+        producer_granule_id=product_id,
+        cmr_granule_id="G0000000-ASF",
+        collection_short_name="NISAR_L2_GCOV_V1",
+        collection_concept_id="C0000000-ASF",
+        product_type="GCOV",
+        processing_configuration="PR",
+        acquisition_start="2026-01-01T00:00:00Z",
+        acquisition_stop="2026-01-01T00:01:00Z",
+        geometry=AOI,
+        size_mb_cmr=12.5,
+        estimated_size_bytes=12_500_000,
+        variables=[{"name": VARIABLE, "concept_id": "V0000000-ASF"}],
+        properties=properties or {},
+    )
+
+
 class FakeExtractor:
     """Stands in for NisarExtractor. Never touches ASF, CMR or Harmony."""
 
     def __init__(self) -> None:
         self.extract_calls: list[dict] = []
+        self.discover_calls: list[int] = []  # max_results of each search
+        self.products: list[ProductRecord] | None = None  # None: discovery returns one fake product
 
     def discover(
         self,
@@ -40,25 +61,12 @@ class FakeExtractor:
         max_results=10,
         inventory_path=None,
     ):
-        product = ProductRecord(
-            product_id=PRODUCT_ID,
-            producer_granule_id=PRODUCT_ID,
-            cmr_granule_id="G0000000-ASF",
-            collection_short_name="NISAR_L2_GCOV_V1",
-            collection_concept_id="C0000000-ASF",
-            product_type=product_type,
-            processing_configuration=production_configuration,
-            acquisition_start=start,
-            acquisition_stop=stop,
-            geometry=region.geometry.__geo_interface__,
-            size_mb_cmr=12.5,
-            estimated_size_bytes=12_500_000,
-            variables=[{"name": VARIABLE, "concept_id": "V0000000-ASF"}],
-        )
+        self.discover_calls.append(max_results)
+        products = self.products if self.products is not None else [make_product(PRODUCT_ID)]
         inventory = Inventory(
-            query={"dataset": "NISAR", "result_count": 1},
+            query={"dataset": "NISAR", "result_count": len(products)},
             region=region_to_record(region),
-            products=[product],
+            products=products,
             queried_at_utc="2026-01-01T00:00:00Z",
         )
         if inventory_path:
@@ -125,6 +133,40 @@ def test_search_rejects_unknown_geojson_type(client):
     unknown = {"type": "Foo", "coordinates": []}
     response = client.post("/api/search", json=search_body(unknown))
     assert response.status_code == 422
+
+
+@pytest.mark.parametrize(("sent", "discovered"), [(None, 100), (1, 1), (10, 10), (200, 200)])
+def test_search_passes_max_results_to_discovery(client, fake_extractor, sent, discovered):
+    body = search_body()
+    if sent is not None:
+        body["max_results"] = sent
+    assert client.post("/api/search", json=body).status_code == 200
+    assert fake_extractor.discover_calls == [discovered]
+
+
+@pytest.mark.parametrize("max_results", [0, 201])
+def test_search_rejects_max_results_outside_1_to_200(client, fake_extractor, max_results):
+    response = client.post("/api/search", json={**search_body(), "max_results": max_results})
+    assert response.status_code == 422
+    assert fake_extractor.discover_calls == []
+
+
+def test_search_reports_track_direction_and_frame(client, fake_extractor):
+    asc_id = "NISAR_L2_PR_GCOV_034_091_A_022_4005_DHDH_A_20261030T120329_20261030T120404_P05036_N_F_J_001"
+    desc_id = "NISAR_L2_PR_GCOV_034_027_D_068_4005_DHDH_A_20261026T015715_20261026T015753_P05036_N_F_J_001"
+    fake_extractor.products = [
+        make_product(asc_id),
+        make_product(desc_id),
+        make_product("NISAR_FAKE_PRODUCT_002", {"pathNumber": 5, "flightDirection": "DESCENDING", "frameNumber": 9}),
+        make_product("NISAR_FAKE_PRODUCT_003"),
+    ]
+    products = client.post("/api/search", json=search_body()).json()["products"]
+    assert [(p["track"], p["direction"], p["frame"]) for p in products] == [
+        (91, "ascending", 22),  # from the product ID
+        (27, "descending", 68),  # from the product ID
+        (5, "descending", 9),  # no readable ID: from ASF properties
+        (None, None, None),  # neither source yields them
+    ]
 
 
 def test_job_runs_extract_in_background(client, fake_extractor):

@@ -12,6 +12,7 @@ class AOIRequest(BaseModel):
     )
     start: str = Field(description="ISO-8601 with timezone, e.g. 2025-08-01T00:00:00Z")
     end: str = Field(description="ISO-8601 with timezone, later than start")
+    max_results: int = Field(default=100, ge=1, le=200, description="Most products to return")
 
 
 class Product(BaseModel):
@@ -25,6 +26,9 @@ class Product(BaseModel):
     size_mb_cmr: float | None = None
     estimated_size_bytes: int | None = None
     variables: list[dict[str, str]] = Field(default_factory=list)
+    track: int | None = Field(default=None, description="Orbit track number; null when unreadable")
+    direction: Literal["ascending", "descending"] | None = None
+    frame: int | None = Field(default=None, description="Frame number; null when unreadable")
 
 
 class SearchResponse(BaseModel):
@@ -106,3 +110,46 @@ class EstimateResponse(BaseModel):
     full_granules_bytes: int | None = Field(
         default=None, description="Sum of CMR estimated_size_bytes (full HDF5) over inventory products"
     )
+
+
+class LandcoverRequest(BaseModel):
+    geometry: dict[str, Any] = Field(
+        description="GeoJSON Polygon or MultiPolygon (or Feature wrapping one), WGS84 lon/lat"
+    )
+
+
+class LandcoverMaskRequest(LandcoverRequest):
+    classes: list[str] = Field(
+        default_factory=list, description="Class keys to draw; empty draws every class"
+    )
+    max_px: int = Field(default=1024, ge=16, le=2048, description="Longest side of the PNG, in pixels")
+
+
+class LandcoverClass(BaseModel):
+    code: int
+    key: str
+    name: str = Field(description="Spanish label")
+    name_en: str = Field(description="ESA WorldCover legend label")
+    color: str = Field(description="Hex #rrggbb, ESA legend colour")
+
+
+class LandcoverClassStats(LandcoverClass):
+    pixels: int = Field(description="Native 10 m pixels; estimated when the grid is decimated")
+    area_km2: float
+    percent: float = Field(description="Share of total_km2")
+
+
+class LandcoverStats(BaseModel):
+    total_km2: float = Field(description="Area of classified pixels inside the AOI")
+    nodata_km2: float = Field(description="Area inside the AOI with no WorldCover class")
+    resolution_m: float = Field(description="Nominal pixel side used: 10 m times the decimation factor")
+    classes: list[LandcoverClassStats]
+
+
+class LandcoverMask(BaseModel):
+    bounds: list[list[float]] = Field(
+        description="[[west, north], [east, north], [east, south], [west, south]]"
+    )
+    width: int
+    height: int
+    png_base64: str = Field(description="RGBA PNG; unselected, nodata and outside-AOI pixels are transparent")

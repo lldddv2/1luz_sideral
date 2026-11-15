@@ -1,0 +1,6 @@
+{
+  "datetime": "2021-01-01T00:00:00Z",
+  "label": "Copernicus DEM 90m — CDMX",
+  "sensor": "Copernicus DEM GLO-90",
+  "notes": "DEM, not SAR. The date is an example placeholder for testing the timeline."
+}

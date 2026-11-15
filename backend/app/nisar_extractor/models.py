@@ -90,6 +90,8 @@ class ExtractionConfig:
     output_dir: str = "nisar_output"
     max_area_km2: float = 500_000.0
     max_products: int = 100
+    # Bounds one discovery search; kept apart from max_products, which bounds extraction.
+    max_discover_results: int = 200
     max_output_bytes: int = 64 * 1024 * 1024
     max_concurrent: int = 2
     max_attempts: int = 2
@@ -104,6 +106,7 @@ class ExtractionConfig:
         positive = {
             "max_area_km2": self.max_area_km2,
             "max_products": self.max_products,
+            "max_discover_results": self.max_discover_results,
             "max_output_bytes": self.max_output_bytes,
             "max_concurrent": self.max_concurrent,
             "max_attempts": self.max_attempts,

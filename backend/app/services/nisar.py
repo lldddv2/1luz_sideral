@@ -6,10 +6,14 @@ from typing import Any
 
 from shapely.errors import ShapelyError
 
-from app.nisar_extractor import Inventory, NisarExtractor
+from app.nisar_extractor import Inventory, NisarExtractor, ProductRecord
 
 # Inventory IDs are uuid4 hex; validating them keeps client input out of file paths.
 _INVENTORY_ID = re.compile(r"[0-9a-f]{32}")
+# NISAR_L2_PR_GCOV_<cycle>_<track>_<A|D>_<frame>_..., e.g. NISAR_L2_PR_GCOV_034_091_A_022_4005_...
+_ID_ORBIT = re.compile(r"NISAR_L\d_[A-Z]{2}_[A-Z0-9]+_\d{3}_(\d{3})_([AD])_(\d{3})_")
+_DIRECTION_BY_CODE = {"A": "ascending", "D": "descending"}
+_DIRECTION_BY_WORD = {"ASCENDING": "ascending", "DESCENDING": "descending"}
 
 
 class InvalidGeometryError(ValueError):
@@ -28,6 +32,7 @@ def search(
     geometry: dict[str, Any],
     start: str,
     end: str,
+    max_results: int = 100,
 ) -> tuple[str, Inventory]:
     """Discover GCOV PR products over the AOI and save the inventory JSON. Downloads nothing."""
     try:
@@ -41,10 +46,34 @@ def search(
         stop=end,
         product_type="GCOV",
         production_configuration="PR",
-        max_results=10,
+        max_results=max_results,
         inventory_path=_inventory_path(inventories_dir, inventory_id),
     )
     return inventory_id, inventory
+
+
+def _whole_number(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def orbit_fields(product: ProductRecord) -> dict[str, Any]:
+    """Track, direction and frame of a product. The product ID is read first, then ASF properties.
+
+    Each value is None when neither source yields it.
+    """
+    match = _ID_ORBIT.match(product.product_id)
+    if match:
+        track, code, frame = match.groups()
+        return {"track": int(track), "direction": _DIRECTION_BY_CODE[code], "frame": int(frame)}
+    props = product.properties
+    return {
+        "track": _whole_number(props.get("pathNumber")),
+        "direction": _DIRECTION_BY_WORD.get(str(props.get("flightDirection") or "").upper()),
+        "frame": _whole_number(props.get("frameNumber")),
+    }
 
 
 def load_inventory(inventories_dir: Path, inventory_id: str) -> Inventory:

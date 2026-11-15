@@ -12,7 +12,7 @@ router = APIRouter(tags=["search"])
 def search(body: AOIRequest, extractor: ExtractorDep, inventories_dir: InventoriesDirDep) -> SearchResponse:
     try:
         inventory_id, inventory = nisar.search(
-            extractor, inventories_dir, body.geometry, body.start, body.end
+            extractor, inventories_dir, body.geometry, body.start, body.end, body.max_results
         )
     except nisar.InvalidGeometryError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
@@ -20,5 +20,8 @@ def search(body: AOIRequest, extractor: ExtractorDep, inventories_dir: Inventori
         raise HTTPException(status_code=400, detail=str(error)) from error
     return SearchResponse(
         inventory_id=inventory_id,
-        products=[Product.model_validate(product.to_dict()) for product in inventory.products],
+        products=[
+            Product.model_validate({**product.to_dict(), **nisar.orbit_fields(product)})
+            for product in inventory.products
+        ],
     )
