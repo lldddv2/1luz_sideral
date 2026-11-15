@@ -26,7 +26,7 @@ import type { AoiPolygon, DrawMode } from '../types'
 import type { AdminLevel } from '../regions'
 import type { RegionPicker } from '../useRegionPicker'
 import type { DownloadController, RunPhase, RunState } from '../useDownload'
-import { MAX_SEARCH_PRODUCTS, POLL_MS, POLS, fileUrl, formatKm2, warningsFor } from '../download'
+import { MAX_SEARCH_PRODUCTS, POLL_MS, POLS, fileUrl, formatKm2, warningsFor, yesterdayIso } from '../download'
 import { BASEMAPS } from '../basemaps'
 import type { BasemapId } from '../basemaps'
 
@@ -209,8 +209,15 @@ function NisarSection() {
           Rango de fechas
         </label>
         <div className="field-row">
-          <input id="nisar-start" className="input" type="date" disabled aria-label="Fecha inicial" />
-          <input className="input" type="date" disabled aria-label="Fecha final" />
+          <input
+            id="nisar-start"
+            className="input"
+            type="date"
+            disabled
+            aria-label="Fecha inicial"
+            max={yesterdayIso()}
+          />
+          <input className="input" type="date" disabled aria-label="Fecha final" max={yesterdayIso()} />
         </div>
       </div>
       <div className="field">
@@ -398,6 +405,8 @@ function DownloadSection({ download }: { download: DownloadController }) {
   const warnings = estimate ? warningsFor(estimate) : []
   // Until the search fixes the product count, size is for one product.
   const perProduct = run.productCount === null
+  // No date after yesterday, the same limit useDownload.setDates enforces.
+  const latest = yesterdayIso()
   return (
     <>
       {area ? (
@@ -416,6 +425,7 @@ function DownloadSection({ download }: { download: DownloadController }) {
             type="date"
             aria-label="Fecha inicial"
             value={params.start}
+            max={params.end && params.end < latest ? params.end : latest}
             onChange={(e) => setDates({ start: e.target.value })}
           />
           <input
@@ -423,6 +433,8 @@ function DownloadSection({ download }: { download: DownloadController }) {
             type="date"
             aria-label="Fecha final"
             value={params.end}
+            min={params.start || undefined}
+            max={latest}
             onChange={(e) => setDates({ end: e.target.value })}
           />
         </div>

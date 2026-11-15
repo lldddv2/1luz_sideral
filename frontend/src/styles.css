@@ -882,7 +882,7 @@ select {
   top: 14px;
   left: 14px;
   z-index: 5;
-  width: 380px;
+  width: 640px;
   border: 1px solid var(--border);
   border-radius: 22px;
   background: var(--overlay);
@@ -906,7 +906,14 @@ select {
   box-shadow: var(--shadow-lg);
 }
 
+.search-top {
+  display: flex;
+  align-items: center;
+}
+
 .search-form {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1001,6 +1008,63 @@ select {
 .search-submit:disabled {
   cursor: default;
   opacity: 0.35;
+}
+
+/* Download date range, shared with the sidebar: a compact row under the search form. */
+.search-dates {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  margin-right: 6px;
+  padding: 0 4px 0 12px;
+  border-left: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.search-dates > svg,
+.search-dates-sep {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+.search-date {
+  width: 112px;
+  height: 28px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.search-date:hover {
+  background: var(--surface-2);
+}
+
+.search-date::-webkit-calendar-picker-indicator {
+  margin-left: 2px;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.search-date:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.search-dates.is-invalid .search-date {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .search-results {

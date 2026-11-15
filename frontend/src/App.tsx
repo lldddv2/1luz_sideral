@@ -98,6 +98,9 @@ export default function App() {
           flyToBbox={flyTo}
         />
         <SearchBar
+          start={download.params.start}
+          end={download.params.end}
+          onDatesChange={download.setDates}
           onPreview={(r) => {
             setPreview(r)
             setFlyTo((prev) => ({ bbox: r.bbox, key: (prev?.key ?? 0) + 1 }))

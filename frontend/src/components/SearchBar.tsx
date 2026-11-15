@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, MapPin, Plus, Search, X } from 'lucide-react'
+import { CalendarDays, Loader2, MapPin, Plus, Search, X } from 'lucide-react'
 import { searchPlaces } from '../nominatim'
 import type { PlaceResult } from '../nominatim'
+import { yesterdayIso } from '../download'
 
 interface Props {
+  start: string // YYYY-MM-DD, the download range shared with the sidebar
+  end: string // YYYY-MM-DD, the download range shared with the sidebar
+  onDatesChange: (patch: { start?: string; end?: string }) => void
   onPreview: (result: PlaceResult) => void // fly to the result; draw its outline if it has one
   onAdd: (result: PlaceResult) => void // add the result as a region shape
 }
@@ -25,7 +29,7 @@ const sleep = (ms: number, signal: AbortSignal) =>
     )
   })
 
-export default function SearchBar({ onPreview, onAdd }: Props) {
+export default function SearchBar({ start, end, onDatesChange, onPreview, onAdd }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<PlaceResult[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -92,6 +96,12 @@ export default function SearchBar({ onPreview, onAdd }: Props) {
     }
   }
 
+  // Same date limits as the sidebar: no date after yesterday; the start may not pass the end.
+  const latest = yesterdayIso()
+  const startMax = end && end < latest ? end : latest
+  // Same rule as datesOk in useDownload.
+  const datesOk = start !== '' && end !== '' && start <= end
+
   return (
     <div
       ref={root}
@@ -102,6 +112,7 @@ export default function SearchBar({ onPreview, onAdd }: Props) {
         e.stopPropagation()
       }}
     >
+      <div className="search-top">
       <form
         className="search-form"
         onSubmit={(e) => {
@@ -133,6 +144,30 @@ export default function SearchBar({ onPreview, onAdd }: Props) {
           <Search size={15} />
         </button>
       </form>
+      <div className={`search-dates${datesOk ? '' : ' is-invalid'}`}>
+        <CalendarDays size={16} aria-hidden="true" />
+        <input
+          className="search-date"
+          type="date"
+          aria-label="Fecha inicial"
+          aria-invalid={!datesOk}
+          max={startMax}
+          value={start}
+          onChange={(e) => onDatesChange({ start: e.target.value })}
+        />
+        <span className="search-dates-sep" aria-hidden="true">–</span>
+        <input
+          className="search-date"
+          type="date"
+          aria-label="Fecha final"
+          aria-invalid={!datesOk}
+          min={start || undefined}
+          max={latest}
+          value={end}
+          onChange={(e) => onDatesChange({ end: e.target.value })}
+        />
+      </div>
+      </div>
       {open && (loading || error || results) && (
         <ul className="search-results">
           {loading && <li className="search-status">Buscando…</li>}

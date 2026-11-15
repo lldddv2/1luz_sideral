@@ -12,7 +12,7 @@ import {
   fetchJob,
   messageOf,
   searchProducts,
-  todayIso,
+  yesterdayIso,
 } from './download'
 import type { Pol } from './download'
 
@@ -38,7 +38,7 @@ const IDLE: RunState = { phase: 'idle', message: null, inventoryId: null, produc
 export function useDownload(area: AoiPolygon | null) {
   const [params, setParams] = useState<DownloadParams>(() => ({
     start: DEFAULT_START,
-    end: todayIso(),
+    end: yesterdayIso(),
     pols: ['HH'],
   }))
   const [run, setRun] = useState<RunState>(IDLE)
@@ -120,8 +120,16 @@ export function useDownload(area: AoiPolygon | null) {
       return next.length === 0 ? prev : { ...prev, pols: POLS.filter((p) => next.includes(p)) }
     })
 
-  const setDates = (patch: Partial<Pick<DownloadParams, 'start' | 'end'>>) =>
-    setParams((prev) => ({ ...prev, ...patch }))
+  // Dates never pass yesterday: a later one is clamped to it. Sidebar and search bar both write here.
+  const setDates = (patch: Partial<Pick<DownloadParams, 'start' | 'end'>>) => {
+    const latest = yesterdayIso()
+    const cap = (date: string | undefined) => (date !== undefined && date > latest ? latest : date)
+    setParams((prev) => ({
+      ...prev,
+      start: cap(patch.start) ?? prev.start,
+      end: cap(patch.end) ?? prev.end,
+    }))
+  }
 
   const busy = run.phase === 'searching' || run.phase === 'queued' || run.phase === 'running'
   const datesOk = params.start !== '' && params.end !== '' && params.start <= params.end
