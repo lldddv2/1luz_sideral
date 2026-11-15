@@ -15,7 +15,7 @@ import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } f
 import type { XY } from '../editing'
 import { TOOLS } from './Sidebar'
 import { addProtocol } from 'maplibre-gl'
-import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, nisarDate, nisarFootprints, overlayTiles, preloadAround, registerNisarProtocol } from '../layers'
+import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, nisarDate, nisarFootprints, overlayTiles, preloadAround, registerNisarProtocol, takeFailedTiles } from '../layers'
 import type { OverlayId, OverlayState, PreloadLayer } from '../layers'
 
 // Overlay tile failures (e.g. GIBS hiccups) are expected; keep them out of the console.
@@ -173,7 +173,7 @@ export default function MapView({
       live = false
     }
   }, [showFoot, footView, footDate])
-  // Neighbour-zoom preload: 300 ms after the map settles, fetch raw tiles for z-1 and z+1.
+  // Tile preload: 300 ms after the map settles, fetch raw tiles around the view, then z-1 and z+1.
   const dswx = overlays.dswx
   useEffect(() => {
     const map = mapRef.current?.getMap()
@@ -182,7 +182,7 @@ export default function MapView({
     if (nisar.on) layers.push({ id: 'nisar', date: nisar.date, dirs: nisarDirs })
     if (dswx.on) layers.push({ id: 'dswx', date: dswx.date })
     if (!layers.length) return
-    const t = setTimeout(() => preloadAround(map.getZoom(), footView, layers), 300)
+    const t = setTimeout(() => void preloadAround(map.getZoom(), footView, layers), 300)
     return () => {
       clearTimeout(t)
       cancelPreload()
@@ -651,6 +651,12 @@ export default function MapView({
         if (!src || !OVERLAY_SOURCES.has(src)) console.error(e.error)
       }}
       onMoveEnd={reportView}
+      onIdle={(e) => {
+        // Overlay tiles that failed (GIBS/CMR errors) are refetched once the map is idle; only
+        // tiles still in view are reloaded.
+        for (const { id, tiles } of takeFailedTiles())
+          if (e.target.getSource(`ov-${id}`)) e.target.refreshTiles(`ov-${id}`, tiles)
+      }}
       interactiveLayerIds={
         mode === 'region'
           ? // Only layers that exist can be queried; subdivisions sit above countries.
@@ -743,7 +749,9 @@ export default function MapView({
               }
             : { 'raster-opacity': imgOpacity, 'raster-fade-duration': 100 }
         return (
-          <Fragment key={`${id}-${url}`}>
+          // Keyed by layer only: a new tile URL (date, mode, passes) goes through setTiles, so the
+          // old tiles stay on screen until the new ones load.
+          <Fragment key={id}>
           {mode && showFoot && (
             <Source id="ov-nisar-outline" type="geojson" data={nisarFoot}>
               <Layer
@@ -761,7 +769,6 @@ export default function MapView({
             </Source>
           )}
           <Source
-            key={`${id}-${url}`}
             id={`ov-${id}`}
             type="raster"
             tiles={[url]}

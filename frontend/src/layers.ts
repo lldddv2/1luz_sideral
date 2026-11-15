@@ -237,8 +237,10 @@ async function fixGibsPng(b: Uint8Array): Promise<Uint8ClampedArray | 'native' |
 
 // Raw GIBS tile per URL, kept as served: compressed PNG Blob, RGBA for a recovered NISAR tile,
 // or null when missing. Decoded on use, so the cache can hold neighbour zooms (see preloadAround).
-// LRU bounded by bytes.
-type Raw = Blob | Uint8ClampedArray | null
+// LRU bounded by bytes. FAIL marks a fetch that gave up (network error, 5xx, broken PNGs): it is
+// not cached, unlike null, which means GIBS really has no tile there.
+const FAIL = 'fail'
+type Raw = Blob | Uint8ClampedArray | null | typeof FAIL
 interface Entry {
   p: Promise<Raw>
   bytes: number
@@ -315,17 +317,18 @@ function loadRaw(url: string, fix: boolean, pre: boolean): Promise<Raw> {
     try {
       if (fix) return await nisarBlob(url)
       const res = await fetch(url)
+      if (res.status >= 500) throw new Error(`gibs ${res.status}`)
       if (!res.ok || !(res.headers.get('content-type') ?? 'image/').startsWith('image/')) return null
       return await res.blob()
     } catch {
       if (cache.get(url) === e) cache.delete(url) // failures are retried on the next request
-      return null
+      return FAIL
     } finally {
       if (!pre) visiblePending--
     }
   })()
   void e.p.then((r) => {
-    if (cache.get(url) !== e || !r) return
+    if (cache.get(url) !== e || !r || r === FAIL) return
     e.bytes = r instanceof Blob ? r.size : r.byteLength
     cacheBytes += e.bytes
     evict()
@@ -336,7 +339,7 @@ function loadRaw(url: string, fix: boolean, pre: boolean): Promise<Raw> {
 }
 
 // Decoded RGBA of a GIBS tile (decoded on every call; only compressed bytes are cached).
-async function rawTile(url: string, fix = false): Promise<Uint8ClampedArray | null> {
+async function rawTile(url: string, fix = false): Promise<Uint8ClampedArray | null | typeof FAIL> {
   const r = await loadRaw(url, fix, false)
   if (!(r instanceof Blob)) return r
   try {
@@ -351,12 +354,15 @@ async function rawTile(url: string, fix = false): Promise<Uint8ClampedArray | nu
   }
 }
 
-// Neighbour-zoom preload (like chunk preloading in games): after the map settles, the raw GIBS
-// tiles of zoom z-1 (whole view) and z+1 (central part of the view) are fetched into the cache,
-// so a zoom step only has to composite. PRELOAD_POOL fetches run at a time, only while no visible
-// tile is loading, and the queue is dropped at the next map move.
-const PRELOAD_POOL = 2
-const PRELOAD_MAX = 200 // GETs per idle
+// Tile preload (like chunk render distance in games): after the map settles, raw GIBS tiles are
+// fetched into the cache in this order: a ring of PRELOAD_RING tiles around the view at the
+// current zoom (panning), z-1 over the whole view (zooming out), z+1 over the central part of the
+// view (zooming in). Visible tiles always go first: MapLibre loads them, and preload workers wait
+// while any is pending. The PRELOAD_MAX budget is shared round-robin between layers, so with
+// NISAR and DSWx on each gets half. The queue is dropped at the next map move.
+const PRELOAD_POOL = 4
+const PRELOAD_MAX = 300 // GETs per idle, all layers together
+const PRELOAD_RING = 1 // tiles around the view at the current zoom (2 roughly doubles the cost)
 const PRELOAD_INNER = 0.5 // share of the view area preloaded at z+1
 let preloadGen = 0
 
@@ -364,17 +370,26 @@ export interface PreloadLayer {
   id: 'nisar' | 'dswx'
   date: string
   dirs?: string // NISAR 'AD' | 'A' | 'D' | 'N'
+  fps?: NisarFootprint[] | null // NISAR: only days with a pass over the tile are preloaded
+}
+
+// Preload level: 0 = ring at the current zoom, 1 = z-1, 2 = z+1 (also the priority order).
+export interface PreloadUrl {
+  url: string
+  fix: boolean
+  lvl: 0 | 1 | 2
+  layer: PreloadLayer['id']
 }
 
 // GIBS URLs to preload for a view (map zoom + lon/lat box [w, s, e, n]), capped at PRELOAD_MAX:
-// z-1 first (few tiles, needed to zoom out), then z+1; nearest the view centre first in each.
+// per layer by level, nearest the view centre first; layers interleaved.
 export function preloadUrls(
   zoom: number,
   [w, s, e, n]: [number, number, number, number],
   layers: PreloadLayer[],
-): { url: string; fix: boolean }[] {
+): PreloadUrl[] {
   const zr = Math.round(zoom) // raster sources pick tiles at the rounded zoom
-  const out: { url: string; fix: boolean; d: number; lvl: number }[] = []
+  const perLayer: PreloadUrl[][] = []
   for (const l of layers) {
     const nisar = l.id === 'nisar'
     if (nisar && l.dirs === 'N') continue
@@ -382,12 +397,16 @@ export function preloadUrls(
     const maxz = OVERLAYS[l.id].maxzoom
     const tpl = nisar ? NISAR_GIBS : DSWX_GIBS
     const dates = nisar ? mosaicDates(l.date) : dswxDates(l.date)
-    for (const [lvl, area] of [
-      [zr - 1, 1],
-      [zr + 1, PRELOAD_INNER],
-    ]) {
-      const z = Math.min(lvl, maxz) // past maxzoom the source overzooms its last level
-      if (z === Math.min(zr, maxz) || z < minz) continue
+    const zc = Math.min(zr, maxz) // past maxzoom the source overzooms its last level
+    const out: (PreloadUrl & { d: number })[] = []
+    const levels: [0 | 1 | 2, number, number][] = [
+      [0, zr, 1],
+      [1, zr - 1, 1],
+      [2, zr + 1, PRELOAD_INNER],
+    ]
+    for (const [lvl, zl, area] of levels) {
+      const z = Math.min(zl, maxz)
+      if ((lvl > 0 && z === zc) || z < minz) continue
       const k = Math.sqrt(area) // shrink the box around its centre (tile units) to the area share
       const cx = (lonX(w, z) + lonX(e, z)) / 2
       const cy = (latY(n, z) + latY(s, z)) / 2
@@ -395,21 +414,32 @@ export function preloadUrls(
       const hy = ((latY(s, z) - latY(n, z)) / 2) * k
       const last = 2 ** z - 1
       const c = (v: number) => Math.max(0, Math.min(last, Math.floor(v)))
-      for (let x = c(cx - hx); x <= c(cx + hx - 1e-9); x++)
-        for (let y = c(cy - hy); y <= c(cy + hy - 1e-9); y++) {
+      // Visible tile range; the ring level takes only the tiles around it.
+      const x0 = c(cx - hx)
+      const x1 = c(cx + hx - 1e-9)
+      const y0 = c(cy - hy)
+      const y1 = c(cy + hy - 1e-9)
+      const r = lvl === 0 ? PRELOAD_RING : 0
+      for (let x = Math.max(0, x0 - r); x <= Math.min(last, x1 + r); x++)
+        for (let y = Math.max(0, y0 - r); y <= Math.min(last, y1 + r); y++) {
+          if (lvl === 0 && x >= x0 && x <= x1 && y >= y0 && y <= y1) continue
           const d = (x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2
+          const [tw, ts, te, tn] = tileBounds(z, x, y)
+          const fps = l.fps?.filter((f) => f.bbox[0] <= te && f.bbox[2] >= tw && f.bbox[1] <= tn && f.bbox[3] >= ts)
           for (const t of dates) {
+            if (fps && !fps.some((f) => f.date === t)) continue // GIBS serves a blank tile there
             const url = tpl.replace('{time}', t).replace('{z}', String(z)).replace('{y}', String(y)).replace('{x}', String(x))
-            out.push({ url, fix: nisar, d, lvl: lvl < zr ? 0 : 1 })
+            out.push({ url, fix: nisar, lvl, layer: l.id, d })
           }
         }
     }
+    out.sort((a, b) => a.lvl - b.lvl || a.d - b.d)
+    perLayer.push(out.filter((u) => !cache.has(u.url)).map(({ url, fix, lvl, layer }) => ({ url, fix, lvl, layer })))
   }
-  out.sort((a, b) => a.lvl - b.lvl || a.d - b.d)
-  return out
-    .filter((u) => !cache.has(u.url))
-    .slice(0, PRELOAD_MAX)
-    .map(({ url, fix }) => ({ url, fix }))
+  const res: PreloadUrl[] = []
+  for (let i = 0; res.length < PRELOAD_MAX && perLayer.some((q) => i < q.length); i++)
+    for (const q of perLayer) if (i < q.length && res.length < PRELOAD_MAX) res.push(q[i])
+  return res
 }
 
 // Drops queued preloads; in-flight ones finish and stay cached.
@@ -417,9 +447,21 @@ export function cancelPreload() {
   preloadGen++
 }
 
-export function preloadAround(zoom: number, view: [number, number, number, number], layers: PreloadLayer[]) {
+export async function preloadAround(zoom: number, view: [number, number, number, number], layers: PreloadLayer[]) {
   const gen = ++preloadGen
-  const queue = preloadUrls(zoom, view, layers)
+  // NISAR passes over the view plus a margin (z-1 tiles and the ring reach past it); a CMR
+  // failure just means every day is preloaded.
+  const [w, s, e, n] = view
+  const mx = (e - w) / 2
+  const my = (n - s) / 2
+  const box: [number, number, number, number] = [Math.max(-180, w - mx), Math.max(-85, s - my), Math.min(180, e + mx), Math.min(85, n + my)]
+  const withFps = await Promise.all(
+    layers.map(async (l) =>
+      l.id === 'nisar' && l.dirs !== 'N' ? { ...l, fps: await nisarFootprints(box, l.date).catch(() => null) } : l,
+    ),
+  )
+  if (gen !== preloadGen) return
+  const queue = preloadUrls(zoom, view, withFps)
   console.debug(
     `preload z${Math.round(zoom)}: ${queue.length} GET; cache ${cache.size} tiles, ${(cacheBytes / 1048576).toFixed(1)} MB; preload hits ${stats.hit}/${stats.req}`,
   )
@@ -604,9 +646,10 @@ function footMask(fps: NisarFootprint[], z: number, x: number, y: number): Uint8
   return m
 }
 
-// Keeps one day's pixels from the wanted direction. The day is dropped when no wanted pass
-// touches the tile; when both directions do, pixels inside an other-direction footprint and
+// Keeps one day's pixels from the wanted direction. The day is dropped when only other-direction
+// passes touch the tile; when both directions do, pixels inside an other-direction footprint and
 // outside every wanted one are cleared (footprint edges are approximate, so the rest is kept).
+// A day with pixels but no footprint at all (granule missing from CMR) is kept unfiltered.
 function clipDay(
   t: Uint8ClampedArray,
   fps: NisarFootprint[],
@@ -620,6 +663,7 @@ function clipDay(
   const hit = fps.filter((f) => f.date === date && f.bbox[0] <= e && f.bbox[2] >= w && f.bbox[1] <= n && f.bbox[3] >= s)
   const wanted = hit.filter((f) => f.dir === want)
   const other = hit.filter((f) => f.dir !== want)
+  if (!hit.length) return t
   if (!wanted.length) return null
   if (!other.length) return t
   const mw = footMask(wanted, z, x, y)
@@ -629,15 +673,71 @@ function clipDay(
   return out
 }
 
+// Tiles built with failed GIBS/CMR fetches, per overlay ("z/x/y"), waiting for a retry at the
+// next map idle (see takeFailedTiles). A tile is retried at most RETRY_MAX times.
+const RETRY_MAX = 3
+const failed: Record<'nisar' | 'dswx', Set<string>> = { nisar: new Set(), dswx: new Set() }
+const retries = new Map<string, number>()
+
+function noteFailed(id: 'nisar' | 'dswx', z: string, x: string, y: string) {
+  const k = `${z}/${x}/${y}`
+  if (failed[id].has(k)) return // already queued for this attempt
+  const n = retries.get(`${id}/${k}`) ?? 0
+  if (n >= RETRY_MAX) return
+  retries.set(`${id}/${k}`, n + 1)
+  failed[id].add(k)
+}
+
+// Drains the tiles waiting for a retry, as {z, x, y} per overlay id.
+export function takeFailedTiles(): { id: 'nisar' | 'dswx'; tiles: { z: number; x: number; y: number }[] }[] {
+  const out: { id: 'nisar' | 'dswx'; tiles: { z: number; x: number; y: number }[] }[] = []
+  for (const id of ['nisar', 'dswx'] as const) {
+    if (!failed[id].size) continue
+    out.push({
+      id,
+      tiles: [...failed[id]].map((k) => {
+        const [z, x, y] = k.split('/').map(Number)
+        return { z, x, y }
+      }),
+    })
+    failed[id].clear()
+  }
+  return out
+}
+
+// Turns FAIL day tiles into null. Throws when something failed and nothing usable came back, so
+// MapLibre marks the tile errored instead of keeping a blank one forever; a partial result is
+// kept but queued for a retry.
+function settleDays(
+  id: 'nisar' | 'dswx',
+  tiles: (Uint8ClampedArray | null | typeof FAIL)[],
+  z: string,
+  x: string,
+  y: string,
+): (Uint8ClampedArray | null)[] {
+  const bad = tiles.filter((t) => t === FAIL).length
+  const ok = tiles.map((t) => (t === FAIL ? null : t))
+  if (!bad) return ok
+  noteFailed(id, z, x, y)
+  if (!ok.some((t) => t)) throw new Error(`${id}: ${bad} day tiles failed`)
+  return ok
+}
+
 async function mosaicTile(mode: NisarMode, date: string, dirs: string, z: string, x: string, y: string): Promise<ArrayBuffer> {
   if (dirs === 'N') return emptyTile()
   const dates = mosaicDates(date)
-  const [tiles, fps] = await Promise.all([
+  const [days, fps] = await Promise.all([
     Promise.all(
       dates.map((d) => rawTile(NISAR_GIBS.replace('{time}', d).replace('{z}', z).replace('{y}', y).replace('{x}', x), true)),
     ),
-    dirs === 'A' || dirs === 'D' ? nisarFootprints(tileBounds(+z, +x, +y), date).catch(() => null) : null,
+    dirs === 'A' || dirs === 'D'
+      ? nisarFootprints(tileBounds(+z, +x, +y), date).catch(() => {
+          noteFailed('nisar', z, x, y) // shown unfiltered for now
+          return null
+        })
+      : null,
   ])
+  const tiles = settleDays('nisar', days, z, x, y)
   // One direction: clip each day to that direction's footprints (CMR failure = unfiltered).
   if (fps) tiles.forEach((t, i) => (tiles[i] = t && clipDay(t, fps, dates[i], dirs as NisarDir, +z, +x, +y)))
   const n = SIZE * SIZE
@@ -753,8 +853,14 @@ function dswxRank(t: Uint8ClampedArray, k: number): number {
 // Newest real class wins, masked pixels only fill leftovers; class colors are copied unchanged
 // and only alpha is feathered at coverage edges.
 async function dswxTile(date: string, z: string, x: string, y: string): Promise<ArrayBuffer> {
-  const tiles = await Promise.all(
-    dswxDates(date).map((d) => rawTile(DSWX_GIBS.replace('{time}', d).replace('{z}', z).replace('{y}', y).replace('{x}', x))),
+  const tiles = settleDays(
+    'dswx',
+    await Promise.all(
+      dswxDates(date).map((d) => rawTile(DSWX_GIBS.replace('{time}', d).replace('{z}', z).replace('{y}', y).replace('{x}', x))),
+    ),
+    z,
+    x,
+    y,
   )
   const n = SIZE * SIZE
   const out = new Uint8ClampedArray(n * 4)
@@ -778,7 +884,8 @@ async function dswxTile(date: string, z: string, x: string, y: string): Promise<
   return (await c.convertToBlob({ type: 'image/png' })).arrayBuffer()
 }
 
-// Registers nisar://{mode}/{date}/{dirs}/{z}/{x}/{y} once; errors resolve to an empty tile.
+// Registers nisar://{mode}/{date}/{dirs}/{z}/{x}/{y} and dswx://{date}/{z}/{x}/{y} once. Errors
+// propagate, so MapLibre marks the tile errored (a blank tile would never be refetched).
 export function registerNisarProtocol(add: (name: string, fn: (p: { url: string }, ac: AbortController) => Promise<{ data: ArrayBuffer }>) => void) {
   if (protocolAdded) return
   protocolAdded = true
@@ -787,8 +894,8 @@ export function registerNisarProtocol(add: (name: string, fn: (p: { url: string 
     try {
       return { data: await mosaicTile(mode === 'color' ? mode : 'water', date, dirs, z, x, y) }
     } catch (e) {
-      if (ac.signal.aborted) throw e
-      return { data: await emptyTile() }
+      if (!ac.signal.aborted) noteFailed('nisar', z, x, y)
+      throw e
     }
   })
   add(DSWX_PROTOCOL, async (params, ac) => {
@@ -796,8 +903,8 @@ export function registerNisarProtocol(add: (name: string, fn: (p: { url: string 
     try {
       return { data: await dswxTile(date, z, x, y) }
     } catch (e) {
-      if (ac.signal.aborted) throw e
-      return { data: await emptyTile() }
+      if (!ac.signal.aborted) noteFailed('dswx', z, x, y)
+      throw e
     }
   })
 }
