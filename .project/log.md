@@ -1,5 +1,13 @@
 # 錄（倒序）
 
+- 2026-11-14 claude: Descarga 節常現；無區示註（Selecciona o dibuja un área…）、鈕禁，有區同前。因：用戶（協調者）令。原僅有區現，今改。
+- 2026-11-14 claude: 去估時全：後端 /api/estimate 之 estimated_seconds、其常數、測、assumptions 時句；前端 Tiempo 列與時閾。因：用戶（協調者）令。警閾唯 500 MB、2500 km²。「加 Descarga 節」條之時模句作廢。
+- 2026-11-14 claude: 加 Descarga 節（前端）、/api/estimate 之 estimated_seconds、GET /api/jobs/{id}/files/{i}（Job 增 files）。因：用戶求。時模：143 s + 127 s × 品（bench_extract.json 之 6 品×2 變 906.8 s；單品 4–5 分，用戶言），不計變數與面積。搜前估單品，搜後估搜得品數。區取列末（無選取態）。實測 Boulder 小矩：搜、job（約 4.5 分）、檔連結、404 皆通；空窗示「Sin datos」；大區警現。見缺：harmony_service 輸出名不含 request_key，同品同變異區重用舊檔（job cfeb2592…：reused=true，80×105，非所選區）；masked 亦由舊檔生。未 commit。
+- 2026-11-14 claude: main 同步：本 commit 後端 rebase 於 origin/main（Santix555：側欄、底圖、搜改；notebooks/santiago 基準）。無衝突。pytest 41 過，tsc 過。未 push：https 無認證，無 gh。
+- 2026-11-14 claude: search 遇未知 GeoJSON type 得 422，非 500。因：shapely 拋 GeometryTypeError（屬 ShapelyError，非 ValueError）。nisar.search 捕 ShapelyError 轉 InvalidGeometryError（ValueError 子），路由轉 422，餘 ValueError 仍 400；限解析段，免上游 CMR 幾何誤作 422。jobs 無客幾何，未改。{} 或 type 非串仍 500（AttributeError，出自 nisar_extractor，未觸）。pytest 41 過。
+- 2026-11-14 claude: 後端 Earthdata 認證改用 .env 之 EARTHDATA_USERNAME/PASSWORD（皆設則傳 harmony Client auth；半設忽略，落回 NETRC、~/.netrc）。因：舊唯 netrc，.env 之設未用。asf/CMR 仍匿名（公開數據）。實網（HOME 空、無 NETRC、臨時 DATA_DIR）：search 得 10 品；20261030 HHHH job done，GeoTIFF 80x105 35KB。pytest 23 過。
+- 2026-11-14 claude: 加 /api/estimate（算子集大小，不觸網）。因：下載前估量。實測 AOI：ceil 得 82×107，實窗 80×105（全像內部取整）；LZW 未計，2048 B 為擬合。
+- 2026-11-14 claude: 搭 FastAPI 骨架於支 backend（haiku 作，主線驗）：/api/health、/api/search（返 inventory_id+品）、/api/jobs（BackgroundTasks 行 extract）。nisar_extractor 複入 backend/app（不移，jose 仍用）。實測真網：search 得 GCOV 20261030；job done，HHHH GeoTIFF 80x105 35KB。pytest 19 過。認證唯 ~/.netrc，.env 之 EARTHDATA_USERNAME/PASSWORD 未用。job 表存記憶體，重啟失。
 - 2026-11-14 claude: 鈕加圖示（lucide-react）。用戶求。
 - 2026-11-14 claude: 立前端則：鈕皆附圖示（frontend-rules.md）。用戶求。
 - 2026-11-14 claude: 試 jose 之 NISAR 抽取器成。EDL netrc 通；search 得 GCOV PR 一顆（20261030）；extract HHHH GeoTIFF 80x105 EPSG:32613 35KB，job 2942e152。未下 h5。

@@ -2,6 +2,10 @@
 
 @AGENTS.md
 
+## Claude 專則：主線常空
+- 黑客松：主線唯答問、派工、讀報。實作、測試、實網驗、瀏覽器驗、`.project/` 記錄皆派後台子代理（run_in_background）。
+- 主線工具呼叫逾二三即派。
+
 ## Claude 專則：模型派遣
 - 序：`haiku`（effort max）先作 → `opus`（effort low）監審 → `opus`（effort medium）再審或修。
 - `opus` effort high：唯頑 bug，前三級皆不能解時。
