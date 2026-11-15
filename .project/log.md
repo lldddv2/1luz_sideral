@@ -29,6 +29,7 @@
 - 2026-11-14 claude: 去圖上過境 swath，唯留 timeline。用戶求。
 - 2026-11-14 claude: 過境列改時間軸。行為 track+方向，點為過境；懸點示 UTC 日時並獨亮其 swath。因：用戶嫌列難讀。InfoBox 增 wide（寬 560、不逾屏）。遺：error 態未測；同刻異幀點重疊；summary 計數 100 等於 max_results 上限，恐截斷，未查。
 - 2026-11-14 claude: 區建即背景搜過境（max_results 100，快取以區 id，刪區去之）；懸區示 swath 與 UTC 日期列。因：用戶令。search 增 max_results（默 100、上限 200），返 track、direction、frame。discover 上限另置 max_discover_results=200，免改 max_products（抽取限）。Descarga 仍搜 10。swath 唯同 track+frame 之最新品填，餘唯框，免疊填全遮底圖。懸列可捲，離則去層。實測 Boulder 小矩：約 30 s 得 Track 019 Asc 32、Track 027 Desc 32。遺：改形不重請；error 態未測。
+- 2026-11-15 claude: 美化水層區，加展收箭。因用戶請。
 - 2026-11-14 claude: 區域分源（aoi-regions），hover 用 feature-state，Nominatim 加 polygon_threshold=0.005。因：拖形時重鋪大界慢；國界 1.6 MB→45 KB。
 - 2026-11-14 claude: 圖上中鍵開具板（選 A：DOM 疊於點，零依）；右鍵仍刪，側欄具鈕存，Shift+T 為鍵代。因：中鍵 MapLibre 不用，右鍵已佔，無輪鼠須備。
 - 2026-11-14 claude: Descarga 節常現；無區示註（Selecciona o dibuja un área…）、鈕禁，有區同前。因：用戶（協調者）令。原僅有區現，今改。
