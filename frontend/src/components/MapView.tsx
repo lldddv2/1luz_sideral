@@ -103,6 +103,7 @@ interface Props {
   onPrefetch: (p: { done: number; total: number; paused?: boolean } | null) => void
   playing: boolean // animation mode: show the pre-rendered day image instead of the tile layer
   onFrames: (p: { done: number; total: number } | null) => void // frame build progress
+  onFramesReady?: (days: string[] | null) => void // days with a built frame once the build ends; null while building
   aoiFill: number // study area fill opacity 0-1 (0: outline only)
   zoneFill: number // point of interest fill opacity 0-1; the selected square doubles it
 }
@@ -171,6 +172,7 @@ export default function MapView({
   passDays,
   onPrefetch,
   playing,
+  onFramesReady,
   onFrames,
   aoiFill,
   zoneFill,
@@ -263,16 +265,23 @@ export default function MapView({
   const nisarMode = nisar.mode ?? 'color'
   const [frames, setFrames] = useState<Record<string, DayFrame>>({})
   useEffect(() => {
-    if (!prefetchKey) return onFrames(null)
+    if (!prefetchKey) {
+      onFramesReady?.(null)
+      return onFrames(null)
+    }
+    onFramesReady?.(null)
     const got: DayFrame[] = []
+    const ready: string[] = []
     const t = setTimeout(
       () =>
         void buildFrames(targetBoxes, passDays, nisarDateRef.current, nisarMode, nisarDirs, (day, f, done, total) => {
           if (f) {
             got.push(f)
+            ready.push(day)
             setFrames((prev) => ({ ...prev, [day]: f }))
           }
           onFrames(done >= total ? null : { done, total })
+          if (done >= total) onFramesReady?.([...ready].sort())
         }),
       600,
     )
@@ -280,11 +289,43 @@ export default function MapView({
       clearTimeout(t)
       cancelFrames()
       onFrames(null)
+      onFramesReady?.(null)
       setFrames({})
       setTimeout(() => got.forEach((f) => URL.revokeObjectURL(f.url)), 1000)
     }
   }, [prefetchKey, nisarMode, nisarDirs]) // eslint-disable-line react-hooks/exhaustive-deps
   const frame = playing && nisar.on ? frames[nisar.date] : undefined
+  // The image source keeps the URL of the first frame shown; later steps are decoded here and
+  // pushed as bitmaps. Swapping the source URL goes through maplibre's shared image request queue,
+  // where hidden tile requests starve it and each 450 ms step aborts the previous load, so the
+  // picture froze while the timeline kept moving.
+  const frameBaseRef = useRef<DayFrame | undefined>(undefined)
+  if (!frame) frameBaseRef.current = undefined
+  else if (!frameBaseRef.current) frameBaseRef.current = frame
+  const frameBase = frameBaseRef.current
+  const frameBitmaps = useRef<ImageBitmap[]>([])
+  useEffect(() => {
+    if (!frame) return
+    let stale = false
+    void (async () => {
+      try {
+        const bmp = await createImageBitmap(await (await fetch(frame.url)).blob())
+        const src = mapRef.current?.getMap().getSource('ov-nisar-frame') as
+          | { updateImage: (o: { image: ImageBitmap; coordinates: DayFrame['coordinates'] }) => void }
+          | undefined
+        if (stale || !src) return bmp.close()
+        src.updateImage({ image: bmp, coordinates: frame.coordinates })
+        const kept = frameBitmaps.current
+        kept.push(bmp)
+        while (kept.length > 3) kept.shift()!.close() // the source holds the newest; older ones are done
+      } catch {
+        // frame URL revoked (frames rebuilt): skip this step
+      }
+    })()
+    return () => {
+      stale = true
+    }
+  }, [frame])
   // Escape deselects the shape being edited.
   useEffect(() => {
     if (!selectedId) return
@@ -1010,8 +1051,8 @@ export default function MapView({
               />
             </Source>
           )}
-          {mode && frame && (
-            <Source id="ov-nisar-frame" type="image" url={frame.url} coordinates={frame.coordinates}>
+          {mode && frameBase && (
+            <Source id="ov-nisar-frame" type="image" url={frameBase.url} coordinates={frameBase.coordinates}>
               <Layer
                 id="ov-nisar-frame-layer"
                 type="raster"

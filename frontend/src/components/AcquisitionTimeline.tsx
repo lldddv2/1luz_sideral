@@ -16,11 +16,12 @@ interface Props {
   onPick?: (day: string) => void // click on a pass: its UTC day
   prefetch?: { done: number; total: number; paused?: boolean; stage?: string } | null // NISAR tile prefetch, then frame build progress
   playing?: boolean // timeline animation running
+  loading?: { done: number; total: number; stage?: string } | null // play pressed, frames still preloading
   onTogglePlay?: () => void // play/pause; undefined hides the button
 }
 
 // Radar passes of the active area over the Descarga range: one line, a point per pass, a date axis below.
-export default function AcquisitionTimeline({ range, entry, children, picked = [], onPick, prefetch, playing = false, onTogglePlay }: Props) {
+export default function AcquisitionTimeline({ range, entry, children, picked = [], onPick, prefetch, playing = false, loading = null, onTogglePlay }: Props) {
   if (!range) {
     return (
       <section data-tour="timeline" className="acq-bar" aria-label="Adquisiciones NISAR">
@@ -94,7 +95,11 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
             ))}
           </ul>
           <span className="acq-summary">{passSummary(groups)}</span>
-          {prefetch && (
+          {loading ? (
+            <span className="acq-summary" role="status">
+              {`Preparando animación…${loading.total ? ` ${loading.stage ? loading.stage + " " : ""}${Math.min(loading.done, loading.total)}/${loading.total}` : ""}`}
+            </span>
+          ) : prefetch && (
             <span className="acq-summary">
               {prefetch.total ? `${prefetch.stage ?? "Precargando"} ${Math.min(prefetch.done, prefetch.total)}/${prefetch.total}${prefetch.paused ? " (en pausa)" : ""}` : "Preparando…"}
             </span>
@@ -103,12 +108,12 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
             {onTogglePlay && (
               <button
                 type="button"
-                title={playing ? 'Pausar' : 'Reproducir'}
-                aria-label={playing ? 'Pausar' : 'Reproducir'}
+                title={loading ? 'Cancelar precarga' : playing ? 'Pausar' : 'Reproducir'}
+                aria-label={loading ? 'Cancelar precarga' : playing ? 'Pausar' : 'Reproducir'}
                 aria-pressed={playing}
                 onClick={onTogglePlay}
               >
-                {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+                {loading ? <Loader2 size={16} className="spin" aria-hidden="true" /> : playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
               </button>
             )}
             <button type="button" title="Pasada anterior" aria-label="Pasada anterior" disabled={!prevDay} onClick={() => step(prevDay)}>

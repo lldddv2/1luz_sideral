@@ -24,7 +24,7 @@ import { useWater, waterCorners } from "./water";
 import { autoStartTour } from "./tour";
 
 // Playback speed of the timeline animation (ms per pass day).
-const FRAME_MS = 1800;
+const FRAME_MS = 450;
 // Hover callbacks are unused since the info card was removed.
 const noop = () => {};
 
@@ -130,19 +130,38 @@ export default function App() {
   const [prefetch, setPrefetch] = useState<{ done: number; total: number; paused?: boolean } | null>(null);
   // Timeline playback: steps NISAR through the pass days every FRAME_MS, looping at the end.
   const [frames, setFrames] = useState<{ done: number; total: number } | null>(null);
-  const [playing, setPlaying] = useState(false);
+  // "loading" waits for every frame image to be built (cached per AOI + range); "on" plays them.
+  const [play, setPlay] = useState<"off" | "loading" | "on">("off");
+  const playing = play === "on";
+  const [readyDays, setReadyDays] = useState<string[] | null>(null);
   // Fill opacity (0-100) of study areas and point-of-interest squares; outlines always stay.
   const [aoiFill, setAoiFill] = useState(4);
   const [zoneFill, setZoneFill] = useState(7);
   const nisarDay = overlays.nisar.date;
+  // A new AOI, range or orbit filter cancels playback (MapView drops and rebuilds the frames).
+  const passKey = passDays.join();
+  useEffect(() => setPlay("off"), [passKey]);
+  // Preload done: play only if at least two days got a frame.
   useEffect(() => {
-    if (!playing || passDays.length < 2) return;
+    if (play !== "loading" || !readyDays) return;
+    if (readyDays.length < 2) return setPlay("off");
+    setOverlays((prev) => ({ ...prev, nisar: { ...prev.nisar, on: true, date: readyDays.includes(prev.nisar.date) ? prev.nisar.date : readyDays[0] } }));
+    setPlay("on");
+  }, [play, readyDays]);
+  useEffect(() => {
+    if (!playing || !readyDays || readyDays.length < 2) return;
     const t = setTimeout(() => {
-      const next = passDays.find((d) => d > nisarDay) ?? passDays[0];
+      const next = readyDays.find((d) => d > nisarDay) ?? readyDays[0];
       setOverlays((prev) => ({ ...prev, nisar: { ...prev.nisar, on: true, date: next } }));
     }, FRAME_MS);
     return () => clearTimeout(t);
-  }, [playing, passDays, nisarDay]);
+  }, [playing, readyDays, nisarDay]);
+  const togglePlay = () => {
+    if (play !== "off") return setPlay("off");
+    // Frames are only built while NISAR is on.
+    setOverlays((prev) => (prev.nisar.on ? prev : { ...prev, nisar: { ...prev.nisar, on: true } }));
+    setPlay("loading");
+  };
   const cover = useLandcover(polygons);
   // U-Net water map: runs on the selected point of interest square, else on the active study area.
   const water = useWater();
@@ -326,6 +345,7 @@ export default function App() {
           onPrefetch={setPrefetch}
           playing={playing}
           onFrames={setFrames}
+          onFramesReady={setReadyDays}
           // Playback hides the fills so the NISAR frames show through; outlines remain.
           aoiFill={playing ? 0 : aoiFill / 100}
           zoneFill={playing ? 0 : zoneFill / 100}
@@ -376,7 +396,8 @@ export default function App() {
             entry={passes}
             prefetch={prefetch ? { ...prefetch, stage: "Teselas" } : frames ? { ...frames, stage: "Imágenes" } : null}
             playing={playing}
-            onTogglePlay={passDays.length > 1 ? () => setPlaying((v) => !v) : undefined}
+            loading={play === "loading" ? (prefetch ? { ...prefetch, stage: "Teselas" } : frames ?? { done: 0, total: 0 }) : null}
+            onTogglePlay={passDays.length > 1 ? togglePlay : undefined}
             picked={OVERLAY_IDS.filter((id) => id !== "jrc" && overlays[id].on).map((id) => overlays[id].date)}
             onPick={(day) =>
               setOverlays((prev) => {

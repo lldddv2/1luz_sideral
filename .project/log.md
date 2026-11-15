@@ -1,4 +1,6 @@
 # 錄（倒序）
+- 2026-11-15 claude: 修播放畫凍（錄影：首輪後日期續行而圖不變）。疑因：image Source 換 url 經 maplibre 共用圖請求隊，隱瓦請求擠之，450ms 即 abort 前載，終不成。今 Source url 釘首幀，後幀自 fetch→createImageBitmap→updateImage({image})。未瀏覽器驗。
+- 2026-11-15 claude: 時序播放改先預載後速播（FRAME_MS 1800→450，見 timeline-playback.md）。逐日待層載慢。
 - 2026-11-15 claude: 修水機率開關關後不復現（根因：關即卸 image Source/Layer，重掛之 Layer 失位/源重加失敗；今常掛，以 layout visibility 切）。
 - 2026-11-15 claude: 加入門導覽（driver.js，MIT）。用戶求新手指引。
 - 2026-11-15 claude: 入 U-Net 水模：/api/water＋Sidebar「Agua (U-Net)」（見 water-unet.md）。淨 state_dict 防 pickle；擇覆最佳景因幀沿軌切。
