@@ -318,7 +318,22 @@ function LayersSection({
               />
             )}
             {(id === 'nisar' || id === 'dswx') && <p className="hint">mosaico de 12 días hasta esta fecha</p>}
-            {id === 'nisar' && <p className="hint">alejado: contorno de órbitas · cerca: mosaico a color</p>}
+            {id === 'nisar' && (
+              <label className="field-row field-row-label">
+                <input
+                  type="checkbox"
+                  checked={st.outline ?? true}
+                  disabled={!st.on}
+                  onChange={(e) => onOverlayChange(id, { outline: e.target.checked })}
+                />
+                <span className="field-label">Contorno de órbitas</span>
+              </label>
+            )}
+            {id === 'nisar' && (
+              <p className="hint">
+                {(st.outline ?? true) ? 'alejado: contorno de órbitas · cerca: mosaico a color' : 'mosaico visible al acercar'}
+              </p>
+            )}
             {id === 'nisar' && (
               <div className="segmented" role="group" aria-label="Modo NISAR">
                 {(

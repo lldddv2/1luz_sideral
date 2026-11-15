@@ -696,7 +696,7 @@ export default function MapView({
                 'raster-fade-duration': 300,
               }
             : { 'raster-opacity': imgOpacity }
-        const outlineUrl = mode && `${NISAR_PROTOCOL}://outline/${nisarDate(overlays[id].date)}/{z}/{x}/{y}`
+        const outlineUrl = mode && (overlays[id].outline ?? true) && `${NISAR_PROTOCOL}://outline/${nisarDate(overlays[id].date)}/{z}/{x}/{y}`
         return (
           <Fragment key={`${id}-${url}`}>
           {outlineUrl && (

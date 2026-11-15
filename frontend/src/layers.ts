@@ -16,6 +16,7 @@ export interface OverlayState {
   opacity: number // 0..100
   date: string // YYYY-MM-DD for GIBS daily layers; GIBS tiles only cover that day's swaths
   mode?: NisarMode // NISAR only
+  outline?: boolean // NISAR only: swath outline when zoomed out
 }
 
 // 'water' = thresholded low-backscatter mask; 'color' = softened false-color preview.
@@ -58,7 +59,7 @@ export const OVERLAY_IDS: OverlayId[] = ['dswx', 'nisar', 'jrc']
 export const DEFAULT_OVERLAYS: Record<OverlayId, OverlayState> = {
   // Defaults are days with verified pixels over La Mojana (Colombia); most single days are empty there.
   dswx: { on: false, opacity: 70, date: '2026-11-14' },
-  nisar: { on: false, opacity: 80, date: '2026-11-01', mode: 'color' },
+  nisar: { on: false, opacity: 80, date: '2026-11-01', mode: 'color', outline: true },
   jrc: { on: false, opacity: 70, date: '' },
 }
 
