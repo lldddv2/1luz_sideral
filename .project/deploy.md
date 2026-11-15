@@ -7,3 +7,4 @@
 - 命：`scripts/deploy_lightsail.sh`（需 docker 守護行、~/.aws 憑；無 aws 則用 `uvx --from awscli aws`）。印服務 URL。
 - URL：https://luzsi.82fhra512x0gc.us-east-1.cs.amazonlightsail.com/（前端 `/`，API `/api/*`，健 `/api/health`）。
 - 遺：IAM 角 luzsi-apprunner-ecr、luzsi-apprunner-instance 為 App Runner 試所建，今無用，可刪。data/ 於容器內，重部署則失 water 快取。
+- netrc：容器無 ~/.netrc，啟時 app.main.ensure_netrc 由 EARTHDATA_USERNAME/PASSWORD 寫 $TMP/luzsi.netrc（0600）設 NETRC；已有 netrc/NETRC 則不覆。
