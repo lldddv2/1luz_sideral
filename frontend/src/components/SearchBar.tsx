@@ -13,6 +13,7 @@ interface Props {
   start: string // YYYY-MM-DD, the download range shared with the sidebar
   end: string // YYYY-MM-DD, the download range shared with the sidebar
   onDatesChange: (patch: { start?: string; end?: string }) => void
+  onClearPreview: () => void // clearing the box drops the outline
   onPreview: (result: PlaceResult) => void // fly to the result; draw its outline if it has one
   onAdd: (result: PlaceResult) => void // add the result as a region shape
   coverSuggestions: CoverSuggestions // land-cover classes for the query, with the active area's stats
@@ -44,7 +45,7 @@ const sleep = (ms: number, signal: AbortSignal) =>
     )
   })
 
-export default function SearchBar({ start, end, onDatesChange, onPreview, onAdd, coverSuggestions, onPickCover, onPickFeature, onAddFeature, onShowFeatures, areaShapes }: Props) {
+export default function SearchBar({ start, end, onDatesChange, onClearPreview, onPreview, onAdd, coverSuggestions, onPickCover, onPickFeature, onAddFeature, onShowFeatures, areaShapes }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<PlaceResult[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -142,6 +143,7 @@ export default function SearchBar({ start, end, onDatesChange, onPreview, onAdd,
     setError(null)
     setLoading(false)
     setActiveId(null)
+    onClearPreview()
     input.current?.focus()
   }
 

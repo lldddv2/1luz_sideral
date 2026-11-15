@@ -1491,6 +1491,29 @@ select {
   white-space: nowrap;
 }
 
+.acq-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.acq-nav button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border, #444);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.acq-nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* The line runs through the middle of the track; the points sit on it. */
 .acq-track {
   position: relative;
@@ -1523,6 +1546,24 @@ select {
   margin: -3.5px 0 0 -3.5px;
   border-radius: 50%;
   box-shadow: 0 0 0 1.5px var(--surface);
+  padding: 0;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Pass whose day is the date of an active water layer. */
+.acq-point.is-picked {
+  z-index: 2;
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor;
+}
+
+.acq-point:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
 }
 
 /* Hit area wider than the dot. */

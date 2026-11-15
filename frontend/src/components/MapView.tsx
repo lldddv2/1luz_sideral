@@ -100,6 +100,7 @@ interface Props {
   onZoneChange: (zone: UserZone) => void
   onDeleteZone: (id: string) => void
   onCancelZone: () => void
+  onClearPreview: () => void // drop the search outline
 }
 
 // Active drag while editing the selected shape.
@@ -125,6 +126,7 @@ interface ContextMenu {
   y: number
   id: string
   name: string
+  preview?: boolean // search outline, not a study area
 }
 
 export default function MapView({
@@ -162,6 +164,7 @@ export default function MapView({
   onZoneChange,
   onDeleteZone,
   onCancelZone,
+  onClearPreview,
 }: Props) {
   // Placing the zone center blocks the same interactions as shape drawing.
   const drawing = mode !== null || zonePlacing
@@ -408,8 +411,13 @@ export default function MapView({
     e.originalEvent.preventDefault()
     setPalette(null)
     const feature = e.features?.find((f) => isAoiFill(f.layer.id))
-    if (drawing || !feature) {
+    const onPreview = !feature && e.features?.some((f) => f.layer.id === 'preview-fill')
+    if (drawing || (!feature && !onPreview)) {
       setMenu(null)
+      return
+    }
+    if (!feature) {
+      setMenu({ x: e.point.x, y: e.point.y, id: '', name: 'Contorno de búsqueda', preview: true })
       return
     }
     setMenu({ x: e.point.x, y: e.point.y, id: feature.properties.id, name: feature.properties.name })
@@ -809,7 +817,7 @@ export default function MapView({
             ]
           : drawing
             ? []
-            : ['poi-circle', 'edit-handles', 'aoi-fill', 'aoi-region-fill']
+            : ['poi-circle', 'edit-handles', 'aoi-fill', 'aoi-region-fill', 'preview-fill']
       }
     >
       {/* Basemap licenses require attribution; kept bottom-left so the right corner is free for InfoBox. */}
@@ -1171,7 +1179,7 @@ export default function MapView({
       {/* Place-name labels above overlays and AOI shapes, under POIs and edit handles. */}
       {/* No fade: cross-fading parent/child label tiles while zooming shows names twice. */}
       {/* With study areas the raster labels are hidden: names outside the areas cannot be removed from a raster. */}
-      {areaPlaces === null && (!labels.withOverlaysOnly || OVERLAY_IDS.some((id) => overlays[id].on)) && (
+      {(areaPlaces === null || areaPlaces.length === 0) && (!labels.withOverlaysOnly || OVERLAY_IDS.some((id) => overlays[id].on)) && (
         <Source id="basemap-labels" key={labels.tiles} type="raster" tiles={[labels.tiles]} tileSize={256} maxzoom={labels.maxzoom}>
           <Layer
             id="basemap-labels-layer"
@@ -1267,12 +1275,13 @@ export default function MapView({
           <div className="context-menu-title">{menu.name}</div>
           <button
             onClick={() => {
-              onDelete(menu.id)
+              if (menu.preview) onClearPreview()
+              else onDelete(menu.id)
               setMenu(null)
             }}
           >
             <Trash2 size={16} />
-            Eliminar
+            {menu.preview ? 'Quitar contorno' : 'Eliminar'}
           </button>
         </div>
       )}

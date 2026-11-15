@@ -18,7 +18,7 @@ export interface AreaPlace {
 }
 
 // Zoom from which each rank is shown.
-export const PLACE_MINZOOM: Record<PlaceRank, number> = { state: 5, city: 6, town: 9, village: 12 }
+export const PLACE_MINZOOM: Record<PlaceRank, number> = { state: 5, city: 6, town: 8, village: 12 }
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
 const MAX_PLACES = 200

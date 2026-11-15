@@ -20,7 +20,7 @@ import type { AoiPolygon, DownloadTarget, DrawMode, LngLat, RegionGeometry, User
 import { ZONE_DEFAULT_HALF_KM, zoneBbox, zoneGeometry, zoneLabel } from "./zone";
 import { BASEMAPS } from "./basemaps";
 import type { BasemapId } from "./basemaps";
-import { DEFAULT_OVERLAYS } from "./layers";
+import { DEFAULT_OVERLAYS, OVERLAY_IDS } from "./layers";
 import type { OverlayId, OverlayState } from "./layers";
 
 const LABELS: Record<DrawMode, string> = {
@@ -272,11 +272,13 @@ export default function App() {
           onZoneChange={changeZone}
           onDeleteZone={deleteZone}
           onCancelZone={() => setZonePlacing(false)}
+          onClearPreview={() => setPreview(null)}
         />
         <SearchBar
           start={download.params.start}
           end={download.params.end}
           onDatesChange={download.setDates}
+          onClearPreview={() => setPreview(null)}
           onPreview={(r) => {
             setPreview(r);
             setFlyTo((prev) => ({ bbox: r.bbox, key: (prev?.key ?? 0) + 1 }));
@@ -312,7 +314,21 @@ export default function App() {
           }
         />
         {active && (
-          <AcquisitionTimeline range={range} entry={passes} />
+          <AcquisitionTimeline
+            range={range}
+            entry={passes}
+            picked={OVERLAY_IDS.filter((id) => id !== "jrc" && overlays[id].on).map((id) => overlays[id].date)}
+            onPick={(day) =>
+              setOverlays((prev) => {
+                const on = OVERLAY_IDS.filter((id) => id !== "jrc" && prev[id].on);
+                // No dated layer on: turn NISAR GCOV on at that day.
+                const ids = on.length ? on : (["nisar"] as const);
+                const next = { ...prev };
+                for (const id of ids) next[id] = { ...prev[id], on: true, date: day };
+                return next;
+              })
+            }
+          />
         )}
         {hoveredTool ? (
           <InfoBox>
