@@ -13,9 +13,6 @@ class Settings(BaseSettings):
     netrc: str | None = None
     data_dir: str = "data"
     cors_origins: str = "http://localhost:5173"
-    # NISAR COGs cropped in AWS; exported to os.environ for app.services.nisar_s3 and GDAL /vsis3/.
-    nisar_bucket: str | None = None
-    aws_region: str | None = None
 
     @property
     def earthdata_auth(self) -> tuple[str, str] | None:

@@ -73,24 +73,3 @@ export interface Job {
   error: string | null
   files: string[] // download order; file i is served at /api/jobs/{id}/files/{i}
 }
-
-// NISAR GCOV scene cropped in AWS and served by /api/scenes (source "nisar").
-export type NisarPol = 'HH' | 'HV'
-
-export interface NisarScene {
-  scene_id: string
-  acquired_at: string // UTC ISO
-  track: number | null
-  frame: number | null
-  direction: string | null
-  coverage_pct: number // share of the active area inside the scene crop
-  footprint: RegionGeometry // crop box, WGS84
-}
-
-// PNG of the scene over the active area, placed by its corners [tl, tr, br, bl] as [lon, lat].
-export interface NisarOverlay {
-  sceneId: string
-  pol: NisarPol
-  url: string // object URL of the PNG
-  corners: [LngLat, LngLat, LngLat, LngLat]
-}

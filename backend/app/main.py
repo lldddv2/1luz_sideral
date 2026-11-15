@@ -17,10 +17,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     if settings.netrc:
         os.environ["NETRC"] = settings.netrc
-    if settings.nisar_bucket:
-        os.environ.setdefault("NISAR_BUCKET", settings.nisar_bucket)
-    if settings.aws_region:
-        os.environ.setdefault("AWS_REGION", settings.aws_region)
     data_dir = Path(settings.data_dir)
     # The extractor keeps its job ledger (SQLite) in output_dir, so it lands under data_dir.
     # Harmony auth: EARTHDATA_USERNAME/PASSWORD first, else NETRC or ~/.netrc.

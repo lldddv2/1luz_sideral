@@ -70,10 +70,8 @@ def test_query_coverage_and_empty(env):
     assert q(env, regions=poly(10, 10, 11, 11)).json()["features"] == []
 
 
-def test_query_limits(env, monkeypatch):
-    monkeypatch.delenv("NISAR_BUCKET", raising=False)
+def test_query_limits(env):
     assert q(env, regions=fc(*[TRI] * 11)).status_code == 422
-    assert q(env, regions=TRI, source="nisar").status_code == 501
 
 
 def data(client, sid="a", **body):

@@ -11,7 +11,7 @@ const share = (f: number) => `${f * 100}%`
 interface Props {
   range: DateRange | null // Descarga dates; null while they are incomplete or reversed
   entry: PassEntry | undefined // passes of the active area; undefined until its search starts
-  children?: ReactNode // extra row on top (NISAR scenes in S3)
+  children?: ReactNode // extra row on top
 }
 
 // Radar passes of the active area over the Descarga range: one line, a point per pass, a date axis below.

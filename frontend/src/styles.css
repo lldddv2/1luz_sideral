@@ -1899,32 +1899,6 @@ select {
 /* When the POI panel is open, lift the acquisition timeline above it so neither hides the other. */
 .map-area:has(.poi-panel) .acq-bar { bottom: calc(var(--overlay-gap) * 2 + 300px); }
 
-/* NISAR scenes stored in S3, on top of the acquisition timeline. */
-.nisar-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: 6px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid var(--border);
-}
-.nisar-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 13px;
-}
-.nisar-scene { font-size: 12px; }
-.nisar-opacity {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-.nisar-row .btn { flex: none; padding: 4px 8px; }
-
 /* ============================================================
    Point of interest (center + square range)
    ============================================================ */

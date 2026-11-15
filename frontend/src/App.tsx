@@ -13,9 +13,6 @@ import type { MapViewport } from "./useRegionPicker";
 import { useDownload } from "./useDownload";
 import { useAreaPlaces } from "./areaPlaces";
 import { usePasses } from "./usePasses";
-import { useNisarScenes } from "./useNisarScenes";
-import { footprintsOf, NISAR_DEMO } from "./nisarScenes";
-import NisarScenes from "./components/NisarScenes";
 import type { BBox, PlaceResult } from "./nominatim";
 import { aoiBoxes, aoiGeometries, fetchOutline, groupLabel, inShapes } from "./features";
 import type { NaturalFeature } from "./features";
@@ -118,20 +115,6 @@ export default function App() {
   );
   const passes = usePasses(polygons, range);
   const cover = useLandcover(polygons);
-  const nisar = useNisarScenes(active, range);
-  const nisarFootprints = useMemo(
-    () => (nisar.scenes.length ? footprintsOf(nisar.scenes, nisar.selected) : null),
-    [nisar.scenes, nisar.selected],
-  );
-  // Quick pick: the demo area over Lake Pontchartrain and its date window, where S3 holds NISAR scenes.
-  const pickNisarDemo = () => {
-    download.setDates({ start: NISAR_DEMO.start, end: NISAR_DEMO.end });
-    addShape("rectangle", NISAR_DEMO.coords, NISAR_DEMO.name);
-    const lons = NISAR_DEMO.coords.map((c) => c[0]);
-    const lats = NISAR_DEMO.coords.map((c) => c[1]);
-    const bbox: BBox = [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)];
-    setFlyTo((prev) => ({ bbox, key: (prev?.key ?? 0) + 1 }));
-  };
   const shownLabels = useMemo(
     () => (areaShapes.length && labels.length > 1 ? labels.filter((f) => inShapes(f, areaShapes)) : labels),
     [labels, areaShapes],
@@ -240,7 +223,6 @@ export default function App() {
         onBasemapChange={setBasemap}
         overlays={overlays}
         onOverlayChange={changeOverlay}
-        onNisarDemo={pickNisarDemo}
         zones={zones}
         selectedZoneId={selectedZoneId}
         onSelectZone={setSelectedZoneId}
@@ -282,9 +264,6 @@ export default function App() {
           activeFeature={feature}
           onFeatureClick={pickFeature}
           onFeatureAdd={addFeature}
-          nisarFootprints={nisarFootprints}
-          nisarOverlay={nisar.overlay}
-          nisarOpacity={nisar.opacity}
           zones={zones}
           selectedZoneId={selectedZoneId}
           onSelectZone={setSelectedZoneId}
@@ -332,9 +311,7 @@ export default function App() {
           }
         />
         {active && (
-          <AcquisitionTimeline range={range} entry={passes}>
-            <NisarScenes nisar={nisar} />
-          </AcquisitionTimeline>
+          <AcquisitionTimeline range={range} entry={passes} />
         )}
         {hoveredTool ? (
           <InfoBox>

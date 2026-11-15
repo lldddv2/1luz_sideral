@@ -60,7 +60,6 @@ interface Props {
   onBasemapChange: (basemap: BasemapId) => void
   overlays: Record<OverlayId, OverlayState>
   onOverlayChange: (id: OverlayId, patch: Partial<OverlayState>) => void
-  onNisarDemo: () => void
   zones: UserZone[]
   selectedZoneId: string | null
   onSelectZone: (id: string | null) => void
@@ -164,8 +163,7 @@ function StudyAreaSection({
   onSelectMode,
   onDelete,
   onHoverTool,
-  onNisarDemo,
-}: Pick<Props, 'polygons' | 'mode' | 'regions' | 'onSelectMode' | 'onDelete' | 'onHoverTool' | 'onNisarDemo'>) {
+}: Pick<Props, 'polygons' | 'mode' | 'regions' | 'onSelectMode' | 'onDelete' | 'onHoverTool'>) {
   return (
     <>
       <h3 className="section-title">Herramientas de dibujo</h3>
@@ -186,12 +184,6 @@ function StudyAreaSection({
             {t.label}
           </button>
         ))}
-      </div>
-      <div className="btn-row">
-        <button type="button" className="btn" onClick={onNisarDemo}>
-          <Satellite size={16} aria-hidden="true" />
-          Lake Pontchartrain (NISAR demo)
-        </button>
       </div>
       {mode === 'region' ? <RegionOptions regions={regions} /> : mode && <p className="hint">{HINTS[mode]}</p>}
 
@@ -893,7 +885,6 @@ export default function Sidebar({
   onBasemapChange,
   overlays,
   onOverlayChange,
-  onNisarDemo,
   ...zoneProps
 }: Props) {
   const [collapsed, setCollapsed] = useState(readStoredCollapsed)
@@ -980,7 +971,6 @@ export default function Sidebar({
               onSelectMode={onSelectMode}
               onDelete={onDelete}
               onHoverTool={onHoverTool}
-              onNisarDemo={onNisarDemo}
             />
           )}
           {active.id === 'zones' && <ZonesSection {...zoneProps} />}

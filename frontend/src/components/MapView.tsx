@@ -4,7 +4,7 @@ import Map, { AttributionControl, Layer, Marker, Source } from 'react-map-gl/map
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
 import type { Map as MaplibreMap, StyleSpecification } from 'maplibre-gl'
 import type { FeatureCollection } from 'geojson'
-import type { AoiPolygon, DrawMode, LngLat, NisarOverlay, RegionGeometry, UserZone } from '../types'
+import type { AoiPolygon, DrawMode, LngLat, RegionGeometry, UserZone } from '../types'
 import { halfKmFromCorner, zoneBbox, zoneCorners } from '../zone'
 import type { BBox } from '../nominatim'
 import { inAnyShape, shapeGeometry } from '../geo'
@@ -92,9 +92,6 @@ interface Props {
   activeFeature: NaturalFeature | null // last feature picked; its label offers "add as study area"
   onFeatureClick: (feature: NaturalFeature) => void
   onFeatureAdd: (feature: NaturalFeature) => void
-  nisarFootprints: FeatureCollection | null // NISAR scene crops in S3, drawn as outlines
-  nisarOverlay: NisarOverlay | null // PNG of the picked scene over the active area
-  nisarOpacity: number
   zones: UserZone[] // user points of interest, each with its square range (annotation only)
   selectedZoneId: string | null
   onSelectZone: (id: string) => void
@@ -152,9 +149,6 @@ export default function MapView({
   searchEnd,
   overlays,
   coverMask,
-  nisarFootprints,
-  nisarOverlay,
-  nisarOpacity,
   featureLabels,
   activeFeature,
   onFeatureClick,
@@ -891,29 +885,6 @@ export default function MapView({
             id="cover-mask-layer"
             type="raster"
             paint={{ 'raster-opacity': 0.7, 'raster-resampling': 'nearest' }}
-          />
-        </Source>
-      )}
-      {nisarOverlay && (
-        <Source
-          key={nisarOverlay.url}
-          id="nisar-overlay"
-          type="image"
-          url={nisarOverlay.url}
-          coordinates={nisarOverlay.corners}
-        >
-          <Layer id="nisar-overlay-layer" type="raster" paint={{ 'raster-opacity': nisarOpacity }} />
-        </Source>
-      )}
-      {nisarFootprints && (
-        <Source id="nisar-footprints" type="geojson" data={nisarFootprints}>
-          <Layer
-            id="nisar-footprints-line"
-            type="line"
-            paint={{
-              'line-color': ['case', ['get', 'selected'], '#22d3ee', '#a78bfa'],
-              'line-width': ['case', ['get', 'selected'], 2.5, 1.5],
-            }}
           />
         </Source>
       )}
