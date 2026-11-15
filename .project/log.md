@@ -1,5 +1,6 @@
 # 錄（倒序）
 
+- 2026-11-15 claude: 刪HLS光學層，唯留S2無雲。用戶求。
 - 2026-11-15 claude: 去 S3 管線。因用戶棄 S3。
 - 2026-11-15 claude: 去代理聊天；諸改入 main。因用戶不整合代理。
 - 2026-11-15 claude: 再併 origin/main（5 commit：tile 預載與快取、NISAR 升降軌分示、軌框勾選、GIBS 壞 tile 重試）入 backend；ff c20ea0a 至 6f8203b，本地改經 stash 重放。衝突唯 Sidebar.tsx import，兩存（NISAR_ASC/DESC_COLOR 並 zone 函）。MapView 本地 prop `nisarFootprints` 蔽 main 同名函，以 `fetchNisarFootprints` 別名 import 解。因用戶令再同步。build 過，pytest 121 過。備份 refs/backup/pre-sync-2。
