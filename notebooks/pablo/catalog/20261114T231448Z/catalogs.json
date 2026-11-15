@@ -1,0 +1,484 @@
+{
+  "nisar_gcov": [
+    {
+      "dataset": "nisar_gcov",
+      "granule_id": "NISAR_L2_PR_GCOV_034_034_A_020_4005_DHDH_A_20261026T130857_20261026T130931_P05036_N_F_J_001",
+      "cmr_concept_id": "G4408635016-ASF",
+      "time_start": "2026-10-26T13:08:57.000Z",
+      "time_end": "2026-10-26T13:09:31.999Z",
+      "granule_size_mb_cmr": 6614.070486068726,
+      "footprint_bounds_wsen": [
+        -121.43151,
+        35.21904,
+        -117.89659,
+        37.95228
+      ]
+    }
+  ],
+  "opera_dist_alert": [
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261022T184429Z_20261024T023435Z_S2B_30_v1",
+      "cmr_concept_id": "G4386315301-LPCLOUD",
+      "time_start": "2026-10-22T18:54:19.880Z",
+      "time_end": "2026-10-22T18:54:19.880Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3713182,
+        36.0104973,
+        -119.1114312,
+        37.0273077
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKV_20261022T184429Z_20261024T023713Z_S2B_30_v1",
+      "cmr_concept_id": "G4386319345-LPCLOUD",
+      "time_start": "2026-10-22T18:54:34.242Z",
+      "time_end": "2026-10-22T18:54:34.242Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3324066,
+        35.1101655,
+        -119.0878912,
+        36.1262426
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261023T183349Z_20261025T044231Z_L9_30_v1",
+      "cmr_concept_id": "G4387846919-LPCLOUD",
+      "time_start": "2026-10-23T18:33:49.032Z",
+      "time_end": "2026-10-23T18:34:12.923Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3540539,
+        36.0104973,
+        -119.1114312,
+        37.0273077
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKV_20261023T183412Z_20261025T044255Z_L9_30_v1",
+      "cmr_concept_id": "G4387850713-LPCLOUD",
+      "time_start": "2026-10-23T18:34:12.923Z",
+      "time_end": "2026-10-23T18:34:36.815Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3324066,
+        35.1101655,
+        -119.0878912,
+        36.1251615
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261027T184451Z_20261031T115149Z_S2C_30_v1",
+      "cmr_concept_id": "G4395689415-LPCLOUD",
+      "time_start": "2026-10-27T18:54:18.187Z",
+      "time_end": "2026-10-27T18:54:18.187Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3713182,
+        36.0104973,
+        -119.1114312,
+        37.0273077
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKV_20261027T184451Z_20261031T085325Z_S2C_30_v1",
+      "cmr_concept_id": "G4395401972-LPCLOUD",
+      "time_start": "2026-10-27T18:54:32.544Z",
+      "time_end": "2026-10-27T18:54:32.544Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3324066,
+        35.1101655,
+        -119.0878912,
+        36.1262426
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261031T183350Z_20261102T014708Z_L8_30_v1",
+      "cmr_concept_id": "G4397332148-LPCLOUD",
+      "time_start": "2026-10-31T18:33:50.303Z",
+      "time_end": "2026-10-31T18:34:14.194Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.354768,
+        36.0104973,
+        -119.1114312,
+        37.0273077
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKV_20261031T183414Z_20261104T014743Z_L8_30_v1",
+      "cmr_concept_id": "G4400333659-LPCLOUD",
+      "time_start": "2026-10-31T18:34:14.194Z",
+      "time_end": "2026-10-31T18:34:14.194Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3324066,
+        35.1302785,
+        -119.0878912,
+        36.1262426
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261101T184529Z_20261103T053352Z_S2B_30_v1",
+      "cmr_concept_id": "G4398645969-LPCLOUD",
+      "time_start": "2026-11-01T18:54:20.681Z",
+      "time_end": "2026-11-01T18:54:20.681Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3713182,
+        36.0104973,
+        -119.1114312,
+        37.0273077
+      ]
+    },
+    {
+      "dataset": "opera_dist_alert",
+      "granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKV_20261101T184529Z_20261103T052740Z_S2B_30_v1",
+      "cmr_concept_id": "G4398639993-LPCLOUD",
+      "time_start": "2026-11-01T18:54:35.044Z",
+      "time_end": "2026-11-01T18:54:35.044Z",
+      "granule_size_mb_cmr": 0.0,
+      "footprint_bounds_wsen": [
+        -120.3324066,
+        35.1101655,
+        -119.0878912,
+        36.1262426
+      ]
+    }
+  ],
+  "opera_dswx": [
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261022T183955Z_20261024T074025Z_L8_30_v1.1",
+      "cmr_concept_id": "G4387134140-POCLOUD",
+      "time_start": "2026-10-22T18:39:55.114Z",
+      "time_end": "2026-10-22T18:39:55.114Z",
+      "granule_size_mb_cmr": 40.73151206970215,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261022T184019Z_20261024T083339Z_L8_30_v1.1",
+      "cmr_concept_id": "G4387142278-POCLOUD",
+      "time_start": "2026-10-22T18:40:19.009Z",
+      "time_end": "2026-10-22T18:40:19.009Z",
+      "granule_size_mb_cmr": 38.034818649291985,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261022T184429Z_20261024T053450Z_S2B_30_v1.1",
+      "cmr_concept_id": "G4387061935-POCLOUD",
+      "time_start": "2026-10-22T18:54:19.880Z",
+      "time_end": "2026-10-22T18:54:19.880Z",
+      "granule_size_mb_cmr": 41.57491970062255,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261022T184429Z_20261024T053438Z_S2B_30_v1.1",
+      "cmr_concept_id": "G4387060889-POCLOUD",
+      "time_start": "2026-10-22T18:54:34.242Z",
+      "time_end": "2026-10-22T18:54:34.242Z",
+      "granule_size_mb_cmr": 40.31737899780273,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261022T185821Z_20261024T053435Z_S2A_30_v1.1",
+      "cmr_concept_id": "G4387060955-POCLOUD",
+      "time_start": "2026-10-22T19:04:17.367Z",
+      "time_end": "2026-10-22T19:04:17.367Z",
+      "granule_size_mb_cmr": 37.12782001495361,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261023T183349Z_20261025T025112Z_L9_30_v1.1",
+      "cmr_concept_id": "G4387769518-POCLOUD",
+      "time_start": "2026-10-23T18:33:49.032Z",
+      "time_end": "2026-10-23T18:33:49.032Z",
+      "granule_size_mb_cmr": 41.49857139587402,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261023T183412Z_20261025T025107Z_L9_30_v1.1",
+      "cmr_concept_id": "G4387769517-POCLOUD",
+      "time_start": "2026-10-23T18:34:12.923Z",
+      "time_end": "2026-10-23T18:34:12.923Z",
+      "granule_size_mb_cmr": 40.96721935272217,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261024T182758Z_20261026T024438Z_L8_30_v1.1",
+      "cmr_concept_id": "G4388842631-POCLOUD",
+      "time_start": "2026-10-24T18:27:58.882Z",
+      "time_end": "2026-10-24T18:27:58.882Z",
+      "granule_size_mb_cmr": 36.36737632751465,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261024T183431Z_20261026T023558Z_S2C_30_v1.1",
+      "cmr_concept_id": "G4388829518-POCLOUD",
+      "time_start": "2026-10-24T18:44:40.650Z",
+      "time_end": "2026-10-24T18:44:40.650Z",
+      "granule_size_mb_cmr": 36.39173984527588,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261027T184451Z_20261031T083303Z_S2C_30_v1.1",
+      "cmr_concept_id": "G4398420513-POCLOUD",
+      "time_start": "2026-10-27T18:54:18.187Z",
+      "time_end": "2026-10-27T18:54:18.187Z",
+      "granule_size_mb_cmr": 38.05989933013915,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261027T184451Z_20261031T073210Z_S2C_30_v1.1",
+      "cmr_concept_id": "G4398328801-POCLOUD",
+      "time_start": "2026-10-27T18:54:32.544Z",
+      "time_end": "2026-10-27T18:54:32.544Z",
+      "granule_size_mb_cmr": 36.503868103027344,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261029T183509Z_20261031T152624Z_S2B_30_v1.1",
+      "cmr_concept_id": "G4398757016-POCLOUD",
+      "time_start": "2026-10-29T18:44:42.239Z",
+      "time_end": "2026-10-29T18:44:42.239Z",
+      "granule_size_mb_cmr": 36.379096031188965,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261030T183958Z_20261101T014017Z_L9_30_v1.1",
+      "cmr_concept_id": "G4399087485-POCLOUD",
+      "time_start": "2026-10-30T18:39:58.719Z",
+      "time_end": "2026-10-30T18:39:58.719Z",
+      "granule_size_mb_cmr": 39.06800556182861,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261030T184022Z_20261104T033143Z_L9_30_v1.1",
+      "cmr_concept_id": "G4405714814-POCLOUD",
+      "time_start": "2026-10-30T18:40:22.606Z",
+      "time_end": "2026-10-30T18:40:22.606Z",
+      "granule_size_mb_cmr": 37.1485538482666,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261030T185521Z_20261101T013233Z_S2C_30_v1.1",
+      "cmr_concept_id": "G4399021560-POCLOUD",
+      "time_start": "2026-10-30T19:04:06.195Z",
+      "time_end": "2026-10-30T19:04:06.195Z",
+      "granule_size_mb_cmr": 37.12612342834473,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261031T183350Z_20261102T014101Z_L8_30_v1.1",
+      "cmr_concept_id": "G4399495203-POCLOUD",
+      "time_start": "2026-10-31T18:33:50.303Z",
+      "time_end": "2026-10-31T18:33:50.303Z",
+      "granule_size_mb_cmr": 38.67255401611329,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261031T183414Z_20261104T033056Z_L8_30_v1.1",
+      "cmr_concept_id": "G4405713097-POCLOUD",
+      "time_start": "2026-10-31T18:34:14.194Z",
+      "time_end": "2026-10-31T18:34:14.194Z",
+      "granule_size_mb_cmr": 37.29089069366455,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261101T182802Z_20261103T212823Z_L9_30_v1.1",
+      "cmr_concept_id": "G4403549579-POCLOUD",
+      "time_start": "2026-11-01T18:28:02.003Z",
+      "time_end": "2026-11-01T18:28:02.003Z",
+      "granule_size_mb_cmr": 36.3770809173584,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261101T184529Z_20261103T045908Z_S2B_30_v1.1",
+      "cmr_concept_id": "G4402922344-POCLOUD",
+      "time_start": "2026-11-01T18:54:20.681Z",
+      "time_end": "2026-11-01T18:54:20.681Z",
+      "granule_size_mb_cmr": 40.500442504882805,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261101T184529Z_20261103T045904Z_S2B_30_v1.1",
+      "cmr_concept_id": "G4402918671-POCLOUD",
+      "time_start": "2026-11-01T18:54:35.044Z",
+      "time_end": "2026-11-01T18:54:35.044Z",
+      "granule_size_mb_cmr": 40.86353969573974,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261103T183531Z_20261107T213556Z_S2C_30_v1.1",
+      "cmr_concept_id": "G4408322943-POCLOUD",
+      "time_start": "2026-11-03T18:44:37.461Z",
+      "time_end": "2026-11-03T18:44:37.461Z",
+      "granule_size_mb_cmr": 36.38424301147462,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261104T185549Z_20261107T013323Z_S2B_30_v1.1",
+      "cmr_concept_id": "G4408137038-POCLOUD",
+      "time_start": "2026-11-04T19:04:09.718Z",
+      "time_end": "2026-11-04T19:04:09.718Z",
+      "granule_size_mb_cmr": 37.12672519683837,
+      "footprint_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ]
+    },
+    {
+      "dataset": "opera_dswx",
+      "granule_id": "OPERA_L3_DSWx-HLS_T11SKV_20261105T183821Z_20261111T202829Z_S2A_30_v1.1",
+      "cmr_concept_id": "G4408904898-POCLOUD",
+      "time_start": "2026-11-05T18:44:47.336Z",
+      "time_end": "2026-11-05T18:44:47.336Z",
+      "granule_size_mb_cmr": 36.37893104553223,
+      "footprint_bounds_wsen": [
+        -120.3884143,
+        35.1526294,
+        -119.1425754,
+        36.1692387
+      ]
+    }
+  ]
+}

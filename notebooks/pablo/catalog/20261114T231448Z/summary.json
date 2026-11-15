@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "run_id_utc": "20261114T231448Z",
+  "source": "NASA CMR metadata API",
+  "data_downloaded": false,
+  "aoi": {
+    "name": "central_valley_california_candidate",
+    "status": "provisional_catalog_probe",
+    "bbox_wsen": [
+      -119.555,
+      36.075,
+      -119.545,
+      36.085
+    ],
+    "note": "AOI de prueba pequena; no representa una seleccion final de estudio."
+  },
+  "bbox_wsen": [
+    -119.555,
+    36.075,
+    -119.545,
+    36.085
+  ],
+  "date_range_utc": {
+    "start": "2026-10-21T00:00:00Z",
+    "stop": "2026-11-14T23:59:59Z"
+  },
+  "nisar_collection": "NISAR_L2_GCOV_V1",
+  "opera_collections": {
+    "opera_dist_alert": "OPERA_L3_DIST-ALERT-HLS_V1",
+    "opera_dswx": "OPERA_L3_DSWx-HLS_V1"
+  },
+  "temporal_tolerance_days": 6.0,
+  "catalog_granule_counts": {
+    "nisar_gcov": 1,
+    "opera_dist_alert": 10,
+    "opera_dswx": 23
+  },
+  "candidate_pair_counts": {
+    "opera_dist_alert": 8,
+    "opera_dswx": 17
+  },
+  "total_candidate_pairs": 25,
+  "temporal_match_counts": {
+    "close_72h": 10,
+    "candidate": 15
+  },
+  "candidate_delta_days_range": {
+    "min": 1.239829,
+    "max": 5.225893
+  },
+  "closest_pair_per_opera_product": {
+    "opera_dist_alert": {
+      "nisar_granule_id": "NISAR_L2_PR_GCOV_034_034_A_020_4005_DHDH_A_20261026T130857_20261026T130931_P05036_N_F_J_001",
+      "nisar_cmr_concept_id": "G4408635016-ASF",
+      "nisar_time_utc": "2026-10-26T13:08:57.000Z",
+      "opera_product": "opera_dist_alert",
+      "opera_granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261027T184451Z_20261031T115149Z_S2C_30_v1",
+      "opera_cmr_concept_id": "G4395689415-LPCLOUD",
+      "opera_time_utc": "2026-10-27T18:54:18.187Z",
+      "signed_delta_hours_opera_minus_nisar": 29.755885,
+      "absolute_delta_days": 1.239829,
+      "temporal_match": "close_72h",
+      "spatial_screen": "each CMR AOI filter passes; footprint bounding envelopes overlap",
+      "common_envelope_bounds_wsen": [
+        -120.3713182,
+        36.0104973,
+        -119.1114312,
+        37.0273077
+      ],
+      "nisar_aoi_intersection_bounds_wsen": [
+        -119.555,
+        36.075,
+        -119.545,
+        36.085
+      ],
+      "opera_aoi_intersection_bounds_wsen": [
+        -119.555,
+        36.075,
+        -119.545,
+        36.085
+      ],
+      "signed_delta_seconds_opera_minus_nisar": 107121.187,
+      "absolute_delta_seconds": 107121.187,
+      "timestamp_reference": "CMR granule start times"
+    },
+    "opera_dswx": {
+      "nisar_granule_id": "NISAR_L2_PR_GCOV_034_034_A_020_4005_DHDH_A_20261026T130857_20261026T130931_P05036_N_F_J_001",
+      "nisar_cmr_concept_id": "G4408635016-ASF",
+      "nisar_time_utc": "2026-10-26T13:08:57.000Z",
+      "opera_product": "opera_dswx",
+      "opera_granule_id": "OPERA_L3_DSWx-HLS_T11SKA_20261027T184451Z_20261031T083303Z_S2C_30_v1.1",
+      "opera_cmr_concept_id": "G4398420513-POCLOUD",
+      "opera_time_utc": "2026-10-27T18:54:18.187Z",
+      "signed_delta_hours_opera_minus_nisar": 29.755885,
+      "absolute_delta_days": 1.239829,
+      "temporal_match": "close_72h",
+      "spatial_screen": "each CMR AOI filter passes; footprint bounding envelopes overlap",
+      "common_envelope_bounds_wsen": [
+        -120.4280325,
+        36.0527238,
+        -119.1667652,
+        37.0700841
+      ],
+      "nisar_aoi_intersection_bounds_wsen": [
+        -119.555,
+        36.075,
+        -119.545,
+        36.085
+      ],
+      "opera_aoi_intersection_bounds_wsen": [
+        -119.555,
+        36.075,
+        -119.545,
+        36.085
+      ],
+      "signed_delta_seconds_opera_minus_nisar": 107121.187,
+      "absolute_delta_seconds": 107121.187,
+      "timestamp_reference": "CMR granule start times"
+    }
+  },
+  "caveat": "CMR candidate geometry and temporal granule starts do not prove event causality. Exact polygons and nested pixel grids checked only for the audited sample; no resampling. Sample AOI has no positive VEG-DIST-STATUS class.",
+  "sample_data_downloaded": true,
+  "sample_data_scope": {
+    "aoi_crop_only": true,
+    "opera_layer": "VEG-DIST-STATUS",
+    "opera_source_bytes": 1136061,
+    "nisar_variable": "/science/LSAR/GCOV/grids/frequencyA/HHHH",
+    "nisar_crop_bytes": 41284
+  }
+}

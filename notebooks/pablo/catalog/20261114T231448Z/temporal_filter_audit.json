@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "audit": "retrospective_temporal_window_sensitivity",
+  "sample_id": "cv_20261026_row2672_col296",
+  "sample_metadata": "data/datasets/20261114T231448Z/samples/cv_20261026_row2672_col296/sample.json",
+  "source_products": {
+    "nisar_granule_id": "NISAR_L2_PR_GCOV_034_034_A_020_4005_DHDH_A_20261026T130857_20261026T130931_P05036_N_F_J_001",
+    "nisar_cmr_concept_id": "G4408635016-ASF",
+    "opera_granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261027T184451Z_20261031T115149Z_S2C_30_v1",
+    "opera_cmr_concept_id": "G4395689415-LPCLOUD",
+    "catalog_run_id": "20261114T231448Z"
+  },
+  "grid": {
+    "crs": "EPSG:32611",
+    "shape_yx": [
+      39,
+      32
+    ],
+    "pixel_size_m": [
+      30.0,
+      -30.0
+    ]
+  },
+  "population": {
+    "valid_feature_and_status_pixels": 1248,
+    "positive_status_pixels": 1243,
+    "dated_positive_pixels": 1243,
+    "confirmed_positive_pixels": 1240,
+    "negative_status_pixels": 5,
+    "positive_without_event_date_pixels": 0,
+    "positive_event_after_nisar_pixels_excluded": 2,
+    "same_calendar_day_positive_pixels_excluded_as_order_ambiguous": 0,
+    "past_positive_pixels": 1241
+  },
+  "window_rule": "Keep positive OPERA labels with event_delta_days_from_nisar in [-N,-1]. Positive values are future detections and excluded. Zero-day labels are excluded because daily precision cannot establish acquisition order. Status 0 negatives are retained independently of window.",
+  "confirmed_status_codes": [
+    3,
+    6,
+    7,
+    8
+  ],
+  "windows": [
+    {
+      "lookback_days": 7,
+      "delta_days_inclusive": [
+        -7,
+        -1
+      ],
+      "positive_pixels": 0,
+      "confirmed_positive_pixels": 0,
+      "first_detection_or_provisional_pixels": 0,
+      "retained_percent_of_dated_positive": 0.0,
+      "negative_pixels_retained": 5
+    },
+    {
+      "lookback_days": 14,
+      "delta_days_inclusive": [
+        -14,
+        -1
+      ],
+      "positive_pixels": 0,
+      "confirmed_positive_pixels": 0,
+      "first_detection_or_provisional_pixels": 0,
+      "retained_percent_of_dated_positive": 0.0,
+      "negative_pixels_retained": 5
+    },
+    {
+      "lookback_days": 30,
+      "delta_days_inclusive": [
+        -30,
+        -1
+      ],
+      "positive_pixels": 7,
+      "confirmed_positive_pixels": 6,
+      "first_detection_or_provisional_pixels": 1,
+      "retained_percent_of_dated_positive": 0.56,
+      "negative_pixels_retained": 5
+    },
+    {
+      "lookback_days": 45,
+      "delta_days_inclusive": [
+        -45,
+        -1
+      ],
+      "positive_pixels": 333,
+      "confirmed_positive_pixels": 332,
+      "first_detection_or_provisional_pixels": 1,
+      "retained_percent_of_dated_positive": 26.79,
+      "negative_pixels_retained": 5
+    },
+    {
+      "lookback_days": 60,
+      "delta_days_inclusive": [
+        -60,
+        -1
+      ],
+      "positive_pixels": 705,
+      "confirmed_positive_pixels": 704,
+      "first_detection_or_provisional_pixels": 1,
+      "retained_percent_of_dated_positive": 56.72,
+      "negative_pixels_retained": 5
+    },
+    {
+      "lookback_days": 90,
+      "delta_days_inclusive": [
+        -90,
+        -1
+      ],
+      "positive_pixels": 1106,
+      "confirmed_positive_pixels": 1105,
+      "first_detection_or_provisional_pixels": 1,
+      "retained_percent_of_dated_positive": 88.98,
+      "negative_pixels_retained": 5
+    },
+    {
+      "lookback_days": 120,
+      "delta_days_inclusive": [
+        -120,
+        -1
+      ],
+      "positive_pixels": 1241,
+      "confirmed_positive_pixels": 1240,
+      "first_detection_or_provisional_pixels": 1,
+      "retained_percent_of_dated_positive": 99.84,
+      "negative_pixels_retained": 5
+    }
+  ],
+  "limitations": [
+    "One positive hotspot AOI and one NISAR–OPERA pair; window counts are sensitivity results, not a selected threshold.",
+    "Only a few status-0 pixels occur in this positive hotspot; negative sampling needs separate background AOIs.",
+    "VEG-DIST-DATE is first anomaly detection at daily precision, not event onset or causal attribution."
+  ]
+}

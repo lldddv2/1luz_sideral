@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "catalog_run_id": "20261114T231448Z",
+  "metadata_source": "NASA CMR UMM JSON",
+  "data_downloaded": false,
+  "aoi": {
+    "name": "central_valley_california_candidate",
+    "status": "provisional_catalog_probe",
+    "bbox_wsen": [
+      -119.555,
+      36.075,
+      -119.545,
+      36.085
+    ],
+    "note": "AOI de prueba pequena; no representa una seleccion final de estudio."
+  },
+  "pair": {
+    "nisar_granule_id": "NISAR_L2_PR_GCOV_034_034_A_020_4005_DHDH_A_20261026T130857_20261026T130931_P05036_N_F_J_001",
+    "nisar_cmr_concept_id": "G4408635016-ASF",
+    "nisar_time_utc": "2026-10-26T13:08:57Z",
+    "opera_granule_id": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261027T184451Z_20261031T115149Z_S2C_30_v1",
+    "opera_cmr_concept_id": "G4395689415-LPCLOUD",
+    "opera_sensing_time_utc": "2026-10-27T18:54:18.187083Z",
+    "delta_hours_opera_minus_nisar": 29.756,
+    "signed_delta_seconds_opera_minus_nisar": 107121.187,
+    "signed_delta_hours_opera_minus_nisar": 29.755885,
+    "absolute_delta_seconds": 107121.187,
+    "absolute_delta_days": 1.239829,
+    "temporal_match": "close_72h",
+    "timestamp_reference": "CMR granule start times"
+  },
+  "footprint_check": {
+    "method": "all four AOI rectangle corners tested against each CMR UMM polygon",
+    "corner_order_lon_lat": [
+      [
+        -119.555,
+        36.075
+      ],
+      [
+        -119.555,
+        36.085
+      ],
+      [
+        -119.545,
+        36.075
+      ],
+      [
+        -119.545,
+        36.085
+      ]
+    ],
+    "nisar_corner_inside": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "opera_corner_inside": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "nisar_footprint_convex": true,
+    "opera_footprint_convex": true,
+    "aoi_inside_both_footprints": true,
+    "nisar_polygon_lon_lat": [
+      [
+        -117.89659,
+        35.90329
+      ],
+      [
+        -118.67116,
+        37.95228
+      ],
+      [
+        -121.43151,
+        37.25238
+      ],
+      [
+        -120.60357,
+        35.21904
+      ],
+      [
+        -117.89659,
+        35.90329
+      ]
+    ],
+    "opera_polygon_lon_lat": [
+      [
+        -120.37131821,
+        36.99866808
+      ],
+      [
+        -120.32869365,
+        36.01049726
+      ],
+      [
+        -119.11143123,
+        36.03812799
+      ],
+      [
+        -119.13850562,
+        37.02730768
+      ],
+      [
+        -120.37131821,
+        36.99866808
+      ]
+    ]
+  },
+  "nisar_metadata": {
+    "collection": "NISAR_L2_GCOV_V1",
+    "production_pipeline": [
+      "PR"
+    ],
+    "frequency_a_polarizations": [
+      "HH",
+      "HV"
+    ],
+    "frequency_b_polarizations": [
+      "HH",
+      "HV"
+    ],
+    "grid_crs_and_pixel_spacing": "sample HHHH GeoTIFF: EPSG:32611, 10 m; this granule only"
+  },
+  "opera_metadata": {
+    "collection": "OPERA_L3_DIST-ALERT-HLS_V1",
+    "mgrs_tile": [
+      "11SKA"
+    ],
+    "sensing_sensor_product_id": [
+      "S2C_MSIL1C_20261027T184451_N0513_R070_T11SKA_20261027T203415.SAFE"
+    ],
+    "crs": [
+      "EPSG:32611"
+    ],
+    "crs_name": [
+      "WGS84 / UTM zone 11N"
+    ],
+    "upper_left_x": [
+      "199980.0"
+    ],
+    "upper_left_y": [
+      "4100040.0"
+    ],
+    "pixel_spacing_m": 30,
+    "pixel_spacing_source": "https://d2pn8kiwq2w21t.cloudfront.net/documents/OPERA_DIST_HLS_Product_Specification_V1.pdf",
+    "available_tiff_layers": [
+      "DATA-MASK",
+      "GEN-ANOM",
+      "GEN-ANOM-MAX",
+      "GEN-DIST-CONF",
+      "GEN-DIST-COUNT",
+      "GEN-DIST-DATE",
+      "GEN-DIST-DUR",
+      "GEN-DIST-STATUS",
+      "GEN-LAST-DATE",
+      "VEG-ANOM",
+      "VEG-ANOM-MAX",
+      "VEG-DIST-CONF",
+      "VEG-DIST-COUNT",
+      "VEG-DIST-DATE",
+      "VEG-DIST-DUR",
+      "VEG-DIST-STATUS",
+      "VEG-HIST",
+      "VEG-IND",
+      "VEG-LAST-DATE"
+    ],
+    "target_layer_present": true
+  },
+  "alignment_status": "Sample rasters inspected: EPSG:32611; NISAR 10 m and OPERA 30 m; nested grid origins; no resampling.",
+  "next_operation": "extract VEG-DIST-DATE and a small NISAR HHHH crop for recommended candidate; compare first anomaly date with NISAR sensing time",
+  "sample_data_downloaded": true,
+  "sample_data_scope": {
+    "aoi_crop_only": true,
+    "opera_layer": "VEG-DIST-STATUS",
+    "opera_source_bytes": 1136061,
+    "nisar_variable": "/science/LSAR/GCOV/grids/frequencyA/HHHH",
+    "nisar_crop_bytes": 41284
+  },
+  "positive_candidate_scan": {
+    "report_path": "candidate_positive_aois.json",
+    "candidate_window_count": 5,
+    "recommended_bbox_wsen": [
+      -120.2412837,
+      36.2694577,
+      -120.2301769,
+      36.280278
+    ],
+    "positive_pixels": 1243,
+    "confirmed_active_pixels_classes_3_and_6": 1240,
+    "footprint_coverage_percent": 100.0
+  }
+}

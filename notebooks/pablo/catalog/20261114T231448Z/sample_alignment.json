@@ -1,0 +1,208 @@
+{
+  "aoi_bbox_wgs84": [
+    -119.555,
+    36.075,
+    -119.545,
+    36.085
+  ],
+  "temporal_pair": {
+    "nisar_time_utc": "2026-10-26T13:08:57.000Z",
+    "opera_time_utc": "2026-10-27T18:54:18.187Z",
+    "signed_delta_seconds_opera_minus_nisar": 107121.187,
+    "signed_delta_hours_opera_minus_nisar": 29.755885,
+    "absolute_delta_seconds": 107121.187,
+    "absolute_delta_days": 1.239829,
+    "temporal_match": "close_72h",
+    "time_basis": "CMR granule start timestamps; not event onset time"
+  },
+  "opera_download": {
+    "bytes": 1136061,
+    "sha256": "0686f58211e64876cc19e3a311bc4ec22799e7d9c0abd26eb3c7785dec37dc59",
+    "reused_existing": true
+  },
+  "opera_source": {
+    "path": "data/samples/central_valley_20261026/opera/source_VEG-DIST-STATUS.tif",
+    "bytes": 1136061,
+    "sha256": "0686f58211e64876cc19e3a311bc4ec22799e7d9c0abd26eb3c7785dec37dc59",
+    "width": 3660,
+    "height": 3660,
+    "bands": 1,
+    "dtype": [
+      "uint8"
+    ],
+    "crs": "EPSG:32611",
+    "transform": [
+      30.0,
+      0.0,
+      199980.0,
+      0.0,
+      -30.0,
+      4100040.0
+    ],
+    "bounds": [
+      199980.0,
+      3990240.0,
+      309780.0,
+      4100040.0
+    ],
+    "pixel_size": [
+      30.0,
+      -30.0
+    ],
+    "nodata": 255.0,
+    "tags": {
+      "flag_meanings": "no_disturbance,firstdetection_<50%,provisional_<50%,confirmed_<50%,firstdetection_>=50%,provisional_>=50%,confirmed_>=50%,confirmed_<50%_finished,confirmed_>=50%_finished,no_data",
+      "flag_values": "0,1,2,3,4,5,6,7,8,255",
+      "Input_DIST-ALERT_granule": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261023T183349Z_20261025T044231Z_L9_30_v1",
+      "Percent_Updated": "100.0",
+      "Units": "unitless",
+      "Update_Date": "2026-10-27T18:54:18.187083Z",
+      "Valid_max": "8",
+      "Valid_min": "0",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": [
+      {}
+    ],
+    "valid_pixel_count": 13395600,
+    "value_counts": {
+      "0": 12047414,
+      "1": 62204,
+      "2": 45404,
+      "3": 122726,
+      "4": 1094,
+      "5": 767,
+      "6": 70707,
+      "7": 725528,
+      "8": 319756
+    }
+  },
+  "opera_crop": {
+    "path": "data/samples/central_valley_20261026/opera/VEG-DIST-STATUS_aoi.tif",
+    "bytes": 1784,
+    "sha256": "e614f3c627df96585f71530515a21086ab19b8d1b4d71fc98aa7126737b2da79",
+    "width": 32,
+    "height": 39,
+    "bands": 1,
+    "dtype": [
+      "uint8"
+    ],
+    "crs": "EPSG:32611",
+    "transform": [
+      30.0,
+      0.0,
+      269910.0,
+      0.0,
+      -30.0,
+      3996420.0
+    ],
+    "bounds": [
+      269910.0,
+      3995250.0,
+      270870.0,
+      3996420.0
+    ],
+    "pixel_size": [
+      30.0,
+      -30.0
+    ],
+    "nodata": 255.0,
+    "tags": {
+      "flag_meanings": "no_disturbance,firstdetection_<50%,provisional_<50%,confirmed_<50%,firstdetection_>=50%,provisional_>=50%,confirmed_>=50%,confirmed_<50%_finished,confirmed_>=50%_finished,no_data",
+      "flag_values": "0,1,2,3,4,5,6,7,8,255",
+      "Input_DIST-ALERT_granule": "OPERA_L3_DIST-ALERT-HLS_T11SKA_20261023T183349Z_20261025T044231Z_L9_30_v1",
+      "Percent_Updated": "100.0",
+      "Units": "unitless",
+      "Update_Date": "2026-10-27T18:54:18.187083Z",
+      "Valid_max": "8",
+      "Valid_min": "0",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": [
+      {}
+    ],
+    "valid_pixel_count": 1248,
+    "value_counts": {
+      "0": 1248
+    }
+  },
+  "nisar_crop": {
+    "path": "data/samples/central_valley_20261026/nisar/NISAR_L2_PR_GCOV_034_034_A_020_4005_DHDH_A_20261026T130857_20261026T130931_P05036_N_F_J_001_0_HHHH_NISAR_L2_PR_GCOV_034_034_A_020_4005_DHDH_A_20261026T130857_20261026T130931_P05036_N_F_J_001_science_LSAR_GCOV_grids_frequencyA_HHHH_subsetted.tif",
+    "bytes": 41284,
+    "sha256": "8e5cee12bcbe865468ccf39d200e7a5ce34fbfa92349c5888cf6e48e38afc597",
+    "width": 92,
+    "height": 112,
+    "bands": 1,
+    "dtype": [
+      "float32"
+    ],
+    "crs": "EPSG:32611",
+    "transform": [
+      10.0,
+      0.0,
+      269920.0,
+      0.0,
+      -10.0,
+      3996390.0
+    ],
+    "bounds": [
+      269920.0,
+      3995270.0,
+      270840.0,
+      3996390.0
+    ],
+    "pixel_size": [
+      10.0,
+      -10.0
+    ],
+    "nodata": NaN,
+    "tags": {
+      "contact": "nisar-sds-ops@jpl.nasa.gov",
+      "Conventions": "CF-1.7",
+      "institution": "NASA JPL",
+      "mission_name": "NISAR",
+      "reference_document": "D-102274 NISAR NASA SDS Product Specification Level-2 Geocoded Polarimetric Covariance L2 GCOV",
+      "title": "NISAR L2 GCOV Product",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": [
+      {
+        "description": "Covariance between HH and HH",
+        "grid_mapping": "projection",
+        "long_name": "Geocoded polarimetric covariance term HHHH",
+        "max_value": "194426.55",
+        "mean_value": "0.2512551",
+        "min_value": "3.5882686e-18",
+        "sample_stddev": "32.614765",
+        "units": "1",
+        "valid_min": "0",
+        "_FillValue": "nan"
+      }
+    ],
+    "valid_pixel_count": 9973,
+    "value_summary": {
+      "min": 0.001256406307220459,
+      "p02": 0.0044899918138980865,
+      "median": 0.013463497161865234,
+      "p98": 0.09206214547157288,
+      "max": 1.660888671875
+    }
+  },
+  "same_crs": true,
+  "same_pixel_size": false,
+  "origin_offset_opera_minus_nisar_m": [
+    -10.0,
+    30.0
+  ],
+  "origin_offset_in_fine_grid_pixels": [
+    -1.0,
+    3.0
+  ],
+  "pixel_size_ratios_coarse_to_fine": [
+    3.0,
+    3.0
+  ],
+  "same_pixel_grid": false,
+  "nested_grid_alignment": true,
+  "alignment_note": "Inspection only; no reprojection or resampling performed."
+}
