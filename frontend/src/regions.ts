@@ -3,6 +3,7 @@
 // - subdivisions: geoBoundaries gbOpen (ADM1 = departments/states, ADM2 = municipalities)
 import type { FeatureCollection } from 'geojson'
 import type { LngLat, RegionGeometry } from './types'
+import { inPolygon } from './geo'
 
 export type AdminLevel = 'ADM0' | 'ADM1' | 'ADM2'
 
@@ -120,23 +121,6 @@ export function loadSubdivisions(iso: string, level: Exclude<AdminLevel, 'ADM0'>
   }
   return promise
 }
-
-type Ring = number[][]
-
-// Ray casting: a point is inside when a ray to its right crosses the ring an odd number of times.
-const inRing = (ring: Ring, [x, y]: LngLat): boolean => {
-  let inside = false
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i]
-    const [xj, yj] = ring[j]
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside
-  }
-  return inside
-}
-
-// rings[0] is the outer ring; the rest are holes.
-const inPolygon = (rings: Ring[], p: LngLat): boolean =>
-  inRing(rings[0], p) && !rings.slice(1).some((hole) => inRing(hole, p))
 
 // First feature whose outline contains p = [lng, lat], or undefined.
 export function findCountryAt(fc: RegionCollection, p: LngLat) {

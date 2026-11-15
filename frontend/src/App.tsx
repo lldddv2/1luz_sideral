@@ -96,6 +96,8 @@ export default function App() {
           onUpdate={(id, coords) => setPolygons((prev) => prev.map((p) => (p.id === id ? { ...p, coords } : p)))}
           previewGeometry={preview?.geometry ?? null}
           flyToBbox={flyTo}
+          searchStart={download.params.start}
+          searchEnd={download.params.end}
         />
         <SearchBar
           start={download.params.start}
