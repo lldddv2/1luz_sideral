@@ -201,19 +201,21 @@ function unfilter(raw: Uint8Array, w: number, h: number, bpp: number): Uint8Arra
   return out
 }
 
-// GIBS NISAR tiles are normally 8-bit RGB with tRNS (0,0,0). Some tiles are broken:
+// GIBS NISAR tiles are 8-bit RGB with tRNS (0,0,0); genuinely empty tiles are the same, all
+// black. The server is non-deterministic, though: the same URL sometimes comes back as
 // - colour type 6 (RGBA) whose bytes are really the RGB image read with a 4-byte stride, so a
 //   browser shows TV-snow; the first w*h*3 bytes are the true RGB, the rest is junk.
-// - colour type 3 (palette) with an all-zero palette, which renders as an opaque black tile.
-// Returns RGBA for the recovered tile, null for an unusable one, or 'native' for a normal PNG.
-async function fixGibsPng(b: Uint8Array): Promise<Uint8ClampedArray | null | 'native'> {
+// - colour type 0 (grey) or 3 (palette, all-zero palette) holding only the first third of the
+//   RGB bytes, which renders as grey stripes or a black tile and cannot be recovered;
+// - HTTP 500.
+// Returns RGBA for a recovered RGBA tile, 'native' for a normal RGB PNG, or 'retry'.
+async function fixGibsPng(b: Uint8Array): Promise<Uint8ClampedArray | 'native' | 'retry'> {
   const png = parsePng(b)
-  if (!png) return null
-  if (png.type === 3) return png.plte && png.plte.some((v) => v !== 0) ? 'native' : null
-  if (png.type !== 6) return 'native'
-  if (png.depth !== 8 || png.w !== SIZE || png.h !== SIZE) return null
+  if (!png || png.depth !== 8 || b[28] !== 0 || png.w !== SIZE || png.h !== SIZE) return 'retry'
+  if (png.type === 2) return 'native'
+  if (png.type !== 6) return 'retry'
   const raw = await inflate(png.idat)
-  if (raw.length !== SIZE * (SIZE * 4 + 1)) return null
+  if (raw.length !== SIZE * (SIZE * 4 + 1)) return 'retry'
   const bytes = unfilter(raw, SIZE, SIZE, 4)
   const out = new Uint8ClampedArray(SIZE * SIZE * 4)
   for (let i = 0; i < SIZE * SIZE; i++) {
@@ -232,17 +234,54 @@ async function fixGibsPng(b: Uint8Array): Promise<Uint8ClampedArray | null | 'na
 const cache = new Map<string, Promise<Uint8ClampedArray | null>>()
 const CACHE_MAX = 500
 
+// NISAR fetches go through a small pool: GIBS hands out more broken tiles under bursts.
+const NISAR_POOL = 6
+const NISAR_TRIES = 6
+let nisarActive = 0
+const nisarQueue: (() => void)[] = []
+
+async function pooledFetch(url: string): Promise<Response> {
+  if (nisarActive >= NISAR_POOL) await new Promise<void>((r) => nisarQueue.push(r))
+  nisarActive++
+  try {
+    const res = await fetch(url)
+    await res.clone().arrayBuffer() // hold the slot until the body is in
+    return res
+  } finally {
+    nisarActive--
+    nisarQueue.shift()?.()
+  }
+}
+
+// NISAR tile body: refetches until GIBS returns a usable PNG; null after NISAR_TRIES (not cached).
+async function nisarBlob(url: string): Promise<Blob | Uint8ClampedArray | null> {
+  for (let i = 0; i < NISAR_TRIES; i++) {
+    if (i) await new Promise((r) => setTimeout(r, 200 * i + Math.random() * 200))
+    const res = await pooledFetch(url)
+    if (res.status >= 400 && res.status < 500) return null // genuinely missing, no point retrying
+    if (!res.ok) continue
+    const blob = await res.blob()
+    const fixed = await fixGibsPng(new Uint8Array(await blob.arrayBuffer()))
+    if (fixed === 'native') return blob
+    if (fixed !== 'retry') return fixed
+  }
+  throw new Error('gibs: no usable tile')
+}
+
 function rawTile(url: string, fix = false): Promise<Uint8ClampedArray | null> {
   const hit = cache.get(url)
   if (hit) return hit
   const p = (async () => {
     try {
-      const res = await fetch(url)
-      if (!res.ok || !(res.headers.get('content-type') ?? 'image/').startsWith('image/')) return null
-      const blob = await res.blob()
+      let blob: Blob
       if (fix) {
-        const fixed = await fixGibsPng(new Uint8Array(await blob.arrayBuffer()))
-        if (fixed !== 'native') return fixed
+        const b = await nisarBlob(url)
+        if (!(b instanceof Blob)) return b
+        blob = b
+      } else {
+        const res = await fetch(url)
+        if (!res.ok || !(res.headers.get('content-type') ?? 'image/').startsWith('image/')) return null
+        blob = await res.blob()
       }
       const bmp = await createImageBitmap(blob)
       const c = new OffscreenCanvas(SIZE, SIZE)
