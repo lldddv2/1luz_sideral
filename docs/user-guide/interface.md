@@ -10,16 +10,16 @@ At the top of the map. It searches administrative regions, natural features and 
 
 A vertical rail of icons opens the sidebar sections:
 
-- **Área de estudio** (Study area): draw or add the polygon(s) that limit searches.
-- **Puntos de interés** (Points of interest): square zones used for downloads. See {doc}`points-of-interest`.
-- **Coberturas** (Land covers): land-cover percentages of the active area.
-- **Descarga** (Download): download data for the selected point of interest.
-- **Modelo propio** (Own model): connect an external model. See {doc}`custom-model`.
-- **Capas** (Layers): toggle overlays such as `OPERA DSWx-S1`, `NISAR GCOV (vista previa)` and `JRC agua histórica`.
-- **Acerca** (About).
-- **Ver guía** (Show guide): restart the guided tour. See {doc}`onboarding-tour`.
+- **Study area**: draw or add the polygon(s) that limit searches.
+- **Points of interest**: square zones used for downloads. See {doc}`points-of-interest`.
+- **Land cover**: land-cover percentages of the active area.
+- **Download**: download data for the selected point of interest.
+- **Your model**: connect an external model. See {doc}`custom-model`.
+- **Layers**: toggle overlays such as `OPERA DSWx-S1`, `NISAR GCOV (preview)` and `JRC historical water`.
+- **About**.
+- **Start tour**: restart the guided tour. See {doc}`onboarding-tour`.
 
-The panel can be collapsed with **Plegar panel** (Collapse panel) and reopened with **Expandir panel** (Expand panel).
+The panel can be collapsed with **Collapse panel** and reopened with **Expand panel**.
 
 ## Acquisition timeline
 
@@ -32,6 +32,6 @@ The MapLibre map shows the basemap, study areas, points of interest, land-cover 
 ## Conventions
 
 - Every button has an icon in front of its text. Icon-only buttons show a tooltip.
-- Status words are fixed: **Buscando** (Searching), **En cola** (Queued), **Procesando** (Processing), **Listo** (Done), **Error**.
+- Status words are fixed: **Searching**, **Queued**, **Processing**, **Done**, **Error**.
 - Warnings use yellow with a triangle icon. A warning never disables a button.
 - Multi-select segmented buttons show a check mark when selected and a plus sign when not.

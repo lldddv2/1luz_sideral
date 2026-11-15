@@ -13,7 +13,7 @@ Dependencies: `torch` (CPU wheels), `numpy`, `rasterio`, `requests`, `pytest`.
 
 ## Run
 
-1. Open the web app, section **Modelo propio**, and copy the token (valid 2 h).
+1. Open the web app, section **Your model**, and copy the token (valid 2 h).
 2. Start the client:
 
 ```bash
