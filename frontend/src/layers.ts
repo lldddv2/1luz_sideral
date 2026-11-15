@@ -235,9 +235,27 @@ async function fixGibsPng(b: Uint8Array): Promise<Uint8ClampedArray | 'native' |
   return out
 }
 
-// Raw RGBA per GIBS tile URL; null = missing/failed. Bounded FIFO cache.
-const cache = new Map<string, Promise<Uint8ClampedArray | null>>()
-const CACHE_MAX = 500
+// Raw GIBS tile per URL, kept as served: compressed PNG Blob, RGBA for a recovered NISAR tile,
+// or null when missing. Decoded on use, so the cache can hold neighbour zooms (see preloadAround).
+// LRU bounded by bytes.
+type Raw = Blob | Uint8ClampedArray | null
+interface Entry {
+  p: Promise<Raw>
+  bytes: number
+  pre: boolean // created by the preloader
+}
+const cache = new Map<string, Entry>()
+const CACHE_BYTES = 150 * 1024 * 1024
+const CACHE_MAX = 8000
+let cacheBytes = 0
+
+function evict() {
+  for (const [k, e] of cache) {
+    if (cacheBytes <= CACHE_BYTES && cache.size <= CACHE_MAX) break
+    cache.delete(k)
+    cacheBytes -= e.bytes
+  }
+}
 
 // NISAR fetches go through a small pool: GIBS hands out more broken tiles under bursts.
 const NISAR_POOL = 6
@@ -273,35 +291,147 @@ async function nisarBlob(url: string): Promise<Blob | Uint8ClampedArray | null> 
   throw new Error('gibs: no usable tile')
 }
 
-function rawTile(url: string, fix = false): Promise<Uint8ClampedArray | null> {
+// Raw tile loads started for visible tiles and still running; the preloader waits on them.
+let visiblePending = 0
+const stats = { req: 0, hit: 0 } // visible raw requests / ones served by a preloaded entry
+
+function loadRaw(url: string, fix: boolean, pre: boolean): Promise<Raw> {
   const hit = cache.get(url)
-  if (hit) return hit
-  const p = (async () => {
+  if (hit) {
+    cache.delete(url) // LRU: move to the newest end
+    cache.set(url, hit)
+    if (!pre) {
+      stats.req++
+      if (hit.pre) stats.hit++
+    }
+    return hit.p
+  }
+  if (!pre) {
+    stats.req++
+    visiblePending++
+  }
+  const e: Entry = { p: Promise.resolve(null), bytes: 0, pre }
+  e.p = (async (): Promise<Raw> => {
     try {
-      let blob: Blob
-      if (fix) {
-        const b = await nisarBlob(url)
-        if (!(b instanceof Blob)) return b
-        blob = b
-      } else {
-        const res = await fetch(url)
-        if (!res.ok || !(res.headers.get('content-type') ?? 'image/').startsWith('image/')) return null
-        blob = await res.blob()
-      }
-      const bmp = await createImageBitmap(blob)
-      const c = new OffscreenCanvas(SIZE, SIZE)
-      const ctx = c.getContext('2d')!
-      ctx.drawImage(bmp, 0, 0, SIZE, SIZE)
-      bmp.close()
-      return ctx.getImageData(0, 0, SIZE, SIZE).data
+      if (fix) return await nisarBlob(url)
+      const res = await fetch(url)
+      if (!res.ok || !(res.headers.get('content-type') ?? 'image/').startsWith('image/')) return null
+      return await res.blob()
     } catch {
-      cache.delete(url)
+      if (cache.get(url) === e) cache.delete(url) // failures are retried on the next request
       return null
+    } finally {
+      if (!pre) visiblePending--
     }
   })()
-  cache.set(url, p)
-  if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value!)
-  return p
+  void e.p.then((r) => {
+    if (cache.get(url) !== e || !r) return
+    e.bytes = r instanceof Blob ? r.size : r.byteLength
+    cacheBytes += e.bytes
+    evict()
+  })
+  cache.set(url, e)
+  evict()
+  return e.p
+}
+
+// Decoded RGBA of a GIBS tile (decoded on every call; only compressed bytes are cached).
+async function rawTile(url: string, fix = false): Promise<Uint8ClampedArray | null> {
+  const r = await loadRaw(url, fix, false)
+  if (!(r instanceof Blob)) return r
+  try {
+    const bmp = await createImageBitmap(r)
+    const c = new OffscreenCanvas(SIZE, SIZE)
+    const ctx = c.getContext('2d')!
+    ctx.drawImage(bmp, 0, 0, SIZE, SIZE)
+    bmp.close()
+    return ctx.getImageData(0, 0, SIZE, SIZE).data
+  } catch {
+    return null
+  }
+}
+
+// Neighbour-zoom preload (like chunk preloading in games): after the map settles, the raw GIBS
+// tiles of zoom z-1 (whole view) and z+1 (central part of the view) are fetched into the cache,
+// so a zoom step only has to composite. PRELOAD_POOL fetches run at a time, only while no visible
+// tile is loading, and the queue is dropped at the next map move.
+const PRELOAD_POOL = 2
+const PRELOAD_MAX = 200 // GETs per idle
+const PRELOAD_INNER = 0.5 // share of the view area preloaded at z+1
+let preloadGen = 0
+
+export interface PreloadLayer {
+  id: 'nisar' | 'dswx'
+  date: string
+  dirs?: string // NISAR 'AD' | 'A' | 'D' | 'N'
+}
+
+// GIBS URLs to preload for a view (map zoom + lon/lat box [w, s, e, n]), capped at PRELOAD_MAX:
+// z-1 first (few tiles, needed to zoom out), then z+1; nearest the view centre first in each.
+export function preloadUrls(
+  zoom: number,
+  [w, s, e, n]: [number, number, number, number],
+  layers: PreloadLayer[],
+): { url: string; fix: boolean }[] {
+  const zr = Math.round(zoom) // raster sources pick tiles at the rounded zoom
+  const out: { url: string; fix: boolean; d: number; lvl: number }[] = []
+  for (const l of layers) {
+    const nisar = l.id === 'nisar'
+    if (nisar && l.dirs === 'N') continue
+    const minz = nisar ? NISAR_FADE_START : 0
+    const maxz = OVERLAYS[l.id].maxzoom
+    const tpl = nisar ? NISAR_GIBS : DSWX_GIBS
+    const dates = nisar ? mosaicDates(l.date) : dswxDates(l.date)
+    for (const [lvl, area] of [
+      [zr - 1, 1],
+      [zr + 1, PRELOAD_INNER],
+    ]) {
+      const z = Math.min(lvl, maxz) // past maxzoom the source overzooms its last level
+      if (z === Math.min(zr, maxz) || z < minz) continue
+      const k = Math.sqrt(area) // shrink the box around its centre (tile units) to the area share
+      const cx = (lonX(w, z) + lonX(e, z)) / 2
+      const cy = (latY(n, z) + latY(s, z)) / 2
+      const hx = ((lonX(e, z) - lonX(w, z)) / 2) * k
+      const hy = ((latY(s, z) - latY(n, z)) / 2) * k
+      const last = 2 ** z - 1
+      const c = (v: number) => Math.max(0, Math.min(last, Math.floor(v)))
+      for (let x = c(cx - hx); x <= c(cx + hx - 1e-9); x++)
+        for (let y = c(cy - hy); y <= c(cy + hy - 1e-9); y++) {
+          const d = (x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2
+          for (const t of dates) {
+            const url = tpl.replace('{time}', t).replace('{z}', String(z)).replace('{y}', String(y)).replace('{x}', String(x))
+            out.push({ url, fix: nisar, d, lvl: lvl < zr ? 0 : 1 })
+          }
+        }
+    }
+  }
+  out.sort((a, b) => a.lvl - b.lvl || a.d - b.d)
+  return out
+    .filter((u) => !cache.has(u.url))
+    .slice(0, PRELOAD_MAX)
+    .map(({ url, fix }) => ({ url, fix }))
+}
+
+// Drops queued preloads; in-flight ones finish and stay cached.
+export function cancelPreload() {
+  preloadGen++
+}
+
+export function preloadAround(zoom: number, view: [number, number, number, number], layers: PreloadLayer[]) {
+  const gen = ++preloadGen
+  const queue = preloadUrls(zoom, view, layers)
+  console.debug(
+    `preload z${Math.round(zoom)}: ${queue.length} GET; cache ${cache.size} tiles, ${(cacheBytes / 1048576).toFixed(1)} MB; preload hits ${stats.hit}/${stats.req}`,
+  )
+  const worker = async () => {
+    for (;;) {
+      while (visiblePending > 0 && gen === preloadGen) await new Promise((r) => setTimeout(r, 100))
+      const next = queue.shift()
+      if (!next || gen !== preloadGen) return
+      if (!cache.has(next.url)) await loadRaw(next.url, next.fix, true)
+    }
+  }
+  for (let i = 0; i < PRELOAD_POOL; i++) void worker()
 }
 
 // Separable box blur of one channel, in place.

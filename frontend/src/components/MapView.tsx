@@ -15,8 +15,8 @@ import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } f
 import type { XY } from '../editing'
 import { TOOLS } from './Sidebar'
 import { addProtocol } from 'maplibre-gl'
-import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, nisarDate, nisarFootprints, overlayTiles, registerNisarProtocol } from '../layers'
-import type { OverlayId, OverlayState } from '../layers'
+import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, nisarDate, nisarFootprints, overlayTiles, preloadAround, registerNisarProtocol } from '../layers'
+import type { OverlayId, OverlayState, PreloadLayer } from '../layers'
 
 // Overlay tile failures (e.g. GIBS hiccups) are expected; keep them out of the console.
 registerNisarProtocol(addProtocol)
@@ -173,6 +173,21 @@ export default function MapView({
       live = false
     }
   }, [showFoot, footView, footDate])
+  // Neighbour-zoom preload: 300 ms after the map settles, fetch raw tiles for z-1 and z+1.
+  const dswx = overlays.dswx
+  useEffect(() => {
+    const map = mapRef.current?.getMap()
+    if (!footView || !map) return
+    const layers: PreloadLayer[] = []
+    if (nisar.on) layers.push({ id: 'nisar', date: nisar.date, dirs: nisarDirs })
+    if (dswx.on) layers.push({ id: 'dswx', date: dswx.date })
+    if (!layers.length) return
+    const t = setTimeout(() => preloadAround(map.getZoom(), footView, layers), 300)
+    return () => {
+      clearTimeout(t)
+      cancelPreload()
+    }
+  }, [footView, nisar.on, nisar.date, nisarDirs, dswx.on, dswx.date])
   // Look the POI up by id: rendered feature properties flatten nested objects.
   const openPoi = poiId ? poisGeo.features.find((f) => f.properties?.id === poiId) : undefined
   const poi = openPoi ? POIS.features.find((f) => f.properties.id === poiId) : undefined
@@ -626,6 +641,7 @@ export default function MapView({
       }}
       onContextMenu={handleContextMenu}
       onMoveStart={() => {
+        cancelPreload() // visible tiles of the new view go first
         setMenu(null)
         setPalette(null)
       }}
@@ -723,9 +739,9 @@ export default function MapView({
                 'raster-contrast': -0.2,
                 'raster-saturation': -0.25,
                 'raster-resampling': 'linear' as const,
-                'raster-fade-duration': 300,
+                'raster-fade-duration': 100,
               }
-            : { 'raster-opacity': imgOpacity }
+            : { 'raster-opacity': imgOpacity, 'raster-fade-duration': 100 }
         return (
           <Fragment key={`${id}-${url}`}>
           {mode && showFoot && (
