@@ -85,7 +85,7 @@ interface Props {
   flyToBbox: { bbox: BBox; key: number } | null // camera target; a new key flies there again
   overlays: Record<OverlayId, OverlayState>
   coverMask: CoverMaskImage | null // land-cover classes of the filter, over the active area
-  waterOverlay?: { url: string; coordinates: [LngLat, LngLat, LngLat, LngLat]; opacity: number; visible: boolean } | null // U-Net water probability
+  waterOverlay?: { url: string; coordinates: [LngLat, LngLat, LngLat, LngLat]; opacity: number; visible: boolean } | null // Resultado del modelo (external model raster)
   featureLabels: NaturalFeature[] // natural features labelled on the map (one marker each)
   activeFeature: NaturalFeature | null // last feature picked; its label offers "add as study area"
   onFeatureClick: (feature: NaturalFeature) => void

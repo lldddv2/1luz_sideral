@@ -14,3 +14,7 @@
 - [入門導覽](onboarding-tour.md) — driver.js 導覽、tour-seen-v1、data-tour selector、步序
 - [水 U-Net](water-unet.md) — /api/water 推理端點、淨權、前端「Agua (U-Net)」
 - [時序播放](timeline-playback.md) — 先預載幀後速播、play 態、取消
+- [外模接口](model-api.md) — /api/models 約：token、jobs 拉、input.tif、result、SSE
+- [外模後台](model-backend.md) — store/raster/router 實、快取、錯碼
+- [離模客](model-service.md) — model_service/water_unet 獨程 U-Net 客、跑法、測
+- [外模前端](model-ui.md) — 節「Modelo propio」：token、SSE、工態、命令片

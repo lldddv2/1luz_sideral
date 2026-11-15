@@ -1,4 +1,6 @@
 # 錄（倒序）
+- 2026-11-15 claude: Modelo propio 唯 curl 七步連（去 luzsi_model.py、pip、U-Net 例），任意模約不變；PowerShell hello 用 hello.json。用戶令 solo CURL。
+- 2026-11-15 claude: 模離後台→model_service/water_unet 獨程，HTTP 拉+SSE 接 /api/models（token 2h）；前端「Modelo propio」示 token、命令 `python -m water_unet`（dev --url 直 :8000）、片合 409 序。驗：端到端 Okavango 工 3 s 成（input 快取），PNG 200；tsc/build 過；test_dem 二敗於 main 亦敗，舊疾。因：模可換、用戶本機跑。
 - 2026-11-15 claude: 導覽改側欄每節一步（study→about 七節，自開節，防閉以 aria-current），panel 步併入 layers，鍵升 tour-seen-v2 令舊用戶再見。tsc、build 過；未瀏覽器驗。
 - 2026-11-15 claude: 「Detectar agua」誤因本機 DNS 暫斷 urs.earthdata.nasa.gov（今解析可，實跑 /api/water 成）。碼無誤。router 今分 ConnectionError/HTTPError/Timeout 回西語簡訊，詳入 log；.download-status 錯文 overflow-wrap:anywhere 以換行。
 - 2026-11-15 claude: 修播放畫凍（錄影：首輪後日期續行而圖不變）。疑因：image Source 換 url 經 maplibre 共用圖請求隊，隱瓦請求擠之，450ms 即 abort 前載，終不成。今 Source url 釘首幀，後幀自 fetch→createImageBitmap→updateImage({image})。未瀏覽器驗。

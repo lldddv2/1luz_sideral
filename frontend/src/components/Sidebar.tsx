@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import {
   Check,
@@ -26,6 +26,11 @@ import {
   TriangleAlert,
   Trees,
   Plug,
+  Copy,
+  RefreshCw,
+  Play,
+  BookOpen,
+  X,
 } from 'lucide-react'
 import { Compass } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -42,7 +47,7 @@ import type { BasemapId } from '../basemaps'
 import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, OVERLAYS, OVERLAY_IDS } from '../layers'
 import { ZONE_MAX_SIDE_KM, ZONE_MIN_SIDE_KM, clampHalfKm } from '../zone'
 import type { OverlayId, OverlayState } from '../layers'
-import type { WaterController } from '../water'
+import type { WaterController, WaterResult } from '../water'
 import type { BBox } from '../nominatim'
 
 // Legend color per water layer, shown as a dot next to its name.
@@ -107,7 +112,7 @@ const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
   { id: 'zones', label: 'Puntos de interés', Icon: MapPin },
   { id: 'cover', label: 'Coberturas', Icon: Trees },
   { id: 'download', label: 'Descarga', Icon: Download },
-  { id: 'water', label: 'Agua (U-Net)', Icon: Plug },
+  { id: 'water', label: 'Modelo propio', Icon: Plug },
   { id: 'layers', label: 'Capas', Icon: Layers },
   { id: 'about', label: 'Acerca', Icon: Info },
 ]
@@ -584,36 +589,239 @@ function LayersSection({
   )
 }
 
-// U-Net water map from the latest NISAR GCOV HH scene over the active area.
-function WaterSection({ water, target }: { water: WaterController; target: Props['waterTarget'] }) {
-  const { state } = water
-  const loading = state.status === 'loading'
+function CopyButton({ text, label, className = 'btn' }: { text: string; label: string; className?: string }) {
+  const [done, setDone] = useState(false)
+  const copy = () => {
+    navigator.clipboard
+      ?.writeText(text)
+      .then(() => {
+        setDone(true)
+        setTimeout(() => setDone(false), 1500)
+      })
+      .catch(() => {})
+  }
+  return (
+    <button type="button" className={className} onClick={copy} title={label} aria-label={label}>
+      {done ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+    </button>
+  )
+}
+
+function CodeBlock({ code, label, tall }: { code: string; label: string; tall?: boolean }) {
+  return (
+    <div className={tall ? 'model-code tall' : 'model-code'}>
+      <pre>{code}</pre>
+      <CopyButton text={code} label={label} className="model-copy" />
+    </div>
+  )
+}
+
+const JOB_LABEL = { queued: 'En cola', running: 'Procesando' } as const
+
+const fmt = (v: number | undefined) =>
+  v == null || !Number.isFinite(v) ? '—' : Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)
+
+function ModelLegend({ result }: { result: WaterResult }) {
+  const { legend, units, stats, output } = result
+  const u = units ? ` ${units}` : ''
   return (
     <>
-      <p className="hint">
-        {target ? <>Área: {target.name}</> : 'Añade un área de estudio o selecciona un punto de interés (máx. 250 km de lado).'}
+      {legend && 'classes' in legend ? (
+        <ul className="model-classes">
+          {legend.classes.map((c) => (
+            <li key={c.value}>
+              <span className="layer-dot layer-dot-sm" style={{ background: c.color }} aria-hidden="true" /> {c.value}
+            </li>
+          ))}
+        </ul>
+      ) : legend ? (
+        <div className="model-legend">
+          <div className="model-ramp" aria-hidden="true" />
+          <div className="model-ramp-labels">
+            <span>
+              {fmt(legend.min)}
+              {u}
+            </span>
+            <span>
+              {fmt(legend.max)}
+              {u}
+            </span>
+          </div>
+        </div>
+      ) : null}
+      {stats && (
+        <p className="hint">
+          mín {fmt(stats.min)} · máx {fmt(stats.max)} · media {fmt(stats.mean)}
+          {u}
+          {stats.fraction != null && output !== 'continuous' && <> · {(stats.fraction * 100).toFixed(1)} % del área</>}
+        </p>
+      )}
+    </>
+  )
+}
+
+// Raster from the user's own model (any kind), running locally and connected over /api/models.
+function WaterSection({ water, target }: { water: WaterController; target: Props['waterTarget'] }) {
+  const { state, model, token } = water
+  // Dev: the model talks to uvicorn directly (port 8000) instead of through the Vite proxy.
+  const origin = import.meta.env.DEV ? 'http://localhost:8000' : window.location.origin
+  const tok = token ?? '<TOKEN>'
+  const auth = `-H "Authorization: Bearer ${tok}"`
+  const jobId = state.status === 'job' && state.job_id ? state.job_id : '<job_id>'
+  // One flag per line: bash continues with " \", PowerShell with " `".
+  const sh = (...parts: string[]) => parts.join(' \\\n  ')
+  const ps = (...parts: string[]) => parts.join(' `\n  ')
+  const hello = [
+    '{',
+    '  "name": "mi-modelo",',
+    '  "output": "probability",',
+    '  "pols": ["HH"],',
+    '  "label": "Agua",',
+    '  "units": ""',
+    '}',
+  ]
+  const ct = '-H "Content-Type: application/json"'
+  const cmdHello = sh(`curl -X POST ${origin}/api/models/hello`, auth, ct, `-d '${hello.join('\n  ')}'`)
+  const cmdHelloPs =
+    `@'\n${hello.join('\n')}\n'@ | Set-Content -Encoding ascii hello.json\n` +
+    ps(`curl.exe -X POST ${origin}/api/models/hello`, auth, ct, '-d "@hello.json"')
+  const cmdNext = sh(`curl ${origin}/api/models/jobs/next`, auth)
+  const inputUrl = jobId === '<job_id>' ? '<input_url>' : `/api/models/jobs/${jobId}/input.tif`
+  const cmdInput = sh(`curl ${origin}${inputUrl}`, auth, '-o input.tif')
+  const cmdResult = sh(`curl -X POST ${origin}/api/models/jobs/${jobId}/result`, auth, '-F "file=@result.tif;type=image/tiff"')
+  const busy = state.status === 'job'
+  const desc = [model.name ?? 'modelo', model.label].filter(Boolean).join(' · ')
+  const dim = token ? undefined : 'model-dim'
+  const [guide, setGuide] = useState(false)
+  useEffect(() => {
+    if (!guide) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setGuide(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [guide])
+  const connectBtn = (
+    <button type="button" className="btn btn-active" onClick={water.regenerate}>
+      <Plug size={16} aria-hidden="true" />
+      Conectar modelo
+    </button>
+  )
+  const tokenError = water.tokenError && (
+    <p className="download-status tone-error" role="alert">
+      <CircleX size={16} aria-hidden="true" />
+      <span>{water.tokenError}</span>
+    </p>
+  )
+  return (
+    <>
+      <p className={model.connected ? 'model-status on' : 'model-status'} role="status">
+        <span className="model-dot" aria-hidden="true" />
+        {model.connected ? `Conectado: ${desc}` : 'Desconectado'}
       </p>
+      {token ? (
+        <>
+          <div className="model-token-row">
+            <code className="model-token" title={token}>{`${token.slice(0, 10)}…${token.slice(-4)}`}</code>
+            <CopyButton text={token} label="Copiar token" className="model-icon-btn" />
+            <button type="button" className="model-icon-btn" onClick={water.regenerate} title="Regenerar token" aria-label="Regenerar token">
+              <RefreshCw size={16} aria-hidden="true" />
+            </button>
+          </div>
+          {!model.connected && <p className="hint">Usa la guía para conectar tu modelo con curl.</p>}
+        </>
+      ) : (
+        <div className="btn-row">{connectBtn}</div>
+      )}
+      {tokenError}
       <div className="btn-row">
         <button
           type="button"
           className="btn btn-active"
-          disabled={!target || loading}
+          disabled={!target || busy || !model.connected}
           onClick={() => target && water.run(target.bbox)}
         >
-          {loading ? <Loader2 size={16} className="spin" aria-hidden="true" /> : <Droplets size={16} aria-hidden="true" />}
-          Detectar agua
+          {busy ? <Loader2 size={16} className="spin" aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+          Ejecutar modelo
         </button>
-        {state.status === 'ready' && (
+        {state.status !== 'idle' && (
           <button type="button" className="btn" onClick={water.clear}>
             <Trash2 size={16} aria-hidden="true" />
             Quitar
           </button>
         )}
       </div>
-      {loading && (
+      <p className="hint">
+        {!model.connected ? 'Conecta un modelo para ejecutarlo.' : target ? <>Área: {target.name}</> : 'Elige un área (máx. 60 km).'}
+      </p>
+      <button type="button" className="btn model-guide-btn" onClick={() => setGuide(true)}>
+        <BookOpen size={16} aria-hidden="true" />
+        Guía de uso
+      </button>
+      {guide && (
+        <div className="model-modal-backdrop" onClick={() => setGuide(false)}>
+          <div
+            className="model-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="model-guide-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="model-modal-head">
+              <h2 id="model-guide-title">Guía de uso</h2>
+              <button type="button" className="model-icon-btn" onClick={() => setGuide(false)} title="Cerrar" aria-label="Cerrar" autoFocus>
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+            <p className="body-text">
+              Tu modelo lee <code>input.tif</code> (dB, una banda por polarización) y devuelve un GeoTIFF de 1 banda.
+            </p>
+            <ol className="body-text model-steps">
+              <li>
+                Genera un token de sesión (2 h):
+                {token ? <p className="hint">Token listo; los comandos ya lo incluyen.</p> : <div className="btn-row">{connectBtn}</div>}
+                {tokenError}
+              </li>
+              <li className={dim}>
+                Presenta tu modelo:
+                <CodeBlock code={cmdHello} label="Copiar comando hello" />
+                <p className="hint">
+                  <code>output</code>: <code>probability</code> (0–1), <code>continuous</code> o <code>classes</code>.{' '}
+                  <code>pols</code>: polarizaciones que lee (HH, HV, VV, VH).
+                </p>
+                <details>
+                  <summary>Windows PowerShell</summary>
+                  <CodeBlock code={cmdHelloPs} label="Copiar comando hello (PowerShell)" />
+                </details>
+              </li>
+              <li className={dim}>Selecciona un área y pulsa «Ejecutar modelo».</li>
+              <li className={dim}>
+                Toma el trabajo (devuelve <code>job_id</code> e <code>input_url</code>):
+                <CodeBlock code={cmdNext} label="Copiar comando jobs/next" />
+              </li>
+              <li className={dim}>
+                Descarga la imagen:
+                <CodeBlock code={cmdInput} label="Copiar comando de descarga" />
+              </li>
+              <li className={dim}>
+                Procesa <code>input.tif</code> con tu modelo → <code>result.tif</code> (misma malla, 1 banda float32).
+              </li>
+              <li className={dim}>
+                Sube el resultado; aparece en el mapa:
+                <CodeBlock code={cmdResult} label="Copiar comando de subida" />
+              </li>
+            </ol>
+            <p className="hint">
+              Sin actividad en 30 s pasa a Desconectado; repite hello o jobs/next para reconectar. En Windows PowerShell usa{' '}
+              <code>curl.exe</code>.
+            </p>
+          </div>
+        </div>
+      )}
+      {busy && (
         <p className="download-status tone-info" role="status">
-          <Loader2 size={16} className="spin" aria-hidden="true" />
-          <span>Procesando: busca la escena NISAR más reciente, lee HH e infiere (~30–60 s)</span>
+          {state.state === 'queued' ? <Clock size={16} aria-hidden="true" /> : <Loader2 size={16} className="spin" aria-hidden="true" />}
+          <span>{JOB_LABEL[state.state]}</span>
         </p>
       )}
       {state.status === 'error' && (
@@ -626,17 +834,17 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
         <>
           <p className="download-status tone-ok" role="status">
             <CircleCheck size={16} aria-hidden="true" />
-            <span>Listo{state.result.cached ? ' (caché)' : ''}</span>
+            <span>Listo{state.result.label ? `: ${state.result.label}` : ''}</span>
           </p>
-          <ul className="body-text">
-            <li>Escena: {state.result.datetime.slice(0, 10)}</li>
-            <li title={state.result.scene_id}>Agua: {(state.result.water_fraction * 100).toFixed(1)} % del área válida</li>
-            <li>Umbral: {state.result.threshold}</li>
-            <li>Cobertura válida: {(state.result.valid_fraction * 100).toFixed(0)} %</li>
-          </ul>
+          {state.result.datetime && (
+            <p className="hint" title={state.result.scene_id}>
+              Escena: {state.result.datetime.slice(0, 10)}
+            </p>
+          )}
+          <ModelLegend result={state.result} />
           <label className="field-label">
             <input type="checkbox" checked={water.visible} onChange={(e) => water.setVisible(e.target.checked)} /> Mostrar
-            probabilidad de agua
+            resultado del modelo
           </label>
           <div className="field">
             <span className="field-label">
@@ -651,7 +859,7 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
               value={water.opacity}
               style={{ '--pct': `${water.opacity}%` } as CSSProperties}
               onChange={(e) => water.setOpacity(Number(e.target.value))}
-              aria-label="Opacidad del agua"
+              aria-label="Opacidad del resultado del modelo"
               aria-valuetext={`${water.opacity}%`}
             />
           </div>

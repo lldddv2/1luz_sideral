@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.deps import get_settings
 from app.nisar_extractor import ExtractionConfig, NisarExtractor
-from app.routers import dem, estimate, features, health, jobs, landcover, regions, samples, scenes, search, water
+from app.routers import dem, estimate, features, health, jobs, landcover, models, regions, samples, scenes, search, water
 from app.services.jobs import JobRegistry
 
 
@@ -29,6 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.jobs = JobRegistry()
     app.state.samples_dir = data_dir / "samples"
     app.state.water_dir = data_dir / "water"
+    app.state.models_dir = data_dir / "models"
     try:
         yield
     finally:
@@ -54,6 +55,7 @@ def create_app() -> FastAPI:
     app.include_router(features.router, prefix="/api")
     app.include_router(regions.router, prefix="/api")
     app.include_router(water.router, prefix="/api")
+    app.include_router(models.router, prefix="/api")
     return app
 
 

@@ -17,7 +17,7 @@ const SECTION_STEPS: { id: string; title: string; description: string }[] = [
   {
     id: 'zones',
     title: 'Puntos de interés',
-    description: 'Marca puntos con un rango cuadrado ajustable, con nombre y nota. Sirven para descargar y detectar agua.',
+    description: 'Marca puntos con un rango cuadrado ajustable, con nombre y nota. Sirven para descargar y ejecutar modelos.',
   },
   {
     id: 'cover',
@@ -31,8 +31,8 @@ const SECTION_STEPS: { id: string; title: string; description: string }[] = [
   },
   {
     id: 'water',
-    title: 'Agua (U-Net)',
-    description: 'Detecta agua con un modelo U-Net sobre la escena NISAR HH más reciente del área. Muestra el mapa de probabilidad.',
+    title: 'Modelo propio',
+    description: 'Pulsa Conectar modelo y sigue la Guía de uso para enviar resultados con curl.',
   },
   {
     id: 'layers',
