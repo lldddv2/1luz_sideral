@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import {
-  Activity,
   Check,
   CircleAlert,
   CircleCheck,
@@ -22,13 +21,15 @@ import {
   Pentagon,
   Plus,
   RectangleHorizontal,
-  Satellite,
   ScanSearch,
   Trash2,
   TriangleAlert,
   Trees,
+  Plug,
 } from 'lucide-react'
+import { Compass } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { startTour } from '../tour'
 import type { AoiPolygon, DrawMode, UserZone } from '../types'
 import type { AdminLevel } from '../regions'
 import type { RegionPicker } from '../useRegionPicker'
@@ -41,11 +42,13 @@ import type { BasemapId } from '../basemaps'
 import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, OVERLAYS, OVERLAY_IDS } from '../layers'
 import { ZONE_MAX_SIDE_KM, ZONE_MIN_SIDE_KM, clampHalfKm } from '../zone'
 import type { OverlayId, OverlayState } from '../layers'
+import type { WaterController } from '../water'
+import type { BBox } from '../nominatim'
 
 // Legend color per water layer, shown as a dot next to its name.
 const LAYER_DOT: Record<OverlayId, string> = { dswx: '#1f78b4', nisar: '#7b3fbf', jrc: '#14a3a3' }
 
-type SectionId = 'study' | 'zones' | 'cover' | 'download' | 'nisar' | 'layers' | 'analysis' | 'about'
+type SectionId = 'study' | 'zones' | 'cover' | 'download' | 'water' | 'layers' | 'about'
 
 interface Props {
   polygons: AoiPolygon[]
@@ -68,6 +71,35 @@ interface Props {
   onZoneChange: (zone: UserZone) => void
   onFocusZone: (id: string) => void
   onDeleteZone: (id: string) => void
+  aoiFill: number // study area fill opacity, 0-100 (0: outline only)
+  onAoiFill: (v: number) => void
+  zoneFill: number // point of interest fill opacity, 0-100
+  onZoneFill: (v: number) => void
+  water: WaterController
+  waterTarget: { name: string; bbox: BBox } | null // area the U-Net runs on
+}
+
+// Fill opacity slider shared by the study area and point of interest sections.
+function FillSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="field">
+      <span className="field-label">
+        Opacidad del relleno <span className="layer-pct">{value}%</span>
+      </span>
+      <input
+        className="slider"
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={value}
+        style={{ '--pct': `${value}%` } as CSSProperties}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label="Opacidad del relleno"
+        aria-valuetext={`${value}%`}
+      />
+    </div>
+  )
 }
 
 const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
@@ -75,9 +107,8 @@ const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
   { id: 'zones', label: 'Puntos de interés', Icon: MapPin },
   { id: 'cover', label: 'Coberturas', Icon: Trees },
   { id: 'download', label: 'Descarga', Icon: Download },
-  { id: 'nisar', label: 'Datos NISAR', Icon: Satellite },
+  { id: 'water', label: 'Agua (U-Net)', Icon: Plug },
   { id: 'layers', label: 'Capas', Icon: Layers },
-  { id: 'analysis', label: 'Análisis', Icon: Activity },
   { id: 'about', label: 'Acerca', Icon: Info },
 ]
 
@@ -163,9 +194,12 @@ function StudyAreaSection({
   onSelectMode,
   onDelete,
   onHoverTool,
-}: Pick<Props, 'polygons' | 'mode' | 'regions' | 'onSelectMode' | 'onDelete' | 'onHoverTool'>) {
+  aoiFill,
+  onAoiFill,
+}: Pick<Props, 'polygons' | 'mode' | 'regions' | 'onSelectMode' | 'onDelete' | 'onHoverTool' | 'aoiFill' | 'onAoiFill'>) {
   return (
     <>
+      <FillSlider value={aoiFill} onChange={onAoiFill} />
       <h3 className="section-title">Herramientas de dibujo</h3>
       <div className="btn-row">
         {TOOLS.map((t) => (
@@ -228,6 +262,8 @@ type ZonesProps = Pick<
   | 'onZoneChange'
   | 'onFocusZone'
   | 'onDeleteZone'
+  | 'zoneFill'
+  | 'onZoneFill'
 >
 
 function ZonesSection({
@@ -239,9 +275,12 @@ function ZonesSection({
   onZoneChange,
   onFocusZone,
   onDeleteZone,
+  zoneFill,
+  onZoneFill,
 }: ZonesProps) {
   return (
     <>
+      <FillSlider value={zoneFill} onChange={onZoneFill} />
       <h3 className="section-title">Marcar</h3>
       <div className="btn-row">
         <button
@@ -380,67 +419,6 @@ function ZoneEditor({
         </button>
       </div>
     </div>
-  )
-}
-
-function NisarSection() {
-  const [polarization, setPolarization] = useState<'HH' | 'HV'>('HH')
-  return (
-    <>
-      <div className="section-head">
-        <h3 className="section-title">Consulta</h3>
-        <span className="badge">Próximamente</span>
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor="nisar-product">
-          Producto
-        </label>
-        <input id="nisar-product" className="input" value="GCOV (Geocoded Complex)" readOnly disabled />
-      </div>
-      <div className="field">
-        <label className="field-label" htmlFor="nisar-start">
-          Rango de fechas
-        </label>
-        <div className="field-row">
-          <input
-            id="nisar-start"
-            className="input"
-            type="date"
-            disabled
-            aria-label="Fecha inicial"
-            max={yesterdayIso()}
-          />
-          <input className="input" type="date" disabled aria-label="Fecha final" max={yesterdayIso()} />
-        </div>
-      </div>
-      <div className="field">
-        <span className="field-label" id="nisar-pol-label">
-          Polarización
-        </span>
-        <div className="segmented" role="group" aria-labelledby="nisar-pol-label">
-          <button
-            type="button"
-            className={polarization === 'HH' ? 'active' : undefined}
-            aria-pressed={polarization === 'HH'}
-            onClick={() => setPolarization('HH')}
-          >
-            HH
-          </button>
-          <button
-            type="button"
-            className={polarization === 'HV' ? 'active' : undefined}
-            aria-pressed={polarization === 'HV'}
-            onClick={() => setPolarization('HV')}
-          >
-            HV
-          </button>
-        </div>
-      </div>
-      <p className="hint">
-        La descarga y el procesamiento de escenas NISAR todavía no están conectados. Por ahora esta sección
-        solo prepara la interfaz.
-      </p>
-    </>
   )
 }
 
@@ -606,21 +584,79 @@ function LayersSection({
   )
 }
 
-function AnalysisSection() {
+// U-Net water map from the latest NISAR GCOV HH scene over the active area.
+function WaterSection({ water, target }: { water: WaterController; target: Props['waterTarget'] }) {
+  const { state } = water
+  const loading = state.status === 'loading'
   return (
     <>
-      <div className="section-head">
-        <h3 className="section-title">Serie temporal</h3>
-        <span className="badge">Próximamente</span>
+      <p className="hint">
+        {target ? <>Área: {target.name}</> : 'Añade un área de estudio o selecciona un punto de interés (máx. 250 km de lado).'}
+      </p>
+      <div className="btn-row">
+        <button
+          type="button"
+          className="btn btn-active"
+          disabled={!target || loading}
+          onClick={() => target && water.run(target.bbox)}
+        >
+          {loading ? <Loader2 size={16} className="spin" aria-hidden="true" /> : <Droplets size={16} aria-hidden="true" />}
+          Detectar agua
+        </button>
+        {state.status === 'ready' && (
+          <button type="button" className="btn" onClick={water.clear}>
+            <Trash2 size={16} aria-hidden="true" />
+            Quitar
+          </button>
+        )}
       </div>
-      <div className="placeholder">
-        <Activity size={20} aria-hidden="true" />
-        <p>
-          Aquí aparecerán las gráficas de la serie temporal del área seleccionada: retrodispersión por fecha,
-          coherencia interferométrica y detección de cambios.
+      {loading && (
+        <p className="download-status tone-info" role="status">
+          <Loader2 size={16} className="spin" aria-hidden="true" />
+          <span>Procesando: busca la escena NISAR más reciente, lee HH e infiere (~30–60 s)</span>
         </p>
-      </div>
-      <p className="hint">Depende de la descarga de escenas NISAR.</p>
+      )}
+      {state.status === 'error' && (
+        <p className="download-status tone-error" role="alert">
+          <CircleX size={16} aria-hidden="true" />
+          <span>Error: {state.message}</span>
+        </p>
+      )}
+      {state.status === 'ready' && (
+        <>
+          <p className="download-status tone-ok" role="status">
+            <CircleCheck size={16} aria-hidden="true" />
+            <span>Listo{state.result.cached ? ' (caché)' : ''}</span>
+          </p>
+          <ul className="body-text">
+            <li>Escena: {state.result.datetime.slice(0, 10)}</li>
+            <li title={state.result.scene_id}>Agua: {(state.result.water_fraction * 100).toFixed(1)} % del área válida</li>
+            <li>Umbral: {state.result.threshold}</li>
+            <li>Cobertura válida: {(state.result.valid_fraction * 100).toFixed(0)} %</li>
+          </ul>
+          <label className="field-label">
+            <input type="checkbox" checked={water.visible} onChange={(e) => water.setVisible(e.target.checked)} /> Mostrar
+            probabilidad de agua
+          </label>
+          <div className="field">
+            <span className="field-label">
+              Opacidad <span className="layer-pct">{water.opacity}%</span>
+            </span>
+            <input
+              className="slider"
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={water.opacity}
+              style={{ '--pct': `${water.opacity}%` } as CSSProperties}
+              onChange={(e) => water.setOpacity(Number(e.target.value))}
+              aria-label="Opacidad del agua"
+              aria-valuetext={`${water.opacity}%`}
+            />
+          </div>
+        </>
+      )}
     </>
   )
 }
@@ -885,6 +921,10 @@ export default function Sidebar({
   onBasemapChange,
   overlays,
   onOverlayChange,
+  aoiFill,
+  onAoiFill,
+  water,
+  waterTarget,
   ...zoneProps
 }: Props) {
   const [collapsed, setCollapsed] = useState(readStoredCollapsed)
@@ -909,12 +949,13 @@ export default function Sidebar({
 
   return (
     <aside className="sidebar" data-collapsed={collapsed} aria-label="Panel de trabajo">
-      <nav className="rail" aria-label="Secciones">
+      <nav className="rail" aria-label="Secciones" data-tour="rail">
         {SECTIONS.map(({ id, label, Icon }) => (
           <button
             key={id}
             type="button"
             className="rail-btn"
+            data-tour={`rail-${id}`}
             aria-label={label}
             aria-current={!collapsed && active.id === id ? 'true' : undefined}
             onClick={() => openSection(id)}
@@ -926,6 +967,12 @@ export default function Sidebar({
           </button>
         ))}
         <div className="rail-spacer" />
+        <button type="button" className="rail-btn" data-tour="tour-btn" aria-label="Ver guía" onClick={() => startTour()}>
+          <Compass size={20} aria-hidden="true" />
+          <span className="rail-tooltip" aria-hidden="true">
+            Ver guía
+          </span>
+        </button>
         <button
           type="button"
           className="rail-btn"
@@ -941,7 +988,7 @@ export default function Sidebar({
         </button>
       </nav>
 
-      <div className="panel" inert={collapsed || undefined} aria-hidden={collapsed}>
+      <div className="panel" data-tour="panel" inert={collapsed || undefined} aria-hidden={collapsed}>
         <header className="panel-header">
           <div className="brand">
             <span className="brand-mark" aria-hidden="true" />
@@ -971,12 +1018,14 @@ export default function Sidebar({
               onSelectMode={onSelectMode}
               onDelete={onDelete}
               onHoverTool={onHoverTool}
+              aoiFill={aoiFill}
+              onAoiFill={onAoiFill}
             />
           )}
           {active.id === 'zones' && <ZonesSection {...zoneProps} />}
           {active.id === 'cover' && <CoverSection cover={cover} />}
           {active.id === 'download' && <DownloadSection download={download} zoneCount={zoneProps.zones.length} />}
-          {active.id === 'nisar' && <NisarSection />}
+          {active.id === 'water' && <WaterSection water={water} target={waterTarget} />}
           {active.id === 'layers' && (
             <LayersSection
               basemap={basemap}
@@ -985,7 +1034,6 @@ export default function Sidebar({
               onOverlayChange={onOverlayChange}
             />
           )}
-          {active.id === 'analysis' && <AnalysisSection />}
           {active.id === 'about' && <AboutSection />}
         </div>
       </div>

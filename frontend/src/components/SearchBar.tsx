@@ -103,10 +103,14 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
   }, [query, boxKey])
 
   // Regions (countries, departments, municipalities) follow the typing too, debounced.
-  // A change of areas (or the worldwide switch) searches again with the new scope.
+  // A change of areas (or the worldwide switch) searches again with the new scope,
+  // without reopening a list the user closed (e.g. after adding a result as an area).
+  const lastQuery = useRef(query)
   useEffect(() => {
+    const reveal = lastQuery.current !== query
+    lastQuery.current = query
     if (query.trim().length < 2) return
-    const timer = setTimeout(() => searchRef.current(), REGION_DEBOUNCE_MS)
+    const timer = setTimeout(() => searchRef.current(reveal), REGION_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [query, boxKey])
 
@@ -147,7 +151,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
     input.current?.focus()
   }
 
-  const search = async () => {
+  const search = async (reveal = true) => {
     const q = query.trim()
     if (!q) return
     controller.current?.abort()
@@ -155,7 +159,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
     controller.current = ac
     setLoading(true)
     setError(null)
-    setOpen(true)
+    if (reveal) setOpen(true)
     try {
       const delay = MIN_INTERVAL_MS - (Date.now() - lastStart.current)
       if (delay > 0) await sleep(delay, ac.signal)
@@ -186,6 +190,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
   return (
     <div
       ref={root}
+      data-tour="search"
       className={`search-bar${listOpen ? ' is-open' : ''}`}
       onKeyDown={(e) => {
         if (e.key === 'Escape') setOpen(false)

@@ -1,5 +1,5 @@
 import type { KeyboardEvent, ReactNode } from 'react'
-import { ChevronLeft, ChevronRight, CircleX, Loader2, TriangleAlert } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CircleX, Loader2, Pause, Play, TriangleAlert } from 'lucide-react'
 import { axisLabels, groupsIn, orbitName, passSummary, rangeBounds, shortDay, timeMs, utcLabel } from '../passes'
 import type { DateRange, PassEntry } from '../passes'
 
@@ -14,13 +14,16 @@ interface Props {
   children?: ReactNode // extra row on top
   picked?: string[] // YYYY-MM-DD dates of the active water layers; matching passes are highlighted
   onPick?: (day: string) => void // click on a pass: its UTC day
+  prefetch?: { done: number; total: number; paused?: boolean; stage?: string } | null // NISAR tile prefetch, then frame build progress
+  playing?: boolean // timeline animation running
+  onTogglePlay?: () => void // play/pause; undefined hides the button
 }
 
 // Radar passes of the active area over the Descarga range: one line, a point per pass, a date axis below.
-export default function AcquisitionTimeline({ range, entry, children, picked = [], onPick }: Props) {
+export default function AcquisitionTimeline({ range, entry, children, picked = [], onPick, prefetch, playing = false, onTogglePlay }: Props) {
   if (!range) {
     return (
-      <section className="acq-bar" aria-label="Adquisiciones NISAR">
+      <section data-tour="timeline" className="acq-bar" aria-label="Adquisiciones NISAR">
         <p className="acq-note">
           <TriangleAlert size={16} aria-hidden="true" />
           <span>Revisa el rango de fechas en Descarga.</span>
@@ -78,7 +81,7 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
   }
 
   return (
-    <section className="acq-bar" aria-label="Adquisiciones NISAR en el periodo">
+    <section data-tour="timeline" className="acq-bar" aria-label="Adquisiciones NISAR en el periodo">
       {children}
       {groups.length > 0 && (
         <div className="acq-head">
@@ -91,7 +94,23 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
             ))}
           </ul>
           <span className="acq-summary">{passSummary(groups)}</span>
+          {prefetch && (
+            <span className="acq-summary">
+              {prefetch.total ? `${prefetch.stage ?? "Precargando"} ${Math.min(prefetch.done, prefetch.total)}/${prefetch.total}${prefetch.paused ? " (en pausa)" : ""}` : "Preparando…"}
+            </span>
+          )}
           <span className="acq-nav">
+            {onTogglePlay && (
+              <button
+                type="button"
+                title={playing ? 'Pausar' : 'Reproducir'}
+                aria-label={playing ? 'Pausar' : 'Reproducir'}
+                aria-pressed={playing}
+                onClick={onTogglePlay}
+              >
+                {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+              </button>
+            )}
             <button type="button" title="Pasada anterior" aria-label="Pasada anterior" disabled={!prevDay} onClick={() => step(prevDay)}>
               <ChevronLeft size={16} aria-hidden="true" />
             </button>

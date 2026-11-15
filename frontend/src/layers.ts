@@ -476,6 +476,124 @@ export async function preloadAround(zoom: number, view: [number, number, number,
   for (let i = 0; i < PRELOAD_POOL; i++) void worker()
 }
 
+// Timeline prefetch: raw NISAR tiles of every pass day (and the days its mosaic draws on) over
+// a box at the current zoom, nearest days to the shown one first, so stepping through the
+// timeline hits the cache. Own generation counter: a new call (box, zoom, days) drops the queue.
+const DAYS_POOL = 6
+const DAYS_MAX_TILES = 64 // tiles per day at one zoom
+const DAYS_MAX = 1500 // GETs per run
+let daysGen = 0
+
+export function cancelDaysPrefetch() {
+  daysGen++
+}
+
+type Box = [number, number, number, number]
+
+// Tile range of a box at zoom z.
+function tileRange(z: number, [w, s, e, n]: Box): [number, number, number, number] {
+  const last = 2 ** z - 1
+  const c = (v: number) => Math.max(0, Math.min(last, Math.floor(v)))
+  return [c(lonX(w, z)), c(lonX(e, z) - 1e-9), c(latY(n, z)), c(latY(s, z) - 1e-9)]
+}
+
+function unionBox(boxes: Box[]): Box {
+  return [
+    Math.min(...boxes.map((b) => b[0])),
+    Math.min(...boxes.map((b) => b[1])),
+    Math.max(...boxes.map((b) => b[2])),
+    Math.max(...boxes.map((b) => b[3])),
+  ]
+}
+
+// Fixed zoom for a target: the deepest NISAR zoom where the union of the boxes spans at most
+// FRAME_MAX_SIDE tiles per side. Independent of the map view, so frames and cache stay stable.
+export function targetZoom(boxes: Box[]): number {
+  const u = unionBox(boxes)
+  for (let z = OVERLAYS.nisar.maxzoom; z > NISAR_FADE_START; z--) {
+    const [x0, x1, y0, y1] = tileRange(z, u)
+    if (x1 - x0 + 1 <= FRAME_MAX_SIDE && y1 - y0 + 1 <= FRAME_MAX_SIDE) return z
+  }
+  return NISAR_FADE_START
+}
+
+// Tiles at zoom z that touch any of the boxes (bbox test), nearest to the union center first.
+function targetTiles(boxes: Box[], z: number): [number, number][] {
+  const keys = new Set<string>()
+  const tiles: [number, number][] = []
+  for (const b of boxes) {
+    const [x0, x1, y0, y1] = tileRange(z, b)
+    for (let x = x0; x <= x1; x++)
+      for (let y = y0; y <= y1; y++)
+        if (!keys.has(`${x}/${y}`)) {
+          keys.add(`${x}/${y}`)
+          tiles.push([x, y])
+        }
+  }
+  const [ux0, ux1, uy0, uy1] = tileRange(z, unionBox(boxes))
+  const cx = (ux0 + ux1 + 1) / 2
+  const cy = (uy0 + uy1 + 1) / 2
+  const d = (t: [number, number]) => (t[0] + 0.5 - cx) ** 2 + (t[1] + 0.5 - cy) ** 2
+  return tiles.sort((a, b) => d(a) - d(b))
+}
+
+export async function prefetchDays(
+  boxes: Box[],
+  passDays: string[],
+  current: string,
+  onProgress: (p: { done: number; total: number; paused?: boolean } | null) => void,
+) {
+  const gen = ++daysGen
+  let finish = () => {}
+  daysReady = new Promise<void>((r) => (finish = r))
+  if (!boxes.length || !passDays.length) return finish(), onProgress(null)
+  const z = targetZoom(boxes)
+  const tiles = targetTiles(boxes, z)
+  tiles.length = Math.min(tiles.length, DAYS_MAX_TILES)
+  const cur = days(current)
+  const order = [...passDays].sort((a, b) => Math.abs(days(a) - cur) - Math.abs(days(b) - cur))
+  const dates: string[] = []
+  for (const d of order) for (const t of mosaicDates(d)) if (!dates.includes(t)) dates.push(t)
+  // Already cached tiles count as done, so switching targets resumes instead of restarting.
+  const all = new Set<string>()
+  for (const t of dates)
+    for (const [x, y] of tiles) all.add(NISAR_GIBS.replace('{time}', t).replace('{z}', String(z)).replace('{y}', String(y)).replace('{x}', String(x)))
+  const urls = [...all].slice(0, DAYS_MAX)
+  const queue = urls.filter((u) => !cache.has(u))
+  const total = urls.length
+  let done = total - queue.length
+  if (!queue.length) return finish(), onProgress(null)
+  onProgress({ done, total })
+  const worker = async () => {
+    for (;;) {
+      // Yield to visible tiles, but never longer than DAYS_YIELD_MS: a hung visible fetch
+      // would otherwise freeze the prefetch (and its counter) forever.
+      const t0 = Date.now()
+      let paused = false
+      while (visiblePending > 0 && gen === daysGen && Date.now() - t0 < DAYS_YIELD_MS) {
+        if (!paused) onProgress({ done: Math.min(done, total), total, paused: (paused = true) })
+        await new Promise((r) => setTimeout(r, 100))
+      }
+      const url = queue.shift()
+      if (!url || gen !== daysGen) return
+      try {
+        if (!cache.has(url)) await loadRaw(url, true, true)
+      } catch {
+        // counted as done anyway
+      }
+      if (gen !== daysGen) return
+      done++
+      onProgress(done >= total ? null : { done, total })
+    }
+  }
+  void Promise.all(Array.from({ length: DAYS_POOL }, worker)).finally(finish)
+}
+
+// Resolves when the current prefetchDays run ends (finished or cancelled); buildFrames waits on it
+// so both do not fight for the same tiles and the progress counter stays monotonic.
+let daysReady: Promise<void> = Promise.resolve()
+const DAYS_YIELD_MS = 3000
+
 // Separable box blur of one channel, in place.
 function boxBlur(a: Float32Array, w: number, h: number, r: number) {
   const t = new Float32Array(a.length)
@@ -907,4 +1025,77 @@ export function registerNisarProtocol(add: (name: string, fn: (p: { url: string 
       throw e
     }
   })
+}
+
+// Animation frames: each pass day pre-rendered as one image over a box at a fixed zoom, so the
+// map swaps a single image per step (no tile reload, no flicker). Built from the same mosaics as
+// the tile layer, so the raw tiles come from the cache filled by prefetchDays.
+export interface DayFrame {
+  url: string // object URL of the PNG
+  coordinates: [[number, number], [number, number], [number, number], [number, number]]
+}
+const FRAME_MAX_SIDE = 8 // tiles per side
+let framesGen = 0
+
+export function cancelFrames() {
+  framesGen++
+}
+
+async function composeDay(mode: NisarMode, date: string, dirs: string, z: number, x0: number, x1: number, y0: number, y1: number, gen: number): Promise<DayFrame | null> {
+  const c = new OffscreenCanvas((x1 - x0 + 1) * SIZE, (y1 - y0 + 1) * SIZE)
+  const g = c.getContext('2d')!
+  let any = false
+  for (let x = x0; x <= x1; x++)
+    for (let y = y0; y <= y1; y++) {
+      if (gen !== framesGen) return null
+      try {
+        const buf = await mosaicTile(mode, date, dirs, String(z), String(x), String(y))
+        const bmp = await createImageBitmap(new Blob([buf], { type: 'image/png' }))
+        g.drawImage(bmp, (x - x0) * SIZE, (y - y0) * SIZE)
+        bmp.close()
+        any = true
+      } catch {
+        // missing tile: left transparent
+      }
+    }
+  if (!any) return null
+  const [w, , , n] = tileBounds(z, x0, y0)
+  const [, s, e] = tileBounds(z, x1, y1)
+  const url = URL.createObjectURL(await c.convertToBlob({ type: 'image/png' }))
+  return { url, coordinates: [[w, n], [e, n], [e, s], [w, s]] }
+}
+
+// Builds a frame per pass day (nearest to current first); onFrame fires as each one is ready.
+export async function buildFrames(
+  boxes: Box[],
+  passDays: string[],
+  current: string,
+  mode: NisarMode,
+  dirs: string,
+  onFrame: (day: string, f: DayFrame | null, done: number, total: number) => void,
+) {
+  const gen = ++framesGen
+  if (!boxes.length || !passDays.length || dirs === 'N') return
+  const z = targetZoom(boxes)
+  let [x0, x1, y0, y1] = tileRange(z, unionBox(boxes))
+  const clamp = (a: number, b: number): [number, number] => {
+    if (b - a + 1 <= FRAME_MAX_SIDE) return [a, b]
+    const m = Math.floor((a + b) / 2) - FRAME_MAX_SIDE / 2 + 1
+    return [m, m + FRAME_MAX_SIDE - 1]
+  }
+  ;[x0, x1] = clamp(x0, x1)
+  ;[y0, y1] = clamp(y0, y1)
+  const cur = days(current)
+  const order = [...passDays].sort((a, b) => Math.abs(days(a) - cur) - Math.abs(days(b) - cur))
+  let done = 0
+  await Promise.race([daysReady, new Promise((r) => setTimeout(r, 60000))])
+  if (gen !== framesGen) return
+  for (const d of order) {
+    const f = await composeDay(mode, nisarDate(d), dirs, z, x0, x1, y0, y1, gen)
+    if (gen !== framesGen) {
+      if (f) URL.revokeObjectURL(f.url)
+      return
+    }
+    onFrame(d, f, ++done, order.length)
+  }
 }

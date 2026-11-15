@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from shapely import wkt
-from shapely.geometry import box, shape
+from shapely import make_valid, wkt
+from shapely.geometry import MultiPolygon, box, shape
 from shapely.geometry.base import BaseGeometry
 
 from .models import Region
@@ -17,7 +17,15 @@ def _validate_geometry(geometry: BaseGeometry) -> BaseGeometry:
     if geometry.geom_type not in {"Polygon", "MultiPolygon"}:
         raise ValueError("NISAR extraction accepts Polygon or MultiPolygon regions")
     if not geometry.is_valid:
-        raise ValueError("Region geometry is invalid; repair it before searching")
+        # Self-intersecting outlines (e.g. simplified river shapes) are repaired, keeping only polygonal parts.
+        repaired = make_valid(geometry)
+        parts = getattr(repaired, "geoms", [repaired])
+        polys = [p for g in parts for p in getattr(g, "geoms", [g]) if p.geom_type == "Polygon" and not p.is_empty]
+        if not polys:
+            raise ValueError("Region geometry is invalid and could not be repaired")
+        geometry = polys[0] if len(polys) == 1 else MultiPolygon(polys)
+        if not geometry.is_valid:
+            geometry = geometry.buffer(0)
     minx, miny, maxx, maxy = geometry.bounds
     if minx < -180 or maxx > 180 or miny < -90 or maxy > 90:
         raise ValueError("Region must use WGS84 longitude/latitude coordinates")

@@ -1,10 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
-import InfoBox from "./components/InfoBox";
-import ShapeInfo from "./components/ShapeInfo";
 import AcquisitionTimeline from "./components/AcquisitionTimeline";
-import ToolInfo from "./components/ToolInfo";
 import SearchBar from "./components/SearchBar";
 import CoverChips from "./components/CoverChips";
 import { useLandcover } from "./useLandcover";
@@ -13,6 +10,7 @@ import type { MapViewport } from "./useRegionPicker";
 import { useDownload } from "./useDownload";
 import { useAreaPlaces } from "./areaPlaces";
 import { usePasses } from "./usePasses";
+import { groupsIn, timeMs } from "./passes";
 import type { BBox, PlaceResult } from "./nominatim";
 import { aoiBoxes, aoiGeometries, fetchOutline, groupLabel, inShapes } from "./features";
 import type { NaturalFeature } from "./features";
@@ -22,6 +20,13 @@ import { BASEMAPS } from "./basemaps";
 import type { BasemapId } from "./basemaps";
 import { DEFAULT_OVERLAYS, OVERLAY_IDS } from "./layers";
 import type { OverlayId, OverlayState } from "./layers";
+import { useWater, waterCorners } from "./water";
+import { autoStartTour } from "./tour";
+
+// Playback speed of the timeline animation (ms per pass day).
+const FRAME_MS = 1800;
+// Hover callbacks are unused since the info card was removed.
+const noop = () => {};
 
 const LABELS: Record<DrawMode, string> = {
   polygon: "Polígono",
@@ -32,9 +37,6 @@ const LABELS: Record<DrawMode, string> = {
 export default function App() {
   const [polygons, setPolygons] = useState<AoiPolygon[]>([]);
   const [mode, setMode] = useState<DrawMode | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [hoveredTool, setHoveredTool] = useState<DrawMode | null>(null);
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [basemap, setBasemap] = useState<BasemapId>("s2cloudless");
   const [overlays, setOverlays] = useState(DEFAULT_OVERLAYS);
   const changeOverlay = (id: OverlayId, patch: Partial<OverlayState>) =>
@@ -106,7 +108,6 @@ export default function App() {
     };
   }, [selectedZone, selectedIndex, zoneSquare, areaBoxes]);
   const download = useDownload(downloadTarget);
-  const hovered = polygons.find((p) => p.id === hoveredId);
   // The timeline spans the Descarga dates; null while they are incomplete or reversed.
   const { start, end } = download.params;
   const range = useMemo(
@@ -114,7 +115,45 @@ export default function App() {
     [download.datesOk, start, end],
   );
   const passes = usePasses(polygons, range);
+  // Timeline pass days for the NISAR prefetch, filtered by the shown orbit directions.
+  const nisarAsc = overlays.nisar.asc ?? true;
+  const nisarDesc = overlays.nisar.desc ?? true;
+  const passDays = useMemo(() => {
+    if (!range || passes?.status !== "ready") return [];
+    const out = new Set<string>();
+    for (const g of groupsIn(passes.products, range)) {
+      if ((g.direction === "ascending" && !nisarAsc) || (g.direction === "descending" && !nisarDesc)) continue;
+      for (const p of g.products) out.add(new Date(timeMs(p)).toISOString().slice(0, 10));
+    }
+    return [...out].sort();
+  }, [passes, range, nisarAsc, nisarDesc]);
+  const [prefetch, setPrefetch] = useState<{ done: number; total: number; paused?: boolean } | null>(null);
+  // Timeline playback: steps NISAR through the pass days every FRAME_MS, looping at the end.
+  const [frames, setFrames] = useState<{ done: number; total: number } | null>(null);
+  const [playing, setPlaying] = useState(false);
+  // Fill opacity (0-100) of study areas and point-of-interest squares; outlines always stay.
+  const [aoiFill, setAoiFill] = useState(4);
+  const [zoneFill, setZoneFill] = useState(7);
+  const nisarDay = overlays.nisar.date;
+  useEffect(() => {
+    if (!playing || passDays.length < 2) return;
+    const t = setTimeout(() => {
+      const next = passDays.find((d) => d > nisarDay) ?? passDays[0];
+      setOverlays((prev) => ({ ...prev, nisar: { ...prev.nisar, on: true, date: next } }));
+    }, FRAME_MS);
+    return () => clearTimeout(t);
+  }, [playing, passDays, nisarDay]);
   const cover = useLandcover(polygons);
+  // U-Net water map: runs on the selected point of interest square, else on the active study area.
+  const water = useWater();
+  const waterTarget = useMemo(() => {
+    if (selectedZone) return { name: zoneLabel(selectedZone, selectedIndex), bbox: zoneBbox(selectedZone) as BBox };
+    if (active) {
+      const box = aoiBoxes([active])[0];
+      if (box) return { name: active.name, bbox: box };
+    }
+    return null;
+  }, [active, selectedZone, selectedIndex]);
   const shownLabels = useMemo(
     () => (areaShapes.length && labels.length > 1 ? labels.filter((f) => inShapes(f, areaShapes)) : labels),
     [labels, areaShapes],
@@ -196,17 +235,13 @@ export default function App() {
   // The study area follows the simplified outline; the bbox is only the fallback.
   const addFeature = (f: NaturalFeature) => {
     setPreview(null);
+    setFlyTo((prev) => ({ bbox: f.bbox, key: (prev?.key ?? 0) + 1 }));
     fetchOutline(f.id)
       .then((geometry) => addShape("region", [], f.name, geometry))
       .catch(() => addShape("rectangle", bboxRing(f.bbox), f.name));
   };
 
-  const regionHover = hoveredRegion ? findRegion(hoveredRegion) : undefined;
-  const regionHint = !regionHover
-    ? ""
-    : hoveredRegion!.startsWith("s:") || regions.level === "ADM0"
-      ? "Clic para agregarla como área de estudio."
-      : "Clic para ver sus subdivisiones.";
+  useEffect(() => autoStartTour(), []);
 
   return (
     <div className="app">
@@ -219,7 +254,7 @@ export default function App() {
         basemap={basemap}
         onSelectMode={selectMode}
         onDelete={deletePolygon}
-        onHoverTool={setHoveredTool}
+        onHoverTool={noop}
         onBasemapChange={setBasemap}
         overlays={overlays}
         onOverlayChange={changeOverlay}
@@ -231,8 +266,14 @@ export default function App() {
         onZoneChange={changeZone}
         onFocusZone={focusZone}
         onDeleteZone={deleteZone}
+        aoiFill={aoiFill}
+        onAoiFill={setAoiFill}
+        zoneFill={zoneFill}
+        onZoneFill={setZoneFill}
+        water={water}
+        waterTarget={waterTarget}
       />
-      <div className="map-area">
+      <div className="map-area" data-tour="map">
         <MapView
           basemap={BASEMAPS[basemap].style}
           labels={BASEMAPS[basemap].labels}
@@ -244,11 +285,11 @@ export default function App() {
           regionSubdivisions={mode === "region" ? regions.subdivisions : null}
           onShapeComplete={(kind, coords) => addShape(kind, coords)}
           onRegionClick={handleRegionClick}
-          onHoverRegion={setHoveredRegion}
+          onHoverRegion={noop}
           onViewChange={setView}
           onCancelDrawing={() => setMode(null)}
           onDelete={deletePolygon}
-          onHover={setHoveredId}
+          onHover={noop}
           onUpdate={(id, coords) =>
             setPolygons((prev) =>
               prev.map((p) => (p.id === id ? { ...p, coords } : p)),
@@ -256,10 +297,18 @@ export default function App() {
           }
           previewGeometry={preview?.geometry ?? null}
           flyToBbox={flyTo}
-          searchStart={download.params.start}
-          searchEnd={download.params.end}
           overlays={overlays}
           coverMask={cover.mask}
+          waterOverlay={
+            water.state.status === "ready"
+              ? {
+                  url: water.state.result.png_url,
+                  coordinates: waterCorners(water.state.result.bounds),
+                  opacity: water.opacity / 100,
+                  visible: water.visible,
+                }
+              : null
+          }
           featureLabels={shownLabels}
           activeFeature={feature}
           onFeatureClick={pickFeature}
@@ -273,6 +322,13 @@ export default function App() {
           onDeleteZone={deleteZone}
           onCancelZone={() => setZonePlacing(false)}
           onClearPreview={() => setPreview(null)}
+          passDays={passDays}
+          onPrefetch={setPrefetch}
+          playing={playing}
+          onFrames={setFrames}
+          // Playback hides the fills so the NISAR frames show through; outlines remain.
+          aoiFill={playing ? 0 : aoiFill / 100}
+          zoneFill={playing ? 0 : zoneFill / 100}
         />
         <SearchBar
           start={download.params.start}
@@ -287,6 +343,7 @@ export default function App() {
             if (!r.geometry) return;
             addShape("region", [], r.name, r.geometry);
             setPreview(null);
+            setFlyTo((prev) => ({ bbox: r.bbox, key: (prev?.key ?? 0) + 1 }));
           }}
           coverSuggestions={cover.suggestions}
           onPickCover={cover.toggle}
@@ -317,6 +374,9 @@ export default function App() {
           <AcquisitionTimeline
             range={range}
             entry={passes}
+            prefetch={prefetch ? { ...prefetch, stage: "Teselas" } : frames ? { ...frames, stage: "Imágenes" } : null}
+            playing={playing}
+            onTogglePlay={passDays.length > 1 ? () => setPlaying((v) => !v) : undefined}
             picked={OVERLAY_IDS.filter((id) => id !== "jrc" && overlays[id].on).map((id) => overlays[id].date)}
             onPick={(day) =>
               setOverlays((prev) => {
@@ -329,22 +389,6 @@ export default function App() {
               })
             }
           />
-        )}
-        {hoveredTool ? (
-          <InfoBox>
-            <ToolInfo tool={hoveredTool} />
-          </InfoBox>
-        ) : regionHover ? (
-          <InfoBox>
-            <h3>{regionHover.properties.name}</h3>
-            <p className="info-hint">{regionHint}</p>
-          </InfoBox>
-        ) : (
-          hovered && (
-            <InfoBox>
-              <ShapeInfo shape={hovered} />
-            </InfoBox>
-          )
         )}
       </div>
     </div>

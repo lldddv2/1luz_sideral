@@ -11,3 +11,5 @@
 - [區內地名](area-labels.md) — 有 study area 則自然地物與底圖地名唯限區內；Overpass 代 raster labels
 - [行政區搜](regions-search.md) — /api/regions Nominatim 代理、搜欄「Regiones」段
 - [興趣點](user-zones.md) — 用戶單點加方形範圍，可拖心與角，唯註記，不作 AOI
+- [入門導覽](onboarding-tour.md) — driver.js 導覽、tour-seen-v1、data-tour selector、步序
+- [水 U-Net](water-unet.md) — /api/water 推理端點、淨權、前端「Agua (U-Net)」

@@ -3,3 +3,4 @@
 - 前端 `nominatim.ts` searchPlaces 改呼 /api/regions（形同 PlaceResult）。SearchBar 打字 450 ms 去抖自搜（Enter 亦可，新請廢舊），段名「Lugares (en el área / mundo)」，與自然地物段並存。點則 onPreview 飛往畫輪廓；+ 則 onAdd 以多邊形設 AOI（舊邏輯）。
 - 限 study area（2026-11-15）：後端 /api/regions 加可選 `viewbox=w,s,e,n`，傳 Nominatim viewbox+bounded=1；快取鍵含 viewbox（3 位）；非法 422。前端以諸 areaShapes 之併 bbox 為 viewbox，返後 `placeInAreas` 再濾：無輪廓者心須在區形內（ray-casting，nominatim.ts），有輪廓者 bbox 交區 bbox。空則「Ningún lugar en el área seleccionada」；末一鈕「Buscar en todo el mundo」共用 `worldwide`，令地名與自然地物皆全球。區變（boxKey）則重搜。
 - 境注：此沙箱中 Python requests 經 IPv6 連 Nominatim 掛起（curl 可）；強 IPv4 則通。非碼之過。
+- 預覽輪廓除法：preview-fill 入 interactiveLayerIds，右鍵→「Quitar contorno」（onClearPreview）；搜欄✕亦 onClearPreview。

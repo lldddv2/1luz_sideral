@@ -7,11 +7,10 @@ import type { FeatureCollection } from 'geojson'
 import type { AoiPolygon, DrawMode, LngLat, RegionGeometry, UserZone } from '../types'
 import { halfKmFromCorner, zoneBbox, zoneCorners } from '../zone'
 import type { BBox } from '../nominatim'
-import { inAnyShape, shapeGeometry } from '../geo'
-import { POI_COLOR, POIS } from '../pois'
-import PoiPanel from './PoiPanel'
+import { geometryBbox, shapeGeometry } from '../geo'
 import type { CoverMaskImage } from '../landcover'
-import { CATEGORY_COLOR } from '../features'
+import type { DayFrame } from '../layers'
+import { CATEGORY_COLOR, aoiGeometries } from '../features'
 import type { NaturalFeature } from '../features'
 import { PLACE_MINZOOM } from '../areaPlaces'
 import type { AreaPlace } from '../areaPlaces'
@@ -21,7 +20,7 @@ import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } f
 import type { XY } from '../editing'
 import { TOOLS } from './Sidebar'
 import { addProtocol } from 'maplibre-gl'
-import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, nisarDate, nisarFootprints as fetchNisarFootprints, overlayTiles, preloadAround, registerNisarProtocol, takeFailedTiles } from '../layers'
+import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, cancelDaysPrefetch, prefetchDays, buildFrames, cancelFrames, nisarDate, nisarFootprints as fetchNisarFootprints, overlayTiles, preloadAround, registerNisarProtocol, takeFailedTiles } from '../layers'
 import type { OverlayId, OverlayState, PreloadLayer } from '../layers'
 
 // Overlay tile failures (e.g. GIBS hiccups) are expected; keep them out of the console.
@@ -84,10 +83,9 @@ interface Props {
   onUpdate: (id: string, coords: LngLat[]) => void
   previewGeometry: RegionGeometry | null // search result outline, drawn dashed; not an AOI
   flyToBbox: { bbox: BBox; key: number } | null // camera target; a new key flies there again
-  searchStart: string // search date range (YYYY-MM-DD), drives the POI popup timeline
-  searchEnd: string
   overlays: Record<OverlayId, OverlayState>
   coverMask: CoverMaskImage | null // land-cover classes of the filter, over the active area
+  waterOverlay?: { url: string; coordinates: [LngLat, LngLat, LngLat, LngLat]; opacity: number; visible: boolean } | null // U-Net water probability
   featureLabels: NaturalFeature[] // natural features labelled on the map (one marker each)
   activeFeature: NaturalFeature | null // last feature picked; its label offers "add as study area"
   onFeatureClick: (feature: NaturalFeature) => void
@@ -101,6 +99,12 @@ interface Props {
   onDeleteZone: (id: string) => void
   onCancelZone: () => void
   onClearPreview: () => void // drop the search outline
+  passDays: string[] // timeline pass days (YYYY-MM-DD, orbit-filtered) whose NISAR tiles are prefetched
+  onPrefetch: (p: { done: number; total: number; paused?: boolean } | null) => void
+  playing: boolean // animation mode: show the pre-rendered day image instead of the tile layer
+  onFrames: (p: { done: number; total: number } | null) => void // frame build progress
+  aoiFill: number // study area fill opacity 0-1 (0: outline only)
+  zoneFill: number // point of interest fill opacity 0-1; the selected square doubles it
 }
 
 // Active drag while editing the selected shape.
@@ -148,10 +152,9 @@ export default function MapView({
   onUpdate,
   previewGeometry,
   flyToBbox,
-  searchStart,
-  searchEnd,
   overlays,
   coverMask,
+  waterOverlay,
   featureLabels,
   activeFeature,
   onFeatureClick,
@@ -165,6 +168,12 @@ export default function MapView({
   onDeleteZone,
   onCancelZone,
   onClearPreview,
+  passDays,
+  onPrefetch,
+  playing,
+  onFrames,
+  aoiFill,
+  zoneFill,
 }: Props) {
   // Placing the zone center blocks the same interactions as shape drawing.
   const drawing = mode !== null || zonePlacing
@@ -185,15 +194,6 @@ export default function MapView({
   const [zoomLevel, setZoomLevel] = useState(4)
   const [hoverRegion, setHoverRegion] = useState<string | null>(null)
   const selected = polygons.find((p) => p.id === selectedId)
-  const [poiId, setPoiId] = useState<string | null>(null)
-  // Only POIs inside some study area are shown; no areas, no points.
-  const poisGeo = useMemo<FeatureCollection>(
-    () => ({
-      type: 'FeatureCollection',
-      features: POIS.features.filter((f) => inAnyShape(polygons, f.geometry.coordinates as LngLat)),
-    }),
-    [polygons],
-  )
   // NISAR frame footprints for the current view (CMR), drawn as outlines colored by orbit direction.
   const nisar = overlays.nisar
   const nisarDirs = ((nisar.asc ?? true) ? 'A' : '') + ((nisar.desc ?? true) ? 'D' : '') || 'N'
@@ -236,18 +236,55 @@ export default function MapView({
       cancelPreload()
     }
   }, [footView, nisar.on, nisar.date, nisarDirs, dswx.on, dswx.date])
-  // Look the POI up by id: rendered feature properties flatten nested objects.
-  const openPoi = poiId ? poisGeo.features.find((f) => f.properties?.id === poiId) : undefined
-  const poi = openPoi ? POIS.features.find((f) => f.properties.id === poiId) : undefined
-
-  // Escape closes the POI popup.
+  // Timeline prefetch: NISAR tiles of every pass day over the target (selected point of interest
+  // square, else every study area bbox) at a zoom fixed by the target size, so changing the day is
+  // near instant. Panning or zooming never restarts it; no target, no prefetch.
+  const targetBoxes = useMemo<[number, number, number, number][]>(() => {
+    const z = zones.find((zz) => zz.id === selectedZoneId)
+    if (z) return [zoneBbox(z)]
+    return aoiGeometries(polygons).map(geometryBbox)
+  }, [zones, selectedZoneId, polygons])
+  const prefetchBoxKey = targetBoxes.map((b) => b.map((v) => v.toFixed(5)).join()).join('|')
+  const prefetchKey = nisar.on && nisarDirs !== 'N' && targetBoxes.length ? `${prefetchBoxKey}|${passDays.join()}` : ''
+  const nisarDateRef = useRef(nisar.date)
+  nisarDateRef.current = nisar.date
   useEffect(() => {
-    if (!poiId) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setPoiId(null)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [poiId])
-
+    if (!prefetchKey) return onPrefetch(null)
+    onPrefetch({ done: 0, total: 0 }) // "Preparando…" until the run computes its total
+    const t = setTimeout(() => void prefetchDays(targetBoxes, passDays, nisarDateRef.current, onPrefetch), 500)
+    return () => {
+      clearTimeout(t)
+      cancelDaysPrefetch()
+      onPrefetch(null)
+    }
+  }, [prefetchKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Animation frames: one pre-rendered image per pass day over the same box; swapping the image
+  // source is instant, so playback does not flicker.
+  const nisarMode = nisar.mode ?? 'color'
+  const [frames, setFrames] = useState<Record<string, DayFrame>>({})
+  useEffect(() => {
+    if (!prefetchKey) return onFrames(null)
+    const got: DayFrame[] = []
+    const t = setTimeout(
+      () =>
+        void buildFrames(targetBoxes, passDays, nisarDateRef.current, nisarMode, nisarDirs, (day, f, done, total) => {
+          if (f) {
+            got.push(f)
+            setFrames((prev) => ({ ...prev, [day]: f }))
+          }
+          onFrames(done >= total ? null : { done, total })
+        }),
+      600,
+    )
+    return () => {
+      clearTimeout(t)
+      cancelFrames()
+      onFrames(null)
+      setFrames({})
+      setTimeout(() => got.forEach((f) => URL.revokeObjectURL(f.url)), 1000)
+    }
+  }, [prefetchKey, nisarMode, nisarDirs]) // eslint-disable-line react-hooks/exhaustive-deps
+  const frame = playing && nisar.on ? frames[nisar.date] : undefined
   // Escape deselects the shape being edited.
   useEffect(() => {
     if (!selectedId) return
@@ -507,10 +544,6 @@ export default function MapView({
     }
     if (!drawing) {
       const feature = e.features?.[0]
-      if (feature?.layer.id === 'poi-circle') {
-        setPoiId(feature.properties.id)
-        return
-      }
       if (feature?.layer.id === 'edit-handles') return
       // Administrative regions are fixed boundaries: they can be deleted but not edited.
       const editable = feature?.layer.id === 'aoi-fill' && feature.properties.kind !== 'region'
@@ -577,13 +610,6 @@ export default function MapView({
       return
     }
     const top = e.features?.[0]
-    if (top?.layer.id === 'poi-circle') {
-      mapRef.current?.getMap().dragPan.enable()
-      setHoverHandle(null)
-      setMapCursor('pointer')
-      onHover(null)
-      return
-    }
     const handle = top?.layer.id === 'edit-handles' ? (top.properties as HandleProps) : null
     const fill = e.features?.find((f) => isAoiFill(f.layer.id))
     const overSelected = !!fill && fill.properties.id === selectedId
@@ -817,10 +843,10 @@ export default function MapView({
             ]
           : drawing
             ? []
-            : ['poi-circle', 'edit-handles', 'aoi-fill', 'aoi-region-fill', 'preview-fill']
+            : ['edit-handles', 'aoi-fill', 'aoi-region-fill', 'preview-fill']
       }
     >
-      {/* Basemap licenses require attribution; kept bottom-left so the right corner is free for InfoBox. */}
+      {/* Basemap licenses require attribution; kept bottom-left. */}
       <AttributionControl position="bottom-left" compact />
       {/* Region picker layers; beforeId keeps them under the AOI shapes even when mounted later. */}
       {mode === 'region' && regionCountries && (
@@ -924,9 +950,15 @@ export default function MapView({
           />
         </Source>
       )}
+      {/* U-Net water probability (blue); under the AOI shapes like the land-cover mask. */}
+      {waterOverlay && (
+        <Source key={waterOverlay.url} id="water-unet" type="image" url={waterOverlay.url} coordinates={waterOverlay.coordinates}>
+          <Layer id="water-unet-layer" type="raster" layout={{ visibility: waterOverlay.visible ? 'visible' : 'none' }} paint={{ 'raster-opacity': waterOverlay.opacity, 'raster-resampling': 'linear' }} />
+        </Source>
+      )}
       <Source id="aoi-regions" type="geojson" data={regionsGeo}>
         {/* Study areas only bound the search: near-transparent fill (kept for hit-testing) and a dashed outline. */}
-        <Layer id="aoi-region-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.04 }} />
+        <Layer id="aoi-region-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': aoiFill }} />
         <Layer
           id="aoi-region-outline"
           type="line"
@@ -978,6 +1010,16 @@ export default function MapView({
               />
             </Source>
           )}
+          {mode && frame && (
+            <Source id="ov-nisar-frame" type="image" url={frame.url} coordinates={frame.coordinates}>
+              <Layer
+                id="ov-nisar-frame-layer"
+                type="raster"
+                beforeId="aoi-region-fill"
+                paint={{ ...paint, 'raster-fade-duration': 0 }}
+              />
+            </Source>
+          )}
           <Source
             id={`ov-${id}`}
             type="raster"
@@ -991,14 +1033,14 @@ export default function MapView({
               type="raster"
               beforeId="aoi-region-fill"
               minzoom={mode ? NISAR_FADE_START : 0}
-              paint={paint}
+              paint={mode && frame ? { ...paint, 'raster-opacity': 0 } : paint}
             />
           </Source>
           </Fragment>
         )
       })}
       <Source id="aoi-polygons" type="geojson" data={polygonsGeo}>
-        <Layer id="aoi-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.04 }} />
+        <Layer id="aoi-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': aoiFill }} />
         <Layer
           id="aoi-outline"
           type="line"
@@ -1016,7 +1058,7 @@ export default function MapView({
           type="fill"
           paint={{
             'fill-color': '#db2777',
-            'fill-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.3, 0.16],
+            'fill-opacity': ['min', 1, ['*', zoneFill, ['case', ['boolean', ['get', 'selected'], false], 2, 1]]],
           }}
         />
         <Layer
@@ -1158,24 +1200,6 @@ export default function MapView({
           </div>
         </Marker>
       )}
-      <Source id="pois" type="geojson" data={poisGeo}>
-        <Layer
-          id="poi-circle"
-          type="circle"
-          paint={{
-            // Selected POI: bigger, with a thick dark ring.
-            'circle-radius': ['case', ['==', ['get', 'id'], poiId ?? ''], 11, 7],
-            'circle-color': [
-              'match',
-              ['get', 'category'],
-              ...Object.entries(POI_COLOR).flat(),
-              '#6b7280',
-            ] as unknown as string,
-            'circle-stroke-color': ['case', ['==', ['get', 'id'], poiId ?? ''], '#111827', '#ffffff'],
-            'circle-stroke-width': ['case', ['==', ['get', 'id'], poiId ?? ''], 3.5, 2],
-          }}
-        />
-      </Source>
       {/* Place-name labels above overlays and AOI shapes, under POIs and edit handles. */}
       {/* No fade: cross-fading parent/child label tiles while zooming shows names twice. */}
       {/* With study areas the raster labels are hidden: names outside the areas cannot be removed from a raster. */}
@@ -1184,7 +1208,7 @@ export default function MapView({
           <Layer
             id="basemap-labels-layer"
             type="raster"
-            beforeId="poi-circle"
+            beforeId="edit-rotate-stem"
             paint={{ 'raster-opacity': 1, 'raster-fade-duration': 0 }}
           />
         </Source>
@@ -1286,7 +1310,6 @@ export default function MapView({
         </div>
       )}
     </Map>
-    {poi && <PoiPanel poi={poi} start={searchStart} end={searchEnd} onClose={() => setPoiId(null)} />}
     </>
   )
 }

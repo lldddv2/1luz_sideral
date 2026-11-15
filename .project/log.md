@@ -1,4 +1,21 @@
 # 錄（倒序）
+- 2026-11-15 claude: 修水機率開關關後不復現（根因：關即卸 image Source/Layer，重掛之 Layer 失位/源重加失敗；今常掛，以 layout visibility 切）。
+- 2026-11-15 claude: 加入門導覽（driver.js，MIT）。用戶求新手指引。
+- 2026-11-15 claude: 入 U-Net 水模：/api/water＋Sidebar「Agua (U-Net)」（見 water-unet.md）。淨 state_dict 防 pickle；擇覆最佳景因幀沿軌切。
+- 2026-11-15 claude: 刪資訊彈卡與附近地物點。用戶求。
+- 2026-11-15 claude: 時序播放減速（App.tsx FRAME_MS 400→1800 ms，唯增間隔；播放已用預渲幀，不需待 idle）。因圖層不及渲染。
+- 2026-11-15 claude: 搜尋下拉點「+」後閉。用戶求。因：加區改 boxKey 觸重搜，search 復 setOpen(true)；今範圍變之重搜不開（SearchBar.tsx）。
+- 2026-11-15 claude: 預取計數凍修：讓路等可見瓦限 3s（懸 fetch 致永凍）、示「(en pausa)」；buildFrames 待 daysReady（預取畢，限 60s）方作，計數單調；時軸示「Teselas n/m」→「Imágenes a/b」，換目標即示「Preparando…」；done 夾 ≤total。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 刪側欄「Próximamente」按鈕。用戶求。
+- 2026-11-15 claude: NISAR 預取/幀改依目標（選中興趣點方，否則諸研究區 bbox）；zoom 由目標大小定（最深而 ≤8 tiles/邊，夾 NISAR 範圍），預取與幀同 zoom；效應 key 唯目標+日+模式/軌，平移縮放不重啟；已快取者計入進度。無目標不預取。因用戶求。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 填色淡化：AOI 填預設 4%、興趣點方 7%（選者倍），Sidebar 二段各加「Opacidad del relleno」滑桿(0–100，0 唯邊線)，App 持態傳 MapView fill-opacity；播放時二填皆 0。因填遮 NISAR 水層。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 搜欄 + 加區（地名、自然地物）亦飛至其 bbox，同預覽。因用戶求。build 過。
+- 2026-11-15 claude: 動畫模式：buildFrames(layers.ts) 以 mosaicTile 於選點 bbox（無則視窗）現 zoom 拼諸過境日為一 PNG（≤8×8 tile，近當日先），MapView 播時以 image source 示當日幀、隱 tile 層（未備則退 tile）；軸頭加 ▶/⏸（Reproducir/Pausar），App 每 400ms(FRAME_MS) 進一日，末則循環；進度沿「Precargando n/m」。因錄屏須無閃。build 過；瀏覽器未驗。
+- 2026-11-15 claude: NISAR 時間軸預取：prefetchDays(layers.ts) 於選點 bbox（無則視窗）現 zoom 取諸過境日（依升降濾）及其鑲嵌日 raw tiles，近當日先，併發6，≤48 tile/日、≤1500 GET；換框/zoom/日集則棄；軸頭示「Precargando n/m」。白閃未改（已 setTiles，快取命中則速）。因換日須近即時。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 軸頭加 < > 鈕（Pasada anterior/siguiente）＋軸內 ←/→：移至前／後過境日（諸軌合序唯一日），經 onPick；基準首選日，無則 < 末 > 首；端則禁。因用戶求逐過境步進。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 區內地名空（Overpass 敗或無）則復示 Esri raster labels；town minzoom 9→8。因用戶見光學圖無名。build 過。
+- 2026-11-15 claude: 軸點可點（button），設啟用水層（DSWx、NISAR）日為其過境日；JRC無日略；無層啟則啟 NISAR GCOV；當前層日之點高亮。因用戶求軸驅層日。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 搜預覽輪廓可除：右鍵輪廓→context menu「Quitar contorno」；搜欄✕亦除。⋮鈕略。因輪廓常駐不可除。build 過；瀏覽器未驗。
 - 2026-11-15 claude: 光學底圖名改「Óptico」為預設；刪OSM。用戶求。
 - 2026-11-15 claude: 搜欄點行（地名／自然地物）亦閉下拉，保 query；經 opencode big-pickle（本地 qwen 敗）。因用戶求。tsc、build 過；瀏覽器未驗。
 - 2026-11-15 charles: 選中方形右上外置圓鈕（⋮），點展工具列；今唯「Eliminar punto de interés」（紅 Trash），經新 MapView prop `onDeleteZone`＝App `deleteZone`；外點、Esc、失選則閉，鈕列不啟圖拖不失選。因用戶就地刪點。build 過；瀏覽器未驗。

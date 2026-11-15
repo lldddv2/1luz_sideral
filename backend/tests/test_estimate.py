@@ -21,7 +21,7 @@ MEASURED_AOI = {
 }
 BAD_GEOMETRIES = [
     {"type": "Point", "coordinates": [-105.0, 40.0]},
-    {"type": "Polygon", "coordinates": [[[-105, 39], [-104.99, 40], [-104.99, 39], [-105, 40], [-105, 39]]]},
+    # Self-intersecting polygons are repaired (make_valid), so they are no longer rejected.
     {"type": "Polygon", "coordinates": [[[-105, 39], [-104.99, 39], [-104.99, 95], [-105, 39]]]},
     {"type": "Polygon"},
     {"type": "Unknown", "coordinates": []},

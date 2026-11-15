@@ -1,0 +1,12 @@
+{
+ "mean": -10.83954178092375,
+ "std": 2.484702338864559,
+ "threshold": 0.97,
+ "patch": 64,
+ "overlap": 32,
+ "base": 16,
+ "depth": 3,
+ "in_channels": 1,
+ "input": "NISAR L2 GCOV HHHH gamma0 linear power, 30 m, 10log10 then z-score",
+ "source": "NISAR_UNET_MODELO_V1 checkpoints/best_unet.pt"
+}
