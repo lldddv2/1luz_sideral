@@ -1,4 +1,5 @@
 # 錄（倒序）
+- 2026-11-15 claude: 「Detectar agua」誤因本機 DNS 暫斷 urs.earthdata.nasa.gov（今解析可，實跑 /api/water 成）。碼無誤。router 今分 ConnectionError/HTTPError/Timeout 回西語簡訊，詳入 log；.download-status 錯文 overflow-wrap:anywhere 以換行。
 - 2026-11-15 claude: 修播放畫凍（錄影：首輪後日期續行而圖不變）。疑因：image Source 換 url 經 maplibre 共用圖請求隊，隱瓦請求擠之，450ms 即 abort 前載，終不成。今 Source url 釘首幀，後幀自 fetch→createImageBitmap→updateImage({image})。未瀏覽器驗。
 - 2026-11-15 claude: 時序播放改先預載後速播（FRAME_MS 1800→450，見 timeline-playback.md）。逐日待層載慢。
 - 2026-11-15 claude: 修水機率開關關後不復現（根因：關即卸 image Source/Layer，重掛之 Layer 失位/源重加失敗；今常掛，以 layout visibility 切）。
