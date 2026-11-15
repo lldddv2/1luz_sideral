@@ -17,7 +17,7 @@ function steps(): DriveStep[] {
   return [
     {
       popover: {
-        title: 'Bienvenido a 1luz sideral',
+        title: 'Bienvenido a Luzsi',
         description:
           'Explora cambios en la superficie terrestre con datos de radar NISAR (NASA-ISRO). Te mostramos lo básico en un minuto.',
       },

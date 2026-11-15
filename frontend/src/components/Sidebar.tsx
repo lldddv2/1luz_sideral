@@ -993,7 +993,7 @@ export default function Sidebar({
           <div className="brand">
             <span className="brand-mark" aria-hidden="true" />
             <div className="brand-text">
-              <span className="brand-title">1luz sideral</span>
+              <span className="brand-title">Luzsi</span>
               <span className="brand-subtitle">NISAR · NASA Space Apps 2026</span>
             </div>
           </div>
