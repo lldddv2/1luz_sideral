@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.deps import get_settings
 from app.nisar_extractor import ExtractionConfig, NisarExtractor
@@ -56,6 +57,10 @@ def create_app() -> FastAPI:
     app.include_router(regions.router, prefix="/api")
     app.include_router(water.router, prefix="/api")
     app.include_router(models.router, prefix="/api")
+    # Production: serve the built frontend (frontend/dist) from the same origin.
+    static_dir = os.environ.get("STATIC_DIR")
+    if static_dir and Path(static_dir).is_dir():
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
     return app
 
 
