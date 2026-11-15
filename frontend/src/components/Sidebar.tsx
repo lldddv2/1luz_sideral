@@ -29,7 +29,7 @@ import type { DownloadController, RunPhase, RunState } from '../useDownload'
 import { MAX_SEARCH_PRODUCTS, POLL_MS, POLS, fileUrl, formatKm2, warningsFor, yesterdayIso } from '../download'
 import { BASEMAPS } from '../basemaps'
 import type { BasemapId } from '../basemaps'
-import { OVERLAYS, OVERLAY_IDS } from '../layers'
+import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, OVERLAYS, OVERLAY_IDS } from '../layers'
 import type { OverlayId, OverlayState } from '../layers'
 
 type SectionId = 'study' | 'download' | 'nisar' | 'layers' | 'analysis' | 'about'
@@ -329,6 +329,25 @@ function LayersSection({
                 <span className="field-label">Contorno de órbitas</span>
               </label>
             )}
+            {id === 'nisar' &&
+              (
+                [
+                  ['asc', 'Ascendente', NISAR_ASC_COLOR],
+                  ['desc', 'Descendente', NISAR_DESC_COLOR],
+                ] as const
+              ).map(([k, label, color]) => (
+                <label key={k} className="field-row field-row-label">
+                  <input
+                    type="checkbox"
+                    checked={st[k] ?? true}
+                    disabled={!st.on}
+                    onChange={(e) => onOverlayChange(id, { [k]: e.target.checked })}
+                  />
+                  <span className="field-label">
+                    <span style={{ color }}>■</span> {label}
+                  </span>
+                </label>
+              ))}
             {id === 'nisar' && (
               <p className="hint">
                 {(st.outline ?? true) ? 'alejado: contorno de órbitas · cerca: mosaico a color' : 'mosaico visible al acercar'}

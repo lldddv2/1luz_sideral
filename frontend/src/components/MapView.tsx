@@ -15,13 +15,14 @@ import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } f
 import type { XY } from '../editing'
 import { TOOLS } from './Sidebar'
 import { addProtocol } from 'maplibre-gl'
-import { NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, nisarDate, overlayTiles, registerNisarProtocol } from '../layers'
+import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, nisarDate, nisarFootprints, overlayTiles, registerNisarProtocol } from '../layers'
 import type { OverlayId, OverlayState } from '../layers'
 
 // Overlay tile failures (e.g. GIBS hiccups) are expected; keep them out of the console.
 registerNisarProtocol(addProtocol)
 
 const OVERLAY_SOURCES = new Set(OVERLAY_IDS.map((id) => `ov-${id}`))
+const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] }
 
 // Pixel tolerances for drawing interactions.
 const DUPLICATE_PX = 5 // clicks this close to the last vertex are ignored (double-click)
@@ -145,6 +146,33 @@ export default function MapView({
     }),
     [polygons],
   )
+  // NISAR frame footprints for the current view (CMR), drawn as outlines colored by orbit direction.
+  const nisar = overlays.nisar
+  const nisarDirs = ((nisar.asc ?? true) ? 'A' : '') + ((nisar.desc ?? true) ? 'D' : '') || 'N'
+  const showFoot = nisar.on && (nisar.outline ?? true)
+  const footDate = nisarDate(nisar.date)
+  const [footView, setFootView] = useState<[number, number, number, number] | null>(null)
+  const [nisarFoot, setNisarFoot] = useState<FeatureCollection>(EMPTY_FC)
+  useEffect(() => {
+    if (!showFoot || !footView) return
+    let live = true
+    nisarFootprints(footView, footDate)
+      .then((fps) => {
+        if (!live) return
+        setNisarFoot({
+          type: 'FeatureCollection',
+          features: fps.map((f) => ({
+            type: 'Feature',
+            properties: { dir: f.dir },
+            geometry: { type: 'MultiLineString', coordinates: f.rings },
+          })),
+        })
+      })
+      .catch(() => live && setNisarFoot(EMPTY_FC)) // view too large or CMR down
+    return () => {
+      live = false
+    }
+  }, [showFoot, footView, footDate])
   // Look the POI up by id: rendered feature properties flatten nested objects.
   const openPoi = poiId ? poisGeo.features.find((f) => f.properties?.id === poiId) : undefined
   const poi = openPoi ? POIS.features.find((f) => f.properties.id === poiId) : undefined
@@ -560,6 +588,8 @@ export default function MapView({
   const reportView = (e: { target: MaplibreMap }) => {
     const c = e.target.getCenter()
     onViewChange({ zoom: e.target.getZoom(), center: [c.lng, c.lat] })
+    const b = e.target.getBounds()
+    setFootView([Math.max(-180, b.getWest()), b.getSouth(), Math.min(180, b.getEast()), b.getNorth()])
   }
 
   return (
@@ -676,7 +706,7 @@ export default function MapView({
         const base = overlayTiles(id, overlays[id].date)
         const mode = id === 'nisar' ? overlays[id].mode ?? 'color' : undefined
         const url = mode
-          ? `${NISAR_PROTOCOL}://${mode}/${nisarDate(overlays[id].date)}/{z}/{x}/{y}`
+          ? `${NISAR_PROTOCOL}://${mode}/${nisarDate(overlays[id].date)}/${nisarDirs}/{z}/{x}/{y}`
           : id === 'dswx'
             ? `${DSWX_PROTOCOL}://${overlays[id].date}/{z}/{x}/{y}`
             : base
@@ -696,18 +726,20 @@ export default function MapView({
                 'raster-fade-duration': 300,
               }
             : { 'raster-opacity': imgOpacity }
-        const outlineUrl = mode && (overlays[id].outline ?? true) && `${NISAR_PROTOCOL}://outline/${nisarDate(overlays[id].date)}/{z}/{x}/{y}`
         return (
           <Fragment key={`${id}-${url}`}>
-          {outlineUrl && (
-            <Source id="ov-nisar-outline" type="raster" tiles={[outlineUrl]} tileSize={256} maxzoom={NISAR_OUTLINE_MAXZOOM}>
+          {mode && showFoot && (
+            <Source id="ov-nisar-outline" type="geojson" data={nisarFoot}>
               <Layer
                 id="ov-nisar-outline-layer"
-                type="raster"
+                type="line"
                 beforeId="aoi-region-fill"
                 maxzoom={NISAR_OUTLINE_MAXZOOM}
+                filter={['in', ['get', 'dir'], ['literal', nisarDirs.split('')]]}
                 paint={{
-                  'raster-opacity': ['interpolate', ['linear'], ['zoom'], NISAR_FADE_START, opacity, NISAR_FADE_END, 0] as unknown as number,
+                  'line-color': ['match', ['get', 'dir'], 'A', NISAR_ASC_COLOR, NISAR_DESC_COLOR],
+                  'line-width': 1.2,
+                  'line-opacity': ['interpolate', ['linear'], ['zoom'], NISAR_FADE_START, opacity, NISAR_FADE_END, 0],
                 }}
               />
             </Source>

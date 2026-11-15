@@ -17,6 +17,8 @@ export interface OverlayState {
   date: string // YYYY-MM-DD for GIBS daily layers; GIBS tiles only cover that day's swaths
   mode?: NisarMode // NISAR only
   outline?: boolean // NISAR only: swath outline when zoomed out
+  asc?: boolean // NISAR only: show ascending passes (default true)
+  desc?: boolean // NISAR only: show descending passes (default true)
 }
 
 // 'water' = thresholded low-backscatter mask; 'color' = softened false-color preview.
@@ -59,7 +61,7 @@ export const OVERLAY_IDS: OverlayId[] = ['dswx', 'nisar', 'jrc']
 export const DEFAULT_OVERLAYS: Record<OverlayId, OverlayState> = {
   // Defaults are days with verified pixels over La Mojana (Colombia); most single days are empty there.
   dswx: { on: false, opacity: 70, date: '2026-11-14' },
-  nisar: { on: false, opacity: 80, date: '2026-11-01', mode: 'color', outline: true },
+  nisar: { on: false, opacity: 80, date: '2026-11-01', mode: 'color', outline: true, asc: true, desc: true },
   jrc: { on: false, opacity: 70, date: '' },
 }
 
@@ -102,8 +104,9 @@ export function overlayTiles(id: OverlayId, date: string): string {
 // pixels, ~98% of them inside JRC occurrence > 0.
 //
 // GIBS daily tiles only hold that day's passes, so a single day shows cut swaths. The
-// nisar://{mode}/{date}/{z}/{x}/{y} protocol mosaics the last MOSAIC_DAYS valid days
-// (NISAR repeat cycle): newest day wins, older days fill transparent gaps.
+// nisar://{mode}/{date}/{dirs}/{z}/{x}/{y} protocol mosaics the last MOSAIC_DAYS valid days
+// (NISAR repeat cycle): newest day wins, older days fill transparent gaps. {dirs} is 'AD', 'A',
+// 'D' or 'N' (none): with one direction, each day is clipped to that direction's CMR footprints.
 export const NISAR_PROTOCOL = 'nisar'
 export const MOSAIC_DAYS = 12
 const WATER_THRESHOLD = 50
@@ -113,12 +116,13 @@ const COVER_RGB = [140, 150, 160] // #8c96a0
 const COVER_ALPHA = 64 // ~0.25
 const FEATHER = 2 // px box radius for alpha edges and day seams
 const NISAR_GIBS = OVERLAYS.nisar.tiles
-const OUTLINE_RGB = [0, 0, 0] // black swath outline
-const OUTLINE_ALPHA = 110 // ~0.43: visible orbit trace without dominating the map
 
 // Zoom crossfade: swath outlines when far, full mosaic when close.
 export const NISAR_FADE_START = 6
 export const NISAR_FADE_END = 8
+// Footprint outline colors by orbit direction (muted so the map stays readable).
+export const NISAR_ASC_COLOR = '#4a7fb5'
+export const NISAR_DESC_COLOR = '#c0783a'
 export const NISAR_OUTLINE_MAXZOOM = 9
 
 let protocolAdded = false
@@ -331,53 +335,181 @@ function boxBlur(a: Float32Array, w: number, h: number, r: number) {
     }
 }
 
-// Draws each day's swath boundary (data/no-data edge, ~2px) in one color; inside is transparent.
-function outlineTile(tiles: (Uint8ClampedArray | null)[]): Uint8ClampedArray<ArrayBuffer> | null {
-  const n = SIZE * SIZE
-  const edge = new Uint8Array(n)
-  let any = false
-  for (const t of tiles) {
-    if (!t) continue
-    for (let y = 0; y < SIZE; y++)
-      for (let x = 0; x < SIZE; x++) {
-        const i = y * SIZE + x
-        if (t[i * 4 + 3] === 0) continue
-        any = true
-        // Covered pixel with an uncovered neighbor (tile borders are not edges).
-        for (let d = 0; d < 4; d++) {
-          const xx = x + (d === 0 ? -1 : d === 1 ? 1 : 0)
-          const yy = y + (d === 2 ? -1 : d === 3 ? 1 : 0)
-          if (xx < 0 || yy < 0 || xx >= SIZE || yy >= SIZE) continue
-          if (t[(yy * SIZE + xx) * 4 + 3] === 0) {
-            edge[i] = 1
-            edge[yy * SIZE + xx] = 1 // second pixel outside makes the line ~2px
-            break
-          }
-        }
-      }
-  }
-  if (!any) return null
-  const out = new Uint8ClampedArray(n * 4)
-  for (let i = 0; i < n; i++)
-    if (edge[i]) {
-      out.set(OUTLINE_RGB, i * 4)
-      out[i * 4 + 3] = OUTLINE_ALPHA
+// Orbit direction per granule comes from NASA CMR (keyless, CORS). Its GraphQL endpoint returns
+// only the fields asked for (~250 B per granule; granules.json is ~20 KB). The direction is the
+// A/D token of the granule name (NISAR_L2_PR_GCOV_<cycle>_<track>_<A|D>_<frame>_...), same as
+// its ASCENDING_DESCENDING attribute. Footprints are frame polygons, keyed by UTC day like the
+// GIBS daily tiles.
+export type NisarDir = 'A' | 'D'
+export interface NisarFootprint {
+  id: string
+  dir: NisarDir
+  date: string // YYYY-MM-DD (UTC)
+  rings: [number, number][][] // [lon, lat]
+  bbox: [number, number, number, number] // w, s, e, n
+}
+
+const CMR_GRAPHQL = 'https://graphql.earthdata.nasa.gov/api'
+// NISAR L2 GCOV collections at ASF (validated V1, provisional, beta).
+const GCOV_COLLECTIONS = ['C3622241360-ASF', 'C2854338529-ASF', 'C3622214170-ASF']
+const FOOT_CELL_Z = 4 // queries are cached per z4 tile (22.5 deg) and mosaic window
+const FOOT_MAX_CELLS = 40 // larger views (zoomed far out) are not queried
+const FOOT_PAGE = 2000
+const footCache = new Map<string, Promise<NisarFootprint[]>>()
+
+const lonX = (lon: number, z: number) => ((lon + 180) / 360) * 2 ** z
+const latY = (lat: number, z: number) => {
+  const r = (Math.max(-85.05, Math.min(85.05, lat)) * Math.PI) / 180
+  return ((1 - Math.log(Math.tan(Math.PI / 4 + r / 2)) / Math.PI) / 2) * 2 ** z
+}
+const xLon = (x: number, z: number) => (x / 2 ** z) * 360 - 180
+const yLat = (y: number, z: number) => (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / 2 ** z))) * 180) / Math.PI
+
+// Lon/lat box [w, s, e, n] of a web-mercator tile.
+export function tileBounds(z: number, x: number, y: number): [number, number, number, number] {
+  return [xLon(x, z), yLat(y + 1, z), xLon(x + 1, z), yLat(y, z)]
+}
+
+const GRANULES_QUERY = 'query($p:GranulesInput){granules(params:$p){cursor items{granuleUr timeStart polygons}}}'
+
+async function footCell(cx: number, cy: number, dates: string[]): Promise<NisarFootprint[]> {
+  const [w, s, e, n] = tileBounds(FOOT_CELL_Z, cx, cy)
+  const out: NisarFootprint[] = []
+  let cursor: string | undefined
+  for (let page = 0; page < 5; page++) {
+    const p = {
+      collectionConceptIds: GCOV_COLLECTIONS,
+      boundingBox: [`${w},${s},${e},${n}`],
+      temporal: `${dates[dates.length - 1]}T00:00:00Z,${dates[0]}T23:59:59Z`,
+      limit: FOOT_PAGE,
+      ...(cursor ? { cursor } : {}),
     }
+    const res = await fetch(CMR_GRAPHQL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: GRANULES_QUERY, variables: { p } }),
+    })
+    if (!res.ok) throw new Error(`cmr ${res.status}`)
+    const g = (await res.json()).data?.granules
+    if (!g) throw new Error('cmr: no data')
+    const items = g.items as { granuleUr: string; timeStart: string; polygons: string[][] | null }[]
+    for (const it of items) {
+      const dir = /_GCOV_\d+_\d+_([AD])_/.exec(it.granuleUr)?.[1] as NisarDir | undefined
+      if (!dir || !it.polygons) continue
+      // CMR rings are "lat lon lat lon ..." strings; first ring of each polygon is the outer one.
+      const rings = it.polygons.map((poly) => {
+        const v = poly[0].trim().split(/\s+/).map(Number)
+        const r: [number, number][] = []
+        for (let i = 0; i + 1 < v.length; i += 2) r.push([v[i + 1], v[i]])
+        return r
+      })
+      const lons = rings.flat().map((c) => c[0])
+      const lats = rings.flat().map((c) => c[1])
+      if (Math.max(...lons) - Math.min(...lons) > 180) continue // antimeridian crossers skipped
+      out.push({
+        id: it.granuleUr,
+        dir,
+        date: it.timeStart.slice(0, 10),
+        rings,
+        bbox: [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)],
+      })
+    }
+    cursor = g.cursor
+    if (!cursor || items.length < FOOT_PAGE) break
+  }
   return out
 }
 
-async function mosaicTile(mode: NisarMode | 'outline', date: string, z: string, x: string, y: string): Promise<ArrayBuffer> {
+// NISAR GCOV footprints (deduped) touching a lon/lat box [w, s, e, n] within the mosaic window
+// ending at date. Rejects when the box needs more than FOOT_MAX_CELLS cell queries.
+export async function nisarFootprints(
+  [w, s, e, n]: [number, number, number, number],
+  date: string,
+): Promise<NisarFootprint[]> {
   const dates = mosaicDates(date)
-  const tiles = await Promise.all(
-    dates.map((d) => rawTile(NISAR_GIBS.replace('{time}', d).replace('{z}', z).replace('{y}', y).replace('{x}', x), true)),
-  )
-  if (mode === 'outline') {
-    const o = outlineTile(tiles)
-    if (!o) return emptyTile()
-    const c = new OffscreenCanvas(SIZE, SIZE)
-    c.getContext('2d')!.putImageData(new ImageData(o, SIZE, SIZE), 0, 0)
-    return (await c.convertToBlob({ type: 'image/png' })).arrayBuffer()
-  }
+  if (!dates.length) return []
+  const z = FOOT_CELL_Z
+  const last = 2 ** z - 1
+  const x0 = Math.max(0, Math.floor(lonX(w, z)))
+  const x1 = Math.min(last, Math.ceil(lonX(e, z)) - 1)
+  const y0 = Math.max(0, Math.floor(latY(n, z)))
+  const y1 = Math.min(last, Math.ceil(latY(s, z)) - 1)
+  if ((x1 - x0 + 1) * (y1 - y0 + 1) > FOOT_MAX_CELLS) throw new Error('nisar footprints: view too large')
+  const cells: Promise<NisarFootprint[]>[] = []
+  for (let cx = x0; cx <= x1; cx++)
+    for (let cy = y0; cy <= y1; cy++) {
+      const key = `${cx}/${cy}/${dates[0]}`
+      let p = footCache.get(key)
+      if (!p) {
+        p = footCell(cx, cy, dates)
+        p.catch(() => footCache.delete(key)) // failures are retried on the next request
+        footCache.set(key, p)
+      }
+      cells.push(p)
+    }
+  const seen = new Set<string>()
+  return (await Promise.all(cells)).flat().filter((f) => !seen.has(f.id) && !!seen.add(f.id))
+}
+
+// Rasterizes footprint rings into a tile-sized coverage mask (1 = inside).
+function footMask(fps: NisarFootprint[], z: number, x: number, y: number): Uint8Array {
+  const c = new OffscreenCanvas(SIZE, SIZE)
+  const ctx = c.getContext('2d')!
+  ctx.fillStyle = '#000'
+  for (const f of fps)
+    for (const r of f.rings) {
+      ctx.beginPath()
+      r.forEach(([lon, lat], i) => {
+        const px = (lonX(lon, z) - x) * SIZE
+        const py = (latY(lat, z) - y) * SIZE
+        if (i) ctx.lineTo(px, py)
+        else ctx.moveTo(px, py)
+      })
+      ctx.closePath()
+      ctx.fill()
+    }
+  const a = ctx.getImageData(0, 0, SIZE, SIZE).data
+  const m = new Uint8Array(SIZE * SIZE)
+  for (let i = 0; i < m.length; i++) m[i] = a[i * 4 + 3] >= 128 ? 1 : 0
+  return m
+}
+
+// Keeps one day's pixels from the wanted direction. The day is dropped when no wanted pass
+// touches the tile; when both directions do, pixels inside an other-direction footprint and
+// outside every wanted one are cleared (footprint edges are approximate, so the rest is kept).
+function clipDay(
+  t: Uint8ClampedArray,
+  fps: NisarFootprint[],
+  date: string,
+  want: NisarDir,
+  z: number,
+  x: number,
+  y: number,
+): Uint8ClampedArray | null {
+  const [w, s, e, n] = tileBounds(z, x, y)
+  const hit = fps.filter((f) => f.date === date && f.bbox[0] <= e && f.bbox[2] >= w && f.bbox[1] <= n && f.bbox[3] >= s)
+  const wanted = hit.filter((f) => f.dir === want)
+  const other = hit.filter((f) => f.dir !== want)
+  if (!wanted.length) return null
+  if (!other.length) return t
+  const mw = footMask(wanted, z, x, y)
+  const mo = footMask(other, z, x, y)
+  const out = t.slice()
+  for (let i = 0; i < mw.length; i++) if (mo[i] && !mw[i]) out[i * 4 + 3] = 0
+  return out
+}
+
+async function mosaicTile(mode: NisarMode, date: string, dirs: string, z: string, x: string, y: string): Promise<ArrayBuffer> {
+  if (dirs === 'N') return emptyTile()
+  const dates = mosaicDates(date)
+  const [tiles, fps] = await Promise.all([
+    Promise.all(
+      dates.map((d) => rawTile(NISAR_GIBS.replace('{time}', d).replace('{z}', z).replace('{y}', y).replace('{x}', x), true)),
+    ),
+    dirs === 'A' || dirs === 'D' ? nisarFootprints(tileBounds(+z, +x, +y), date).catch(() => null) : null,
+  ])
+  // One direction: clip each day to that direction's footprints (CMR failure = unfiltered).
+  if (fps) tiles.forEach((t, i) => (tiles[i] = t && clipDay(t, fps, dates[i], dirs as NisarDir, +z, +x, +y)))
   const n = SIZE * SIZE
   const out = new Uint8ClampedArray(n * 4)
   const src = new Int8Array(n).fill(-1) // index of the day that filled each pixel
@@ -516,14 +648,14 @@ async function dswxTile(date: string, z: string, x: string, y: string): Promise<
   return (await c.convertToBlob({ type: 'image/png' })).arrayBuffer()
 }
 
-// Registers nisar://{mode}/{date}/{z}/{x}/{y} once; errors resolve to an empty tile.
+// Registers nisar://{mode}/{date}/{dirs}/{z}/{x}/{y} once; errors resolve to an empty tile.
 export function registerNisarProtocol(add: (name: string, fn: (p: { url: string }, ac: AbortController) => Promise<{ data: ArrayBuffer }>) => void) {
   if (protocolAdded) return
   protocolAdded = true
   add(NISAR_PROTOCOL, async (params, ac) => {
-    const [mode, date, z, x, y] = params.url.replace(`${NISAR_PROTOCOL}://`, '').split('/')
+    const [mode, date, dirs, z, x, y] = params.url.replace(`${NISAR_PROTOCOL}://`, '').split('/')
     try {
-      return { data: await mosaicTile(mode === 'color' || mode === 'outline' ? mode : 'water', date, z, x, y) }
+      return { data: await mosaicTile(mode === 'color' ? mode : 'water', date, dirs, z, x, y) }
     } catch (e) {
       if (ac.signal.aborted) throw e
       return { data: await emptyTile() }
