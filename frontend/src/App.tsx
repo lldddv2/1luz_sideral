@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
 import InfoBox from "./components/InfoBox";
@@ -18,7 +18,8 @@ import { aoiBoxes, aoiGeometries, fetchOutline, groupLabel, inShapes } from "./f
 import type { NaturalFeature } from "./features";
 import type { AoiPolygon, DownloadTarget, DrawMode, LngLat, RegionGeometry, UserZone } from "./types";
 import { ZONE_DEFAULT_HALF_KM, zoneBbox, zoneGeometry, zoneLabel } from "./zone";
-import { BASEMAPS } from "./basemaps";
+import { BASEMAPS, defaultHlsDate, fetchHlsLatest } from "./basemaps";
+import { nisarDate } from "./layers";
 import type { BasemapId } from "./basemaps";
 import { DEFAULT_OVERLAYS } from "./layers";
 import type { OverlayId, OverlayState } from "./layers";
@@ -39,6 +40,28 @@ export default function App() {
   const [overlays, setOverlays] = useState(DEFAULT_OVERLAYS);
   const changeOverlay = (id: OverlayId, patch: Partial<OverlayState>) =>
     setOverlays((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  // HLS optical day: follows the active NISAR (or DSWx) date; the sidebar can override it
+  // until that automatic date changes again.
+  // Last day GIBS has published; dates past it are clamped (tiles there would be 404).
+  const [hlsLatest, setHlsLatest] = useState(defaultHlsDate);
+  useEffect(() => {
+    fetchHlsLatest().then((d) => d && setHlsLatest(d));
+  }, []);
+  const clampHls = (d: string) => (d > hlsLatest ? hlsLatest : d);
+  const hlsAuto = clampHls(
+    overlays.nisar.on
+      ? nisarDate(overlays.nisar.date)
+      : overlays.dswx.on
+        ? overlays.dswx.date
+        : hlsLatest,
+  );
+  // HLS view: single day (default) or multi-day composite.
+  const [hlsComposite, setHlsComposite] = useState(false);
+  const [hlsOverride, setHlsOverride] = useState<{ date: string; auto: string } | null>(null);
+  const hlsDate = hlsOverride && hlsOverride.auto === hlsAuto ? clampHls(hlsOverride.date) : hlsAuto;
+  // True when the user asked for a day GIBS has not published yet.
+  const hlsClamped = !!hlsOverride && hlsOverride.auto === hlsAuto && hlsOverride.date > hlsLatest;
+  const changeHlsDate = (date: string) => setHlsOverride(date ? { date, auto: hlsAuto } : null);
   // Search: last result picked (dashed outline) and the camera target for it.
   const [preview, setPreview] = useState<PlaceResult | null>(null);
   // Natural features labelled on the map, and the one last picked.
@@ -221,6 +244,13 @@ export default function App() {
         onDelete={deletePolygon}
         onHoverTool={setHoveredTool}
         onBasemapChange={setBasemap}
+        hlsDate={hlsDate}
+        hlsAuto={hlsAuto}
+        hlsLatest={hlsLatest}
+        hlsClamped={hlsClamped}
+        onHlsDateChange={changeHlsDate}
+        hlsComposite={hlsComposite}
+        onHlsCompositeChange={setHlsComposite}
         overlays={overlays}
         onOverlayChange={changeOverlay}
         zones={zones}
@@ -236,6 +266,8 @@ export default function App() {
         <MapView
           basemap={BASEMAPS[basemap].style}
           labels={BASEMAPS[basemap].labels}
+          hlsDate={basemap === "hls" ? hlsDate : null}
+          hlsComposite={hlsComposite}
           areaPlaces={areaPlaces}
           polygons={polygons}
           mode={mode}

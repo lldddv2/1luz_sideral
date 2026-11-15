@@ -2301,3 +2301,42 @@ select {
   font-size: 11px;
   line-height: 1.45;
 }
+
+.option-swatch[data-swatch='hls'] {
+  background: linear-gradient(135deg, #3b5a2e 0%, #8a7a52 55%, #e6e9ee 100%);
+}
+
+.hls-date {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 4px;
+  font-size: 12px;
+}
+
+.hls-date-hint {
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+/* HLS single-day / composite toggle */
+.hls-mode {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+.hls-mode-btn {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.hls-mode-active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+}

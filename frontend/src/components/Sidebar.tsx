@@ -36,7 +36,7 @@ import type { DownloadController, RunPhase, RunState } from '../useDownload'
 import type { LandcoverController } from '../useLandcover'
 import { formatPercent } from '../landcover'
 import { MAX_SEARCH_PRODUCTS, POLL_MS, POLS, fileUrl, formatKm2, warningsFor, yesterdayIso } from '../download'
-import { BASEMAPS } from '../basemaps'
+import { BASEMAPS, HLS_DAYS, shiftDate } from '../basemaps'
 import type { BasemapId } from '../basemaps'
 import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, OVERLAYS, OVERLAY_IDS } from '../layers'
 import { ZONE_MAX_SIDE_KM, ZONE_MIN_SIDE_KM, clampHalfKm } from '../zone'
@@ -58,6 +58,13 @@ interface Props {
   onDelete: (id: string) => void
   onHoverTool: (tool: DrawMode | null) => void
   onBasemapChange: (basemap: BasemapId) => void
+  hlsDate: string
+  hlsAuto: string
+  hlsLatest: string
+  hlsClamped: boolean
+  onHlsDateChange: (date: string) => void
+  hlsComposite: boolean
+  onHlsCompositeChange: (composite: boolean) => void
   overlays: Record<OverlayId, OverlayState>
   onOverlayChange: (id: OverlayId, patch: Partial<OverlayState>) => void
   zones: UserZone[]
@@ -447,9 +454,16 @@ function NisarSection() {
 function LayersSection({
   basemap,
   onBasemapChange,
+  hlsDate,
+  hlsAuto,
+  hlsLatest,
+  hlsClamped,
+  onHlsDateChange,
+  hlsComposite,
+  onHlsCompositeChange,
   overlays,
   onOverlayChange,
-}: Pick<Props, 'basemap' | 'onBasemapChange' | 'overlays' | 'onOverlayChange'>) {
+}: Pick<Props, 'basemap' | 'onBasemapChange' | 'hlsDate' | 'hlsAuto' | 'hlsLatest' | 'hlsClamped' | 'onHlsDateChange' | 'hlsComposite' | 'onHlsCompositeChange' | 'overlays' | 'onOverlayChange'>) {
   const [waterOpen, setWaterOpen] = useState(true)
   return (
     <>
@@ -472,6 +486,44 @@ function LayersSection({
           </button>
         ))}
       </div>
+      {basemap === 'hls' && (
+        <div className="hls-mode" role="radiogroup" aria-label="Modo HLS">
+          {([false, true] as const).map((c) => (
+            <button
+              key={String(c)}
+              type="button"
+              role="radio"
+              aria-checked={hlsComposite === c}
+              className={hlsComposite === c ? 'hls-mode-btn hls-mode-active' : 'hls-mode-btn'}
+              onClick={() => onHlsCompositeChange(c)}
+            >
+              {c ? 'Compuesto' : 'Día único'}
+            </button>
+          ))}
+        </div>
+      )}
+      {basemap === 'hls' && (
+        <label className="hls-date">
+          <span>Fecha HLS</span>
+          <input
+            type="date"
+            value={hlsDate}
+            max={hlsLatest}
+            onChange={(e) => onHlsDateChange(e.target.value)}
+          />
+          <span className="hls-date-hint">
+            {hlsComposite ? (
+              <>
+                {shiftDate(hlsDate, 1 - HLS_DAYS)} → {hlsDate} ({HLS_DAYS} días) · puede haber nubes
+              </>
+            ) : (
+              <>{hlsDate} · puede haber franjas vacías y nubes</>
+            )}{' '}
+            · {hlsDate === hlsAuto ? 'automática' : 'manual'}
+            {hlsClamped && <> · Último disponible: {hlsLatest}</>}
+          </span>
+        </label>
+      )}
 
       <button
         type="button"
@@ -883,6 +935,13 @@ export default function Sidebar({
   onDelete,
   onHoverTool,
   onBasemapChange,
+  hlsDate,
+  hlsAuto,
+  hlsLatest,
+  hlsClamped,
+  onHlsDateChange,
+  hlsComposite,
+  onHlsCompositeChange,
   overlays,
   onOverlayChange,
   ...zoneProps
@@ -981,6 +1040,13 @@ export default function Sidebar({
             <LayersSection
               basemap={basemap}
               onBasemapChange={onBasemapChange}
+              hlsDate={hlsDate}
+              hlsAuto={hlsAuto}
+              hlsLatest={hlsLatest}
+              hlsClamped={hlsClamped}
+              onHlsDateChange={onHlsDateChange}
+              hlsComposite={hlsComposite}
+              onHlsCompositeChange={onHlsCompositeChange}
               overlays={overlays}
               onOverlayChange={onOverlayChange}
             />

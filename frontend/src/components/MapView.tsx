@@ -23,6 +23,7 @@ import { TOOLS } from './Sidebar'
 import { addProtocol } from 'maplibre-gl'
 import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, nisarDate, nisarFootprints as fetchNisarFootprints, overlayTiles, preloadAround, registerNisarProtocol, takeFailedTiles } from '../layers'
 import type { OverlayId, OverlayState, PreloadLayer } from '../layers'
+import { HLS_ATTRIBUTION, HLS_LAYERS, HLS_MAXZOOM, hlsTiles, hlsWindow } from '../basemaps'
 
 // Overlay tile failures (e.g. GIBS hiccups) are expected; keep them out of the console.
 registerNisarProtocol(addProtocol)
@@ -67,6 +68,8 @@ const resizeCursor = (dx: number, dy: number): string => {
 interface Props {
   basemap: StyleSpecification
   labels: { tiles: string; maxzoom: number; withOverlaysOnly?: boolean }
+  hlsDate: string | null // HLS optical day (YYYY-MM-DD) while that basemap is active
+  hlsComposite: boolean // stack HLS_DAYS days ending at hlsDate instead of that day alone
   // Place names inside the study areas; null when there are none (raster reference labels show instead).
   areaPlaces: AreaPlace[] | null
   polygons: AoiPolygon[]
@@ -129,6 +132,8 @@ interface ContextMenu {
 export default function MapView({
   basemap,
   labels,
+  hlsDate,
+  hlsComposite,
   areaPlaces,
   polygons,
   mode,
@@ -763,7 +768,8 @@ export default function MapView({
       }}
       onError={(e) => {
         const src = (e as unknown as { sourceId?: string }).sourceId
-        if (!src || !OVERLAY_SOURCES.has(src)) console.error(e.error)
+        // Missing HLS days (404 / no pass) are expected in the composite: stay quiet.
+        if (!src || (!OVERLAY_SOURCES.has(src) && !src.startsWith('hls-'))) console.error(e.error)
       }}
       onMoveEnd={reportView}
       onIdle={(e) => {
@@ -897,6 +903,33 @@ export default function MapView({
           paint={{ 'line-color': '#ff7a00', 'line-width': 2, 'line-dasharray': [3, 2] }}
         />
       </Source>
+      {/* HLS optical composite under the water overlays and AOI shapes: one L30 + S30 pair per
+          day, oldest first so newer days cover older ones and transparent gaps fall through.
+          Ids include the end date so a date change remounts the stack in order. */}
+      {hlsDate &&
+        (hlsComposite ? hlsWindow(hlsDate) : [hlsDate]).flatMap((day) =>
+          HLS_LAYERS.map((layer) => {
+            const first = OVERLAY_IDS.find((id) => overlays[id].on)
+            return (
+              <Source
+                key={`${layer}-${day}-${hlsDate}-${hlsComposite}`}
+                id={`hls-${layer}-${day}-${hlsDate}-${hlsComposite}`}
+                type="raster"
+                tiles={[hlsTiles(layer, day)]}
+                tileSize={256}
+                maxzoom={HLS_MAXZOOM}
+                attribution={HLS_ATTRIBUTION}
+              >
+                <Layer
+                  id={`hls-${layer}-${day}-${hlsDate}-${hlsComposite}-layer`}
+                  type="raster"
+                  beforeId={first ? `ov-${first}-layer` : 'aoi-region-fill'}
+                  paint={{ 'raster-fade-duration': 100 }}
+                />
+              </Source>
+            )
+          }),
+        )}
       {/* Water overlays sit under the AOI shapes; mounted after aoi-regions so beforeId exists. */}
       {OVERLAY_IDS.filter((id) => overlays[id].on).map((id) => {
         const base = overlayTiles(id, overlays[id].date)
