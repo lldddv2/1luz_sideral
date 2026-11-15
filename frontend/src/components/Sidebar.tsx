@@ -1,17 +1,21 @@
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
 import {
   Activity,
   Check,
   CircleAlert,
   CircleCheck,
+  ChevronDown,
   CircleX,
   Clock,
   Download,
+  Droplets,
   FileDown,
   Info,
   Layers,
   Loader2,
   Map as MapIcon,
+  Palette,
   PanelLeftClose,
   PanelLeftOpen,
   Pentagon,
@@ -31,6 +35,9 @@ import { BASEMAPS } from '../basemaps'
 import type { BasemapId } from '../basemaps'
 import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, OVERLAYS, OVERLAY_IDS } from '../layers'
 import type { OverlayId, OverlayState } from '../layers'
+
+// Legend color per water layer, shown as a dot next to its name.
+const LAYER_DOT: Record<OverlayId, string> = { dswx: '#1f78b4', nisar: '#7b3fbf', jrc: '#14a3a3' }
 
 type SectionId = 'study' | 'download' | 'nisar' | 'layers' | 'analysis' | 'about'
 
@@ -261,6 +268,7 @@ function LayersSection({
   overlays,
   onOverlayChange,
 }: Pick<Props, 'basemap' | 'onBasemapChange' | 'overlays' | 'onOverlayChange'>) {
+  const [waterOpen, setWaterOpen] = useState(true)
   return (
     <>
       <h3 className="section-title">Mapa base</h3>
@@ -283,33 +291,48 @@ function LayersSection({
         ))}
       </div>
 
-      <h3 className="section-title">Capas de agua</h3>
+      <button
+        type="button"
+        className="section-title section-toggle"
+        aria-expanded={waterOpen}
+        aria-controls="water-layers"
+        onClick={() => setWaterOpen((v) => !v)}
+      >
+        <span>Capas de agua</span>
+        <ChevronDown size={16} className="section-chevron" aria-hidden="true" />
+      </button>
+      <div id="water-layers" className={waterOpen ? 'collapse collapse-open' : 'collapse'}>
+        <div className="collapse-inner">
       {OVERLAY_IDS.map((id) => {
         const o = OVERLAYS[id]
         const st = overlays[id]
         return (
-          <div className="field" key={id}>
-            <label className="field-row field-row-label">
+          <div className={st.on ? 'layer-card layer-card-on' : 'layer-card'} key={id}>
+            <label className="layer-head">
               <input type="checkbox" checked={st.on} onChange={(e) => onOverlayChange(id, { on: e.target.checked })} />
-              <span className="field-label" title={o.hint}>
+              <span className="layer-dot" style={{ background: LAYER_DOT[id] }} aria-hidden="true" />
+              <span className="layer-name" title={o.hint}>
                 {o.label}
               </span>
-              <span className="field-value">{st.opacity}%</span>
+              <span className="layer-pct">{st.opacity}%</span>
             </label>
+            <div className="layer-body">
             <input
-              className="slider"
+              className="slider layer-slider"
               type="range"
               min={0}
               max={100}
               step={5}
               value={st.opacity}
               disabled={!st.on}
+              style={{ '--pct': `${st.opacity}%` } as CSSProperties}
               onChange={(e) => onOverlayChange(id, { opacity: Number(e.target.value) })}
               aria-label={`Opacidad ${o.label}`}
               aria-valuetext={`${st.opacity}%`}
             />
             {o.needsDate && (
               <input
+                className="input layer-date"
                 type="date"
                 value={st.date}
                 disabled={!st.on}
@@ -317,50 +340,60 @@ function LayersSection({
                 aria-label={`Fecha ${o.label}`}
               />
             )}
-            {(id === 'nisar' || id === 'dswx') && <p className="hint">mosaico de 12 días hasta esta fecha</p>}
+            {(id === 'nisar' || id === 'dswx') && <p className="layer-hint">Mosaico de 12 días hasta esta fecha</p>}
             {id === 'nisar' && (
-              <label className="field-row field-row-label">
+              <div className="layer-sub">
+              <label className="layer-check">
                 <input
                   type="checkbox"
                   checked={st.outline ?? true}
                   disabled={!st.on}
                   onChange={(e) => onOverlayChange(id, { outline: e.target.checked })}
                 />
-                <span className="field-label">Contorno de órbitas</span>
+                <span>Contorno de órbitas</span>
               </label>
+              <p className="layer-hint">
+                {(st.outline ?? true) ? 'Alejado: contorno de órbitas · cerca: mosaico a color' : 'Mosaico visible al acercar'}
+              </p>
+              </div>
             )}
-            {id === 'nisar' &&
-              (
+            {id === 'nisar' && (
+              // Orbit pass filter: its own group (it filters both the image and the outline).
+              // At least one direction stays on: the last checked box is disabled.
+              <div className="layer-sub" role="group" aria-label="Pasadas NISAR">
+              <span className="layer-hint">Pasadas:</span>
+              {(
                 [
                   ['asc', 'Ascendente', NISAR_ASC_COLOR],
                   ['desc', 'Descendente', NISAR_DESC_COLOR],
                 ] as const
-              ).map(([k, label, color]) => (
-                <label key={k} className="field-row field-row-label">
-                  <input
-                    type="checkbox"
-                    checked={st[k] ?? true}
-                    disabled={!st.on}
-                    onChange={(e) => onOverlayChange(id, { [k]: e.target.checked })}
-                  />
-                  <span className="field-label">
-                    <span style={{ color }}>■</span> {label}
-                  </span>
-                </label>
-              ))}
-            {id === 'nisar' && (
-              <p className="hint">
-                {(st.outline ?? true) ? 'alejado: contorno de órbitas · cerca: mosaico a color' : 'mosaico visible al acercar'}
-              </p>
+              ).map(([k, label, color]) => {
+                const checked = st[k] ?? true
+                const other = (k === 'asc' ? st.desc : st.asc) ?? true
+                return (
+                  <label key={k} className="layer-check" title={checked && !other ? 'Debe quedar al menos una pasada' : undefined}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!st.on || (checked && !other)}
+                      onChange={(e) => (e.target.checked || other) && onOverlayChange(id, { [k]: e.target.checked })}
+                    />
+                    <span className="layer-dot layer-dot-sm" style={{ background: color }} aria-hidden="true" />
+                    <span>{label}</span>
+                  </label>
+                )
+              })}
+              <p className="layer-hint">Filtra imagen y contorno</p>
+              </div>
             )}
             {id === 'nisar' && (
               <div className="segmented" role="group" aria-label="Modo NISAR">
                 {(
                   [
-                    ['water', 'Agua (umbral)'],
-                    ['color', 'Color (suavizado)'],
+                    ['water', 'Agua (umbral)', Droplets],
+                    ['color', 'Color (suavizado)', Palette],
                   ] as const
-                ).map(([m, label]) => (
+                ).map(([m, label, Icon]) => (
                   <button
                     key={m}
                     type="button"
@@ -369,20 +402,24 @@ function LayersSection({
                     disabled={!st.on}
                     onClick={() => onOverlayChange(id, { mode: m })}
                   >
+                    <Icon size={16} aria-hidden="true" />
                     {label}
                   </button>
                 ))}
               </div>
             )}
             {id === 'nisar' && (st.mode ?? 'color') === 'water' && (
-              <p className="hint">
-                <span style={{ color: '#2b8cbe' }}>■</span> azul = baja retrodispersión banda L (agua/superficie lisa)
+              <p className="layer-hint">
+                <span className="layer-dot layer-dot-sm" style={{ background: '#2b8cbe' }} aria-hidden="true" /> Azul = baja retrodispersión banda L (agua/superficie lisa)
               </p>
             )}
-            <p className="hint">{o.hint}</p>
+            <p className="layer-hint">{o.hint}</p>
+            </div>
           </div>
         )
       })}
+        </div>
+      </div>
     </>
   )
 }
