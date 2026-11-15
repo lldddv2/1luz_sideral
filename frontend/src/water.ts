@@ -44,6 +44,7 @@ export interface WaterController {
   visible: boolean
   regenerate: () => void
   run: (bbox: BBox) => void
+  runBuiltin: (bbox: BBox) => void // built-in water U-Net (POST /api/water)
   setOpacity: (v: number) => void
   setVisible: (v: boolean) => void
   clear: () => void
@@ -153,6 +154,50 @@ export function useWater(): WaterController {
       .catch((e: Error) => setState({ status: 'error', message: e.message }))
   }
 
+  // Built-in water U-Net: synchronous POST /api/water, same state as external jobs.
+  const runBuiltin = (bbox: BBox) => {
+    const id = `builtin-${Date.now()}`
+    jobRef.current = id
+    setState({ status: 'job', job_id: id, state: 'running' })
+    fetch('/api/water', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bbox }),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(await detail(res))
+        const body = (await res.json()) as {
+          id: string
+          scene_id?: string
+          datetime?: string
+          bounds: WaterResult['bounds']
+          water_fraction?: number
+          png_url: string
+        }
+        if (jobRef.current !== id) return
+        jobRef.current = null
+        setState({
+          status: 'ready',
+          result: {
+            job_id: body.id,
+            scene_id: body.scene_id,
+            datetime: body.datetime,
+            bounds: body.bounds,
+            output: 'probability',
+            label: 'Water (U-Net)',
+            stats: body.water_fraction != null ? { fraction: body.water_fraction } : undefined,
+            png_url: body.png_url,
+          },
+        })
+        setVisible(true)
+      })
+      .catch((e: Error) => {
+        if (jobRef.current !== id) return
+        jobRef.current = null
+        setState({ status: 'error', message: e.message })
+      })
+  }
+
   return {
     token,
     tokenError,
@@ -162,6 +207,7 @@ export function useWater(): WaterController {
     visible,
     regenerate,
     run,
+    runBuiltin,
     setOpacity,
     setVisible,
     clear: () => {

@@ -715,6 +715,18 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
   )
   return (
     <>
+      <div className="btn-row">
+        <button
+          type="button"
+          className="btn btn-active"
+          disabled={!target || busy}
+          title={!target ? 'Pick an area first (max. 60 km)' : busy ? 'A run is in progress' : `Run the built-in water U-Net on ${target.name}`}
+          onClick={() => target && water.runBuiltin(target.bbox)}
+        >
+          {busy ? <Loader2 size={16} className="spin" aria-hidden="true" /> : <Droplets size={16} aria-hidden="true" />}
+          Water model
+        </button>
+      </div>
       <p className={model.connected ? 'model-status on' : 'model-status'} role="status">
         <span className="model-dot" aria-hidden="true" />
         {model.connected ? `Connected: ${desc}` : 'Disconnected'}

@@ -991,12 +991,6 @@ export default function MapView({
           />
         </Source>
       )}
-      {/* U-Net water probability (blue); under the AOI shapes like the land-cover mask. */}
-      {waterOverlay && (
-        <Source key={waterOverlay.url} id="water-unet" type="image" url={waterOverlay.url} coordinates={waterOverlay.coordinates}>
-          <Layer id="water-unet-layer" type="raster" layout={{ visibility: waterOverlay.visible ? 'visible' : 'none' }} paint={{ 'raster-opacity': waterOverlay.opacity, 'raster-resampling': 'linear' }} />
-        </Source>
-      )}
       <Source id="aoi-regions" type="geojson" data={regionsGeo}>
         {/* Study areas only bound the search: near-transparent fill (kept for hit-testing) and a dashed outline. */}
         <Layer id="aoi-region-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': aoiFill }} />
@@ -1092,6 +1086,12 @@ export default function MapView({
           }}
         />
       </Source>
+      {/* U-Net water probability (blue); mounted after the NISAR/DSWx overlays (which insert before aoi-region-fill) so they cannot cover it. */}
+      {waterOverlay && (
+        <Source key={waterOverlay.url} id="water-unet" type="image" url={waterOverlay.url} coordinates={waterOverlay.coordinates}>
+          <Layer id="water-unet-layer" type="raster" layout={{ visibility: waterOverlay.visible ? 'visible' : 'none' }} paint={{ 'raster-opacity': waterOverlay.opacity, 'raster-resampling': 'linear' }} />
+        </Source>
+      )}
       {/* Point of interest square: above study areas and overlays, under labels, POIs and edit handles. */}
       <Source id="user-zone" type="geojson" data={zoneGeo}>
         <Layer
