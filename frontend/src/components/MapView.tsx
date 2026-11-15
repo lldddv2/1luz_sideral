@@ -6,7 +6,9 @@ import type { Map as MaplibreMap, StyleSpecification } from 'maplibre-gl'
 import type { FeatureCollection } from 'geojson'
 import type { AoiPolygon, DrawMode, LngLat, RegionGeometry } from '../types'
 import type { BBox } from '../nominatim'
-import { shapeGeometry } from '../geo'
+import { inAnyShape, shapeGeometry } from '../geo'
+import { POI_COLOR, POIS } from '../pois'
+import PoiPanel from './PoiPanel'
 import type { RegionCollection } from '../regions'
 import type { MapViewport } from '../useRegionPicker'
 import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } from '../editing'
@@ -60,6 +62,8 @@ interface Props {
   onUpdate: (id: string, coords: LngLat[]) => void
   previewGeometry: RegionGeometry | null // search result outline, drawn dashed; not an AOI
   flyToBbox: { bbox: BBox; key: number } | null // camera target; a new key flies there again
+  searchStart: string // search date range (YYYY-MM-DD), drives the POI popup timeline
+  searchEnd: string
 }
 
 // Active drag while editing the selected shape.
@@ -104,6 +108,8 @@ export default function MapView({
   onUpdate,
   previewGeometry,
   flyToBbox,
+  searchStart,
+  searchEnd,
 }: Props) {
   const drawing = mode !== null
   const mapRef = useRef<MapRef>(null)
@@ -118,6 +124,26 @@ export default function MapView({
   const [mapCursor, setMapCursor] = useState('')
   const [hoverRegion, setHoverRegion] = useState<string | null>(null)
   const selected = polygons.find((p) => p.id === selectedId)
+  const [poiId, setPoiId] = useState<string | null>(null)
+  // Only POIs inside some study area are shown; no areas, no points.
+  const poisGeo = useMemo<FeatureCollection>(
+    () => ({
+      type: 'FeatureCollection',
+      features: POIS.features.filter((f) => inAnyShape(polygons, f.geometry.coordinates as LngLat)),
+    }),
+    [polygons],
+  )
+  // Look the POI up by id: rendered feature properties flatten nested objects.
+  const openPoi = poiId ? poisGeo.features.find((f) => f.properties?.id === poiId) : undefined
+  const poi = openPoi ? POIS.features.find((f) => f.properties.id === poiId) : undefined
+
+  // Escape closes the POI popup.
+  useEffect(() => {
+    if (!poiId) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setPoiId(null)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [poiId])
 
   // Escape deselects the shape being edited.
   useEffect(() => {
@@ -335,6 +361,10 @@ export default function MapView({
     }
     if (!drawing) {
       const feature = e.features?.[0]
+      if (feature?.layer.id === 'poi-circle') {
+        setPoiId(feature.properties.id)
+        return
+      }
       if (feature?.layer.id === 'edit-handles') return
       // Administrative regions are fixed boundaries: they can be deleted but not edited.
       const editable = feature?.layer.id === 'aoi-fill' && feature.properties.kind !== 'region'
@@ -404,6 +434,13 @@ export default function MapView({
       return
     }
     const top = e.features?.[0]
+    if (top?.layer.id === 'poi-circle') {
+      mapRef.current?.getMap().dragPan.enable()
+      setHoverHandle(null)
+      setMapCursor('pointer')
+      setHovered(null)
+      return
+    }
     const handle = top?.layer.id === 'edit-handles' ? (top.properties as HandleProps) : null
     const fill = e.features?.find((f) => isAoiFill(f.layer.id))
     const overSelected = !!fill && fill.properties.id === selectedId
@@ -514,6 +551,7 @@ export default function MapView({
   }
 
   return (
+    <>
     <Map
       ref={mapRef}
       initialViewState={{ longitude: -74, latitude: 4.6, zoom: 4 }}
@@ -560,7 +598,7 @@ export default function MapView({
             ]
           : drawing
             ? []
-            : ['edit-handles', 'aoi-fill', 'aoi-region-fill']
+            : ['poi-circle', 'edit-handles', 'aoi-fill', 'aoi-region-fill']
       }
     >
       {/* OSM license requires attribution; kept bottom-left so the right corner is free for InfoBox. */}
@@ -625,6 +663,24 @@ export default function MapView({
           paint={{
             'line-color': ['case', ['==', ['get', 'id'], selectedId ?? ''], '#0078ff', '#ff7a00'],
             'line-width': ['case', ['==', ['get', 'id'], selectedId ?? ''], 3, 2],
+          }}
+        />
+      </Source>
+      <Source id="pois" type="geojson" data={poisGeo}>
+        <Layer
+          id="poi-circle"
+          type="circle"
+          paint={{
+            // Selected POI: bigger, with a thick dark ring.
+            'circle-radius': ['case', ['==', ['get', 'id'], poiId ?? ''], 11, 7],
+            'circle-color': [
+              'match',
+              ['get', 'category'],
+              ...Object.entries(POI_COLOR).flat(),
+              '#6b7280',
+            ] as unknown as string,
+            'circle-stroke-color': ['case', ['==', ['get', 'id'], poiId ?? ''], '#111827', '#ffffff'],
+            'circle-stroke-width': ['case', ['==', ['get', 'id'], poiId ?? ''], 3.5, 2],
           }}
         />
       </Source>
@@ -724,5 +780,7 @@ export default function MapView({
         </div>
       )}
     </Map>
+    {poi && <PoiPanel poi={poi} start={searchStart} end={searchEnd} onClose={() => setPoiId(null)} />}
+    </>
   )
 }

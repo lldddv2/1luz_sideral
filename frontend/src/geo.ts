@@ -43,3 +43,27 @@ export function geometryBbox(g: RegionGeometry): [number, number, number, number
     }
   return [w, s, e, n]
 }
+
+export type Ring = number[][]
+
+// Ray casting: a point is inside when a ray to its right crosses the ring an odd number of times.
+const inRing = (ring: Ring, [x, y]: LngLat): boolean => {
+  let inside = false
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]
+    const [xj, yj] = ring[j]
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside
+  }
+  return inside
+}
+
+// rings[0] is the outer ring; the rest are holes.
+export const inPolygon = (rings: Ring[], p: LngLat): boolean =>
+  inRing(rings[0], p) && !rings.slice(1).some((hole) => inRing(hole, p))
+
+// True when the point lies inside any shape (drawn polygon or administrative region).
+export const inAnyShape = (shapes: AoiPolygon[], p: LngLat): boolean =>
+  shapes.some((s) => {
+    const g = shapeGeometry(s)
+    return g.type === 'Polygon' ? inPolygon(g.coordinates, p) : g.coordinates.some((poly) => inPolygon(poly, p))
+  })
