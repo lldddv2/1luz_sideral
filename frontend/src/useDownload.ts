@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { shapeGeometry } from './geo'
-import type { AoiPolygon, EstimateResult, Job } from './types'
+import type { DownloadTarget, EstimateResult, Job } from './types'
 import {
   DEFAULT_START,
   ESTIMATE_DEBOUNCE_MS,
+  MAX_SEARCH_PRODUCTS,
   POL_VARIABLE,
   POLL_MS,
   POLS,
@@ -35,7 +35,8 @@ export interface RunState {
 const IDLE: RunState = { phase: 'idle', message: null, inventoryId: null, productCount: null, job: null }
 
 // Lives in App, not in the sidebar section, so a running job keeps polling when the user switches sections.
-export function useDownload(area: AoiPolygon | null) {
+// The area is the selected point-of-interest square; study areas only scope searches.
+export function useDownload(area: DownloadTarget | null) {
   const [params, setParams] = useState<DownloadParams>(() => ({
     start: DEFAULT_START,
     end: yesterdayIso(),
@@ -52,16 +53,18 @@ export function useDownload(area: AoiPolygon | null) {
   const variableCount = params.pols.length
   const inventoryId = run.inventoryId
   const jobId = run.job?.id ?? null
+  // Only the square matters to the run: renaming the point must not reset it. App keeps this object stable.
+  const geometry = area?.geometry ?? null
 
   // A new area, dates or polarizations makes the current run stale: its files no longer match the inputs.
   useEffect(() => {
     generation.current += 1
     setRun(IDLE)
-  }, [area, params.start, params.end, polsKey])
+  }, [geometry, params.start, params.end, polsKey])
 
   // Before a search the estimate covers one product (the product count is unknown); after one, the products it found.
   useEffect(() => {
-    if (!area) {
+    if (!geometry) {
       setEstimate(null)
       setEstimateError(null)
       setEstimating(false)
@@ -71,7 +74,6 @@ export function useDownload(area: AoiPolygon | null) {
     setEstimating(true)
     const timer = window.setTimeout(async () => {
       try {
-        const geometry = shapeGeometry(area)
         const body = inventoryId
           ? { geometry, variables: variableCount, inventory_id: inventoryId }
           : { geometry, variables: variableCount }
@@ -89,7 +91,7 @@ export function useDownload(area: AoiPolygon | null) {
       window.clearTimeout(timer)
       controller.abort()
     }
-  }, [area, variableCount, inventoryId])
+  }, [geometry, variableCount, inventoryId])
 
   // Poll the job every POLL_MS until it finishes. Clearing the job (a reset) stops the loop.
   useEffect(() => {
@@ -133,17 +135,22 @@ export function useDownload(area: AoiPolygon | null) {
 
   const busy = run.phase === 'searching' || run.phase === 'queued' || run.phase === 'running'
   const datesOk = params.start !== '' && params.end !== '' && params.start <= params.end
-  const canStart = area !== null && datesOk && !busy
+  const canStart = geometry !== null && datesOk && !busy
 
   // Search, then create one job over every product found, for the chosen polarizations.
   const start = async () => {
-    if (!area || !canStart) return
+    if (!geometry || !canStart) return
     const current = ++generation.current
     const stale = () => current !== generation.current
     const { start: from, end: to, pols } = params
     setRun({ ...IDLE, phase: 'searching' })
     try {
-      const found = await searchProducts(shapeGeometry(area), `${from}T00:00:00Z`, `${to}T23:59:59Z`)
+      const found = await searchProducts(
+        geometry,
+        `${from}T00:00:00Z`,
+        `${to}T23:59:59Z`,
+        MAX_SEARCH_PRODUCTS,
+      )
       if (stale()) return
       const productIds = found.products.map((p) => p.product_id)
       const productCount = productIds.length

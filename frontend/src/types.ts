@@ -15,6 +15,24 @@ export interface AoiPolygon {
   geometry?: RegionGeometry // administrative boundary, only for kind 'region'
 }
 
+// User-marked point of interest: a center with a square range around it (annotation only, not a study area).
+export interface UserZone {
+  id: string
+  center: LngLat // [lon, lat], WGS84; the square is centered here
+  halfSizeKm: number // half the side of the square, in km
+  name?: string
+  note?: string
+}
+
+// What the Descarga section downloads: the square of the selected point of interest.
+export interface DownloadTarget {
+  id: string // zone id
+  name: string
+  sideKm: number
+  geometry: RegionGeometry
+  outsideStudy: boolean // study areas exist and the square meets none of them
+}
+
 // Backend responses (backend/app/schemas.py); only the fields the UI reads.
 export interface EstimateResult {
   area_km2: number
@@ -23,9 +41,21 @@ export interface EstimateResult {
   assumptions: string
 }
 
+export type FlightDirection = 'ascending' | 'descending'
+
+// One product found by search: its swath footprint and where it sits in the orbit.
+export interface SearchProduct {
+  product_id: string
+  acquisition_start: string | null // UTC ISO, e.g. 2026-10-30T12:03:29Z
+  geometry: RegionGeometry // swath footprint, WGS84
+  track: number | null
+  direction: FlightDirection | null
+  frame: number | null
+}
+
 export interface SearchResult {
   inventory_id: string
-  products: { product_id: string }[]
+  products: SearchProduct[]
 }
 
 export type JobState = 'queued' | 'running' | 'done' | 'failed'
@@ -42,4 +72,25 @@ export interface Job {
   results: JobResult[]
   error: string | null
   files: string[] // download order; file i is served at /api/jobs/{id}/files/{i}
+}
+
+// NISAR GCOV scene cropped in AWS and served by /api/scenes (source "nisar").
+export type NisarPol = 'HH' | 'HV'
+
+export interface NisarScene {
+  scene_id: string
+  acquired_at: string // UTC ISO
+  track: number | null
+  frame: number | null
+  direction: string | null
+  coverage_pct: number // share of the active area inside the scene crop
+  footprint: RegionGeometry // crop box, WGS84
+}
+
+// PNG of the scene over the active area, placed by its corners [tl, tr, br, bl] as [lon, lat].
+export interface NisarOverlay {
+  sceneId: string
+  pol: NisarPol
+  url: string // object URL of the PNG
+  corners: [LngLat, LngLat, LngLat, LngLat]
 }

@@ -1,6 +1,6 @@
 import type { EstimateResult, Job, SearchResult } from './types'
 
-// Mirrors max_results in backend/app/services/nisar.py (search): the most products one search returns.
+// Products the Descarga search asks for. The pass timeline keeps the backend default (100).
 export const MAX_SEARCH_PRODUCTS = 10
 export const DEFAULT_START = '2025-08-01'
 export const ESTIMATE_DEBOUNCE_MS = 400
@@ -75,8 +75,13 @@ export const fetchEstimate = (body: EstimateBody, signal?: AbortSignal) =>
   postJson<EstimateResult>('/api/estimate', body, signal)
 
 // start and end are full ISO timestamps with timezone, as the backend requires.
-export const searchProducts = (geometry: unknown, start: string, end: string) =>
-  postJson<SearchResult>('/api/search', { geometry, start, end })
+export const searchProducts = (
+  geometry: unknown,
+  start: string,
+  end: string,
+  maxResults: number,
+  signal?: AbortSignal,
+) => postJson<SearchResult>('/api/search', { geometry, start, end, max_results: maxResults }, signal)
 
 export const createJob = (inventoryId: string, productIds: string[], variables: string[]) =>
   postJson<Job>('/api/jobs', { inventory_id: inventoryId, product_ids: productIds, variables })

@@ -1,21 +1,27 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Trash2 } from 'lucide-react'
-import Map, { AttributionControl, Layer, Source } from 'react-map-gl/maplibre'
+import { Plus, Trash2 } from 'lucide-react'
+import Map, { AttributionControl, Layer, Marker, Source } from 'react-map-gl/maplibre'
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
 import type { Map as MaplibreMap, StyleSpecification } from 'maplibre-gl'
 import type { FeatureCollection } from 'geojson'
-import type { AoiPolygon, DrawMode, LngLat, RegionGeometry } from '../types'
+import type { AoiPolygon, DrawMode, LngLat, NisarOverlay, RegionGeometry, UserZone } from '../types'
+import { halfKmFromCorner, zoneBbox, zoneCorners } from '../zone'
 import type { BBox } from '../nominatim'
 import { inAnyShape, shapeGeometry } from '../geo'
 import { POI_COLOR, POIS } from '../pois'
 import PoiPanel from './PoiPanel'
+import type { CoverMaskImage } from '../landcover'
+import { CATEGORY_COLOR } from '../features'
+import type { NaturalFeature } from '../features'
+import { PLACE_MINZOOM } from '../areaPlaces'
+import type { AreaPlace } from '../areaPlaces'
 import type { RegionCollection } from '../regions'
 import type { MapViewport } from '../useRegionPicker'
 import { angleFrom, centroid, resizeCorner, resizeEdge, rotate, rotateHandle } from '../editing'
 import type { XY } from '../editing'
 import { TOOLS } from './Sidebar'
 import { addProtocol } from 'maplibre-gl'
-import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, nisarDate, nisarFootprints, overlayTiles, preloadAround, registerNisarProtocol, takeFailedTiles } from '../layers'
+import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, NISAR_FADE_END, NISAR_FADE_START, NISAR_OUTLINE_MAXZOOM, NISAR_PROTOCOL, DSWX_PROTOCOL, OVERLAYS, OVERLAY_IDS, cancelPreload, nisarDate, nisarFootprints as fetchNisarFootprints, overlayTiles, preloadAround, registerNisarProtocol, takeFailedTiles } from '../layers'
 import type { OverlayId, OverlayState, PreloadLayer } from '../layers'
 
 // Overlay tile failures (e.g. GIBS hiccups) are expected; keep them out of the console.
@@ -27,6 +33,10 @@ const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] }
 // Pixel tolerances for drawing interactions.
 const DUPLICATE_PX = 5 // clicks this close to the last vertex are ignored (double-click)
 const CLOSE_PX = 10 // clicking this close to the first vertex closes the polygon
+// Point of interest: the square shows once its on-screen side passes SHOW, and collapses
+// into a pin below HIDE. The gap between both keeps it from flickering at the threshold.
+const ZONE_SQUARE_SHOW_PX = 44
+const ZONE_SQUARE_HIDE_PX = 36
 
 // Approximate palette size, used to clamp it inside the map container.
 const PALETTE_W = 112
@@ -57,6 +67,8 @@ const resizeCursor = (dx: number, dy: number): string => {
 interface Props {
   basemap: StyleSpecification
   labels: { tiles: string; maxzoom: number; withOverlaysOnly?: boolean }
+  // Place names inside the study areas; null when there are none (raster reference labels show instead).
+  areaPlaces: AreaPlace[] | null
   polygons: AoiPolygon[]
   mode: DrawMode | null
   onSelectMode: (mode: DrawMode) => void
@@ -75,6 +87,21 @@ interface Props {
   searchStart: string // search date range (YYYY-MM-DD), drives the POI popup timeline
   searchEnd: string
   overlays: Record<OverlayId, OverlayState>
+  coverMask: CoverMaskImage | null // land-cover classes of the filter, over the active area
+  featureLabels: NaturalFeature[] // natural features labelled on the map (one marker each)
+  activeFeature: NaturalFeature | null // last feature picked; its label offers "add as study area"
+  onFeatureClick: (feature: NaturalFeature) => void
+  onFeatureAdd: (feature: NaturalFeature) => void
+  nisarFootprints: FeatureCollection | null // NISAR scene crops in S3, drawn as outlines
+  nisarOverlay: NisarOverlay | null // PNG of the picked scene over the active area
+  nisarOpacity: number
+  zones: UserZone[] // user points of interest, each with its square range (annotation only)
+  selectedZoneId: string | null
+  onSelectZone: (id: string) => void
+  zonePlacing: boolean // next map click adds a zone center
+  onZonePlace: (center: LngLat) => void
+  onZoneChange: (zone: UserZone) => void
+  onCancelZone: () => void
 }
 
 // Active drag while editing the selected shape.
@@ -105,6 +132,7 @@ interface ContextMenu {
 export default function MapView({
   basemap,
   labels,
+  areaPlaces,
   polygons,
   mode,
   onSelectMode,
@@ -123,8 +151,24 @@ export default function MapView({
   searchStart,
   searchEnd,
   overlays,
+  coverMask,
+  nisarFootprints,
+  nisarOverlay,
+  nisarOpacity,
+  featureLabels,
+  activeFeature,
+  onFeatureClick,
+  onFeatureAdd,
+  zones,
+  selectedZoneId,
+  onSelectZone,
+  zonePlacing,
+  onZonePlace,
+  onZoneChange,
+  onCancelZone,
 }: Props) {
-  const drawing = mode !== null
+  // Placing the zone center blocks the same interactions as shape drawing.
+  const drawing = mode !== null || zonePlacing
   const mapRef = useRef<MapRef>(null)
   const [vertices, setVertices] = useState<LngLat[]>([])
   const [cursor, setCursor] = useState<LngLat | null>(null)
@@ -135,6 +179,8 @@ export default function MapView({
   const [drag, setDrag] = useState<Drag | null>(null)
   const [hoverHandle, setHoverHandle] = useState<string | null>(null)
   const [mapCursor, setMapCursor] = useState('')
+  // Whole zoom level only, so area place labels re-render on level changes, not every frame.
+  const [zoomLevel, setZoomLevel] = useState(4)
   const [hoverRegion, setHoverRegion] = useState<string | null>(null)
   const selected = polygons.find((p) => p.id === selectedId)
   const [poiId, setPoiId] = useState<string | null>(null)
@@ -156,7 +202,7 @@ export default function MapView({
   useEffect(() => {
     if (!showFoot || !footView) return
     let live = true
-    nisarFootprints(footView, footDate)
+    fetchNisarFootprints(footView, footDate)
       .then((fps) => {
         if (!live) return
         setNisarFoot({
@@ -381,6 +427,16 @@ export default function MapView({
     )
   }, [flyKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Placing the zone center: Escape cancels.
+  useEffect(() => {
+    if (!zonePlacing) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancelZone()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [zonePlacing]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const pixelDistance = (a: LngLat, b: LngLat) => {
     const map = mapRef.current
     if (!map) return Infinity
@@ -395,7 +451,7 @@ export default function MapView({
 
   // Keyboard: Enter finishes, Escape cancels, Backspace removes last vertex.
   useEffect(() => {
-    if (!drawing) return
+    if (!drawing || zonePlacing) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancelDrawing()
       else if (e.key === 'Enter') finish(vertices)
@@ -408,6 +464,11 @@ export default function MapView({
   const handleClick = (e: MapLayerMouseEvent) => {
     setMenu(null)
     setPalette(null)
+    // Only placing mode sets the center; other clicks never create a zone.
+    if (zonePlacing) {
+      onZonePlace([e.lngLat.lng, e.lngLat.lat])
+      return
+    }
     if (mode === 'region') {
       // Geometry comes from the full collection in App: rendered features are tile-clipped.
       const rid = e.features?.[0]?.properties.rid
@@ -447,14 +508,11 @@ export default function MapView({
     finish(vertices)
   }
 
-  const hoveredRef = useRef<string | null>(null)
-  const setHovered = (id: string | null) => {
-    if (hoveredRef.current === id) return
-    hoveredRef.current = id
-    onHover(id)
-  }
-
   const handleMouseMove = (e: MapLayerMouseEvent) => {
+    if (zonePlacing) {
+      onHover(null)
+      return
+    }
     if (drag && selected) {
       const p: LngLat = [e.lngLat.lng, e.lngLat.lat]
       let coords: LngLat[]
@@ -480,12 +538,12 @@ export default function MapView({
         setHoverRegion(rid)
         onHoverRegion(rid)
       }
-      setHovered(null)
+      onHover(null)
       return
     }
     if (drawing) {
       setCursor([e.lngLat.lng, e.lngLat.lat])
-      setHovered(null)
+      onHover(null)
       return
     }
     const top = e.features?.[0]
@@ -493,7 +551,7 @@ export default function MapView({
       mapRef.current?.getMap().dragPan.enable()
       setHoverHandle(null)
       setMapCursor('pointer')
-      setHovered(null)
+      onHover(null)
       return
     }
     const handle = top?.layer.id === 'edit-handles' ? (top.properties as HandleProps) : null
@@ -507,7 +565,7 @@ export default function MapView({
 
     setHoverHandle(handle?.key ?? null)
     setMapCursor(handle ? handleCursor(handle) : overSelected ? 'grab' : fill ? 'pointer' : '')
-    setHovered(fill?.properties.id ?? null)
+    onHover(fill?.properties.id ?? null)
   }
 
   const handlesGeo = useMemo<FeatureCollection>(() => {
@@ -599,6 +657,61 @@ export default function MapView({
     }
   }, [mode, vertices, cursor])
 
+  // Zoomed out, each square collapses into a pin. Hysteresis band avoids flicker at the threshold.
+  // Ids listed here render as a full square; every other zone is a pin.
+  const [zoneExpanded, setZoneExpanded] = useState<Set<string>>(() => new Set())
+  const zoneDraggedRef = useRef(false)
+  const updateZoneCompact = () => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    setZoneExpanded((prev) => {
+      const next = new Set<string>()
+      for (const zone of zones) {
+        const [w, s, e, n] = zoneBbox(zone)
+        const sw = map.project([w, s])
+        const ne = map.project([e, n])
+        const side = Math.min(Math.abs(ne.x - sw.x), Math.abs(sw.y - ne.y))
+        if (side >= (prev.has(zone.id) ? ZONE_SQUARE_HIDE_PX : ZONE_SQUARE_SHOW_PX)) next.add(zone.id)
+      }
+      // Keep the same Set when nothing changed so React skips the re-render.
+      return next.size === prev.size && [...next].every((id) => prev.has(id)) ? prev : next
+    })
+  }
+  useEffect(updateZoneCompact, [zones]) // eslint-disable-line react-hooks/exhaustive-deps
+  const selectedZone = zones.find((z) => z.id === selectedZoneId && zoneExpanded.has(z.id)) ?? null
+  const zoneCornerList = useMemo(() => (selectedZone ? zoneCorners(selectedZone) : []), [selectedZone])
+  const zoneGeo = useMemo<FeatureCollection>(
+    () => ({
+      type: 'FeatureCollection',
+      features: zones
+        .filter((z) => zoneExpanded.has(z.id))
+        .map((z) => {
+          const corners = zoneCorners(z)
+          return {
+            type: 'Feature' as const,
+            properties: { id: z.id, selected: z.id === selectedZoneId },
+            geometry: { type: 'Polygon' as const, coordinates: [[...corners, corners[0]]] },
+          }
+        }),
+    }),
+    [zones, zoneExpanded, selectedZoneId],
+  )
+  // A drag on a pin or center marker also ends in a click; that click is ignored.
+  const consumeZoneDrag = () => {
+    if (!zoneDraggedRef.current) return false
+    zoneDraggedRef.current = false
+    return true
+  }
+  const markZoneDragStart = () => {
+    zoneDraggedRef.current = true
+  }
+  // Clear the flag after the trailing click (if any) so the next real click is not swallowed.
+  const markZoneDragEnd = () => {
+    setTimeout(() => {
+      zoneDraggedRef.current = false
+    }, 0)
+  }
+
   // Camera report for the automatic admin level. Fires on load and after every pan or zoom.
   const reportView = (e: { target: MaplibreMap }) => {
     const c = e.target.getCenter()
@@ -632,7 +745,7 @@ export default function MapView({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseOut={() => {
-        setHovered(null)
+        onHover(null)
         setHoverHandle(null)
         if (hoverRegion) {
           setHoverRegion(null)
@@ -645,7 +758,15 @@ export default function MapView({
         setMenu(null)
         setPalette(null)
       }}
-      onLoad={reportView}
+      onMove={(e) => {
+        updateZoneCompact()
+        setZoomLevel(Math.floor(e.viewState.zoom))
+      }}
+      onLoad={(e) => {
+        reportView(e)
+        updateZoneCompact()
+        setZoomLevel(Math.floor(e.target.getZoom()))
+      }}
       onError={(e) => {
         const src = (e as unknown as { sourceId?: string }).sourceId
         if (!src || !OVERLAY_SOURCES.has(src)) console.error(e.error)
@@ -719,9 +840,91 @@ export default function MapView({
           paint={{ 'line-color': '#0ea5e9', 'line-width': 2, 'line-dasharray': [2, 2] }}
         />
       </Source>
+      {/* Place names inside the study areas (stand-in for the hidden raster labels); never block clicks. */}
+      {areaPlaces
+        ?.filter((p) => zoomLevel >= PLACE_MINZOOM[p.rank])
+        .map((p) => (
+          <Marker key={p.id} longitude={p.lon} latitude={p.lat} anchor="center" style={{ pointerEvents: 'none' }}>
+            <span className={`area-place area-place-${p.rank}`}>{p.name}</span>
+          </Marker>
+        ))}
+      {!drawing &&
+        featureLabels.map((f) => {
+          const on = activeFeature?.name === f.name
+          return (
+            <Marker key={`${f.category}:${f.name}`} longitude={f.lon} latitude={f.lat} anchor="left">
+              <span className={`feature-label${on ? ' is-active' : ''}`}>
+                <button
+                  type="button"
+                  className="feature-label-main"
+                  title={`${f.category_name}: ir a ${f.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onFeatureClick(f)
+                  }}
+                >
+                  <span className="feature-dot" style={{ background: CATEGORY_COLOR[f.category] }} aria-hidden="true" />
+                  {f.name}
+                </button>
+                {on && (
+                  <button
+                    type="button"
+                    className="feature-label-add"
+                    title="Agregar como área de estudio"
+                    aria-label={`Agregar ${f.name} como área de estudio`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onFeatureAdd(f)
+                    }}
+                  >
+                    <Plus size={14} aria-hidden="true" /> Área
+                  </button>
+                )}
+              </span>
+            </Marker>
+          )
+        })}
+      {/* Land-cover mask: declared before the AOI source so the AOI outline and fill draw over it. */}
+      {coverMask && (
+        <Source id="cover-mask" type="image" url={coverMask.url} coordinates={coverMask.bounds}>
+          <Layer
+            id="cover-mask-layer"
+            type="raster"
+            paint={{ 'raster-opacity': 0.7, 'raster-resampling': 'nearest' }}
+          />
+        </Source>
+      )}
+      {nisarOverlay && (
+        <Source
+          key={nisarOverlay.url}
+          id="nisar-overlay"
+          type="image"
+          url={nisarOverlay.url}
+          coordinates={nisarOverlay.corners}
+        >
+          <Layer id="nisar-overlay-layer" type="raster" paint={{ 'raster-opacity': nisarOpacity }} />
+        </Source>
+      )}
+      {nisarFootprints && (
+        <Source id="nisar-footprints" type="geojson" data={nisarFootprints}>
+          <Layer
+            id="nisar-footprints-line"
+            type="line"
+            paint={{
+              'line-color': ['case', ['get', 'selected'], '#22d3ee', '#a78bfa'],
+              'line-width': ['case', ['get', 'selected'], 2.5, 1.5],
+            }}
+          />
+        </Source>
+      )}
       <Source id="aoi-regions" type="geojson" data={regionsGeo}>
-        <Layer id="aoi-region-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.25 }} />
-        <Layer id="aoi-region-outline" type="line" paint={{ 'line-color': '#ff7a00', 'line-width': 2 }} />
+        {/* Study areas only bound the search: near-transparent fill (kept for hit-testing) and a dashed outline. */}
+        <Layer id="aoi-region-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.04 }} />
+        <Layer
+          id="aoi-region-outline"
+          type="line"
+          paint={{ 'line-color': '#ff7a00', 'line-width': 2, 'line-dasharray': [3, 2] }}
+        />
       </Source>
       {/* Water overlays sit under the AOI shapes; mounted after aoi-regions so beforeId exists. */}
       {OVERLAY_IDS.filter((id) => overlays[id].on).map((id) => {
@@ -788,16 +991,119 @@ export default function MapView({
         )
       })}
       <Source id="aoi-polygons" type="geojson" data={polygonsGeo}>
-        <Layer id="aoi-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.25 }} />
+        <Layer id="aoi-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.04 }} />
         <Layer
           id="aoi-outline"
           type="line"
           paint={{
             'line-color': ['case', ['==', ['get', 'id'], selectedId ?? ''], '#0078ff', '#ff7a00'],
             'line-width': ['case', ['==', ['get', 'id'], selectedId ?? ''], 3, 2],
+            'line-dasharray': [3, 2],
           }}
         />
       </Source>
+      {/* Point of interest square: above study areas and overlays, under labels, POIs and edit handles. */}
+      <Source id="user-zone" type="geojson" data={zoneGeo}>
+        <Layer
+          id="zone-fill"
+          type="fill"
+          paint={{
+            'fill-color': '#db2777',
+            'fill-opacity': ['case', ['boolean', ['get', 'selected'], false], 0.3, 0.16],
+          }}
+        />
+        <Layer
+          id="zone-outline"
+          type="line"
+          paint={{
+            'line-color': ['case', ['boolean', ['get', 'selected'], false], '#9d174d', '#db2777'],
+            'line-width': ['case', ['boolean', ['get', 'selected'], false], 3, 2],
+          }}
+        />
+      </Source>
+      {zones.map((zone) => {
+        const title = zone.note ? `${zone.name ?? ''}: ${zone.note}` : zone.name
+        const selected = zone.id === selectedZoneId
+        const moveCenter = (e: { lngLat: { lng: number; lat: number } }) =>
+          onZoneChange({ ...zone, center: [e.lngLat.lng, e.lngLat.lat] })
+        // Zoomed out: a pin stands in for the square. Drag moves the center, click selects and zooms to the square.
+        if (!zoneExpanded.has(zone.id))
+          return (
+            <Marker
+              key={zone.id}
+              longitude={zone.center[0]}
+              latitude={zone.center[1]}
+              anchor="bottom"
+              draggable={!zonePlacing}
+              onDragStart={markZoneDragStart}
+              onDrag={moveCenter}
+              onDragEnd={markZoneDragEnd}
+              onClick={(e) => {
+                e.originalEvent.stopPropagation()
+                // A drag also ends in a click on the pin; only a plain click zooms.
+                if (consumeZoneDrag()) return
+                onSelectZone(zone.id)
+                const [w, s, e2, n] = zoneBbox(zone)
+                mapRef.current?.getMap().fitBounds([w, s, e2, n], { padding: 60, duration: 800 })
+              }}
+            >
+              <div className={selected ? 'zone-pin zone-pin-selected' : 'zone-pin'} title={title}>
+                <svg width="26" height="34" viewBox="0 0 26 34" aria-hidden="true">
+                  <path
+                    d="M13 1C6.4 1 1 6.3 1 12.8 1 21.6 13 33 13 33s12-11.4 12-20.2C25 6.3 19.6 1 13 1z"
+                    fill={selected ? '#9d174d' : '#db2777'}
+                    stroke="#9d174d"
+                    strokeWidth="1.5"
+                  />
+                  <circle cx="13" cy="13" r="4.5" fill="#ffffff" />
+                </svg>
+                {zone.name && <span className="zone-label zone-pin-label">{zone.name}</span>}
+              </div>
+            </Marker>
+          )
+        // Dragging the center moves the square; the range is kept.
+        return (
+          <Marker
+            key={zone.id}
+            longitude={zone.center[0]}
+            latitude={zone.center[1]}
+            anchor="center"
+            draggable={!zonePlacing}
+            onDragStart={markZoneDragStart}
+            onDrag={moveCenter}
+            onDragEnd={markZoneDragEnd}
+            onClick={(e) => {
+              e.originalEvent.stopPropagation()
+              if (consumeZoneDrag()) return
+              onSelectZone(zone.id)
+            }}
+          >
+            <div className={selected ? 'zone-center zone-center-selected' : 'zone-center'} title={title}>
+              <span className="zone-center-dot" />
+              {zone.name && <span className="zone-label">{zone.name}</span>}
+            </div>
+          </Marker>
+        )
+      })}
+      {/* Dragging a corner of the selected square resizes it around the fixed center. */}
+      {selectedZone &&
+        zoneCornerList.map((c, i) => (
+          <Marker
+            key={`${selectedZone.id}-${i}`}
+            longitude={c[0]}
+            latitude={c[1]}
+            anchor="center"
+            draggable={!zonePlacing}
+            onDrag={(e) =>
+              onZoneChange({
+                ...selectedZone,
+                halfSizeKm: halfKmFromCorner(selectedZone.center, [e.lngLat.lng, e.lngLat.lat]),
+              })
+            }
+          >
+            <span className={`zone-corner zone-corner-${i}`} />
+          </Marker>
+        ))}
       <Source id="pois" type="geojson" data={poisGeo}>
         <Layer
           id="poi-circle"
@@ -818,7 +1124,8 @@ export default function MapView({
       </Source>
       {/* Place-name labels above overlays and AOI shapes, under POIs and edit handles. */}
       {/* No fade: cross-fading parent/child label tiles while zooming shows names twice. */}
-      {(!labels.withOverlaysOnly || OVERLAY_IDS.some((id) => overlays[id].on)) && (
+      {/* With study areas the raster labels are hidden: names outside the areas cannot be removed from a raster. */}
+      {areaPlaces === null && (!labels.withOverlaysOnly || OVERLAY_IDS.some((id) => overlays[id].on)) && (
         <Source id="basemap-labels" key={labels.tiles} type="raster" tiles={[labels.tiles]} tileSize={256} maxzoom={labels.maxzoom}>
           <Layer
             id="basemap-labels-layer"

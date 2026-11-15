@@ -12,33 +12,40 @@ import {
   Layers,
   Loader2,
   Map as MapIcon,
+  MapPin,
   PanelLeftClose,
   PanelLeftOpen,
   Pentagon,
   Plus,
   RectangleHorizontal,
   Satellite,
+  ScanSearch,
   Trash2,
   TriangleAlert,
+  Trees,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { AoiPolygon, DrawMode } from '../types'
+import type { AoiPolygon, DrawMode, UserZone } from '../types'
 import type { AdminLevel } from '../regions'
 import type { RegionPicker } from '../useRegionPicker'
 import type { DownloadController, RunPhase, RunState } from '../useDownload'
+import type { LandcoverController } from '../useLandcover'
+import { formatPercent } from '../landcover'
 import { MAX_SEARCH_PRODUCTS, POLL_MS, POLS, fileUrl, formatKm2, warningsFor, yesterdayIso } from '../download'
 import { BASEMAPS } from '../basemaps'
 import type { BasemapId } from '../basemaps'
 import { NISAR_ASC_COLOR, NISAR_DESC_COLOR, OVERLAYS, OVERLAY_IDS } from '../layers'
+import { ZONE_MAX_SIDE_KM, ZONE_MIN_SIDE_KM, clampHalfKm } from '../zone'
 import type { OverlayId, OverlayState } from '../layers'
 
-type SectionId = 'study' | 'download' | 'nisar' | 'layers' | 'analysis' | 'about'
+type SectionId = 'study' | 'zones' | 'cover' | 'download' | 'nisar' | 'layers' | 'analysis' | 'about'
 
 interface Props {
   polygons: AoiPolygon[]
   mode: DrawMode | null
   regions: RegionPicker
   download: DownloadController
+  cover: LandcoverController
   basemap: BasemapId
   onSelectMode: (mode: DrawMode) => void
   onDelete: (id: string) => void
@@ -46,10 +53,21 @@ interface Props {
   onBasemapChange: (basemap: BasemapId) => void
   overlays: Record<OverlayId, OverlayState>
   onOverlayChange: (id: OverlayId, patch: Partial<OverlayState>) => void
+  onNisarDemo: () => void
+  zones: UserZone[]
+  selectedZoneId: string | null
+  onSelectZone: (id: string | null) => void
+  zonePlacing: boolean
+  onToggleZonePlacing: () => void
+  onZoneChange: (zone: UserZone) => void
+  onFocusZone: (id: string) => void
+  onDeleteZone: (id: string) => void
 }
 
 const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
   { id: 'study', label: 'Área de estudio', Icon: Pentagon },
+  { id: 'zones', label: 'Puntos de interés', Icon: MapPin },
+  { id: 'cover', label: 'Coberturas', Icon: Trees },
   { id: 'download', label: 'Descarga', Icon: Download },
   { id: 'nisar', label: 'Datos NISAR', Icon: Satellite },
   { id: 'layers', label: 'Capas', Icon: Layers },
@@ -139,7 +157,8 @@ function StudyAreaSection({
   onSelectMode,
   onDelete,
   onHoverTool,
-}: Pick<Props, 'polygons' | 'mode' | 'regions' | 'onSelectMode' | 'onDelete' | 'onHoverTool'>) {
+  onNisarDemo,
+}: Pick<Props, 'polygons' | 'mode' | 'regions' | 'onSelectMode' | 'onDelete' | 'onHoverTool' | 'onNisarDemo'>) {
   return (
     <>
       <h3 className="section-title">Herramientas de dibujo</h3>
@@ -160,6 +179,12 @@ function StudyAreaSection({
             {t.label}
           </button>
         ))}
+      </div>
+      <div className="btn-row">
+        <button type="button" className="btn" onClick={onNisarDemo}>
+          <Satellite size={16} aria-hidden="true" />
+          Lake Pontchartrain (NISAR demo)
+        </button>
       </div>
       {mode === 'region' ? <RegionOptions regions={regions} /> : mode && <p className="hint">{HINTS[mode]}</p>}
 
@@ -191,6 +216,171 @@ function StudyAreaSection({
         <p className="empty-state">Aún no hay áreas. Dibuja un polígono o elige una región.</p>
       )}
     </>
+  )
+}
+
+type ZonesProps = Pick<
+  Props,
+  | 'zones'
+  | 'selectedZoneId'
+  | 'onSelectZone'
+  | 'zonePlacing'
+  | 'onToggleZonePlacing'
+  | 'onZoneChange'
+  | 'onFocusZone'
+  | 'onDeleteZone'
+>
+
+function ZonesSection({
+  zones,
+  selectedZoneId,
+  onSelectZone,
+  zonePlacing,
+  onToggleZonePlacing,
+  onZoneChange,
+  onFocusZone,
+  onDeleteZone,
+}: ZonesProps) {
+  return (
+    <>
+      <h3 className="section-title">Marcar</h3>
+      <div className="btn-row">
+        <button
+          type="button"
+          className={zonePlacing ? 'btn btn-active' : 'btn'}
+          aria-pressed={zonePlacing}
+          onClick={onToggleZonePlacing}
+        >
+          <MapPin size={16} aria-hidden="true" />
+          Marcar punto
+        </button>
+      </div>
+      <p className="hint">
+        {zonePlacing
+          ? 'Haz clic en el mapa para fijar el centro. Esc cancela.'
+          : zones.length
+            ? 'Arrastra un centro para mover su cuadrado y una esquina del seleccionado para cambiar el rango.'
+            : 'Señala puntos de interés con un rango cuadrado. No cambian el área de estudio.'}
+      </p>
+
+      {zones.length ? (
+        <>
+          <h3 className="section-title">Puntos de interés</h3>
+          <ul className="zone-list">
+            {zones.map((zone, i) => {
+              const selected = zone.id === selectedZoneId
+              return (
+                <li key={zone.id} className={selected ? 'zone-item zone-item-selected' : 'zone-item'}>
+                  <button
+                    type="button"
+                    className="zone-item-head"
+                    aria-expanded={selected}
+                    onClick={() => onSelectZone(selected ? null : zone.id)}
+                  >
+                    <MapPin size={14} aria-hidden="true" />
+                    <span className="zone-item-name">{zone.name || `Punto ${i + 1}`}</span>
+                    <span className="zone-coords">
+                      {zone.center[1].toFixed(3)}, {zone.center[0].toFixed(3)}
+                    </span>
+                  </button>
+                  {selected && (
+                    <ZoneEditor zone={zone} onZoneChange={onZoneChange} onFocusZone={onFocusZone} onDeleteZone={onDeleteZone} />
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      ) : (
+        <p className="empty-state">Aún no hay puntos. Pulsa «Marcar punto» y haz clic en el mapa.</p>
+      )}
+    </>
+  )
+}
+
+function ZoneEditor({
+  zone,
+  onZoneChange,
+  onFocusZone,
+  onDeleteZone,
+}: { zone: UserZone } & Pick<Props, 'onZoneChange' | 'onFocusZone' | 'onDeleteZone'>) {
+  const sideKm = Math.round(zone.halfSizeKm * 2 * 10) / 10
+  const setSide = (km: number) => {
+    if (Number.isFinite(km)) onZoneChange({ ...zone, halfSizeKm: clampHalfKm(km / 2) })
+  }
+  return (
+    <div className="zone-editor">
+      <div className="field">
+        <span className="field-label">Centro</span>
+        <span className="zone-coords">
+          {zone.center[1].toFixed(5)}, {zone.center[0].toFixed(5)}
+        </span>
+      </div>
+      <div className="field">
+        <label className="field-row field-row-label" htmlFor="zone-side">
+          <span className="field-label">Rango (lado)</span>
+          <span className="zone-side-input">
+            <input
+              id="zone-side"
+              className="input"
+              type="number"
+              min={ZONE_MIN_SIDE_KM}
+              max={ZONE_MAX_SIDE_KM}
+              step={0.5}
+              value={sideKm}
+              onChange={(e) => setSide(Number(e.target.value))}
+            />
+            km
+          </span>
+        </label>
+        <input
+          className="slider"
+          type="range"
+          min={ZONE_MIN_SIDE_KM}
+          max={ZONE_MAX_SIDE_KM}
+          step={0.5}
+          value={sideKm}
+          onChange={(e) => setSide(Number(e.target.value))}
+          aria-label="Rango"
+          aria-valuetext={`${sideKm} km`}
+        />
+      </div>
+      <div className="field">
+        <label className="field-label" htmlFor="zone-name">
+          Nombre
+        </label>
+        <input
+          id="zone-name"
+          className="input"
+          value={zone.name ?? ''}
+          placeholder="Opcional"
+          onChange={(e) => onZoneChange({ ...zone, name: e.target.value || undefined })}
+        />
+      </div>
+      <div className="field">
+        <label className="field-label" htmlFor="zone-note">
+          Nota
+        </label>
+        <textarea
+          id="zone-note"
+          className="input zone-note-input"
+          rows={2}
+          value={zone.note ?? ''}
+          placeholder="Opcional"
+          onChange={(e) => onZoneChange({ ...zone, note: e.target.value || undefined })}
+        />
+      </div>
+      <div className="btn-row">
+        <button type="button" className="btn" onClick={() => onFocusZone(zone.id)}>
+          <ScanSearch size={16} aria-hidden="true" />
+          Ir a
+        </button>
+        <button type="button" className="btn" onClick={() => onDeleteZone(zone.id)}>
+          <Trash2 size={16} aria-hidden="true" />
+          Eliminar
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -430,6 +620,58 @@ function AboutSection() {
   )
 }
 
+// Share of each class in the active area. A bar toggles its class in the map filter, shared with the search bar.
+function CoverSection({ cover }: { cover: LandcoverController }) {
+  const { suggestions, toggle } = cover
+  const { area, filter, classesError } = suggestions
+  if (!area) return <p className="empty-state">Selecciona o dibuja un área en el mapa para ver sus coberturas.</p>
+  if (classesError) return <p className="download-error">Error: {classesError}</p>
+  const entry = area.stats
+  if (entry?.status === 'error') return <p className="download-error">Error: {entry.message}</p>
+  if (entry?.status !== 'ready') {
+    return (
+      <p className="cover-status">
+        <Loader2 size={16} className="spin" aria-hidden="true" />
+        Consultando cobertura…
+      </p>
+    )
+  }
+  const { stats } = entry
+  const rows = stats.classes.filter((c) => c.percent > 0).sort((a, b) => b.percent - a.percent)
+  return (
+    <>
+      <p className="download-area" title={area.name}>
+        {area.name}
+      </p>
+      <ul className="cover-bars">
+        {rows.map((c) => {
+          const on = filter.includes(c.key)
+          const Icon = on ? Check : Plus
+          return (
+            <li key={c.key}>
+              <button
+                type="button"
+                className={`cover-bar${on ? ' is-active' : ''}`}
+                aria-pressed={on}
+                title={on ? `Quitar ${c.name} del filtro` : `Filtrar el mapa por ${c.name}`}
+                onClick={() => toggle(c.key)}
+              >
+                <Icon size={16} aria-hidden="true" />
+                <span className="cover-bar-name">{c.name}</span>
+                <span className="cover-bar-value">{formatPercent(c.percent)}</span>
+                <span className="cover-bar-track" aria-hidden="true">
+                  <span className="cover-bar-fill" style={{ width: `${c.percent}%`, background: c.color }} />
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="hint">Clic en una cobertura para filtrar el mapa. Resolución {stats.resolution_m} m.</p>
+    </>
+  )
+}
+
 const RUN_STATUS: Record<
   Exclude<RunPhase, 'idle'>,
   { label: string; Icon: LucideIcon; tone: 'busy' | 'ok' | 'error' | 'muted'; spin?: boolean }
@@ -483,7 +725,9 @@ function RunStatus({ run }: { run: RunState }) {
   )
 }
 
-function DownloadSection({ download }: { download: DownloadController }) {
+const formatSideKm = (km: number) => `${Number.isInteger(km) ? km : km.toFixed(1)} km`
+
+function DownloadSection({ download, zoneCount }: { download: DownloadController; zoneCount: number }) {
   const { area, params, setDates, togglePol, datesOk, estimate, estimateError, estimating, run, canStart, start } =
     download
   const warnings = estimate ? warningsFor(estimate) : []
@@ -493,12 +737,23 @@ function DownloadSection({ download }: { download: DownloadController }) {
   const latest = yesterdayIso()
   return (
     <>
+      {/* The download covers the square of the selected point of interest, not the study area. */}
       {area ? (
         <p className="download-area" title={area.name}>
-          {area.name}
+          {area.name} · {formatSideKm(area.sideKm)} de lado
         </p>
       ) : (
-        <p className="empty-state">Selecciona o dibuja un área en el mapa para estimar y descargar datos.</p>
+        <p className="empty-state">
+          {zoneCount > 0
+            ? 'Selecciona uno de tus puntos de interés (sección «Puntos de interés») para descargar su área.'
+            : 'Selecciona un punto de interés para descargar.'}
+        </p>
+      )}
+      {area?.outsideStudy && (
+        <div className="download-warning" role="status">
+          <TriangleAlert size={16} aria-hidden="true" />
+          <div>El punto está fuera del área de estudio</div>
+        </div>
       )}
 
       <div className="field">
@@ -594,12 +849,15 @@ export default function Sidebar({
   regions,
   basemap,
   download,
+  cover,
   onSelectMode,
   onDelete,
   onHoverTool,
   onBasemapChange,
   overlays,
   onOverlayChange,
+  onNisarDemo,
+  ...zoneProps
 }: Props) {
   const [collapsed, setCollapsed] = useState(readStoredCollapsed)
   const [section, setSection] = useState<SectionId>(readStoredSection)
@@ -685,9 +943,12 @@ export default function Sidebar({
               onSelectMode={onSelectMode}
               onDelete={onDelete}
               onHoverTool={onHoverTool}
+              onNisarDemo={onNisarDemo}
             />
           )}
-          {active.id === 'download' && <DownloadSection download={download} />}
+          {active.id === 'zones' && <ZonesSection {...zoneProps} />}
+          {active.id === 'cover' && <CoverSection cover={cover} />}
+          {active.id === 'download' && <DownloadSection download={download} zoneCount={zoneProps.zones.length} />}
           {active.id === 'nisar' && <NisarSection />}
           {active.id === 'layers' && (
             <LayersSection
