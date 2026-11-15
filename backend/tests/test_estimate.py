@@ -133,6 +133,13 @@ def test_inventory_sets_product_count_and_full_granule_bytes(client, tmp_path):
     assert body["full_granules_bytes"] == 12_500_000
 
 
+def test_empty_inventory_has_no_bytes(client, tmp_path):
+    inventory_id = save_inventory(tmp_path, [])
+    body = post_estimate(client, geometry=MEASURED_AOI, inventory_id=inventory_id)
+    assert body["total_bytes"] == 0
+    assert body["pixels"]["total"] == 0
+
+
 def test_unknown_or_malformed_inventory(client):
     missing = client.post(ENDPOINT, json={"geometry": MEASURED_AOI, "inventory_id": "0" * 32})
     assert missing.status_code == 404

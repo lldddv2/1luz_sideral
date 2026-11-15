@@ -7,6 +7,7 @@ import ToolInfo from './components/ToolInfo'
 import SearchBar from './components/SearchBar'
 import { useRegionPicker } from './useRegionPicker'
 import type { MapViewport } from './useRegionPicker'
+import { useDownload } from './useDownload'
 import type { BBox, PlaceResult } from './nominatim'
 import type { AoiPolygon, DrawMode, LngLat, RegionGeometry } from './types'
 import { BASEMAPS } from './basemaps'
@@ -27,6 +28,8 @@ export default function App() {
   // Same start as MapView's initialViewState; replaced on map load and after each move.
   const [view, setView] = useState<MapViewport>({ zoom: 4, center: [-74, 4.6] })
   const regions = useRegionPicker(mode === 'region', view)
+  // No selection state exists, so the download acts on the most recently added area.
+  const download = useDownload(polygons.at(-1) ?? null)
   const hovered = polygons.find((p) => p.id === hoveredId)
   const deletePolygon = (id: string) => setPolygons((prev) => prev.filter((p) => p.id !== id))
 
@@ -66,6 +69,7 @@ export default function App() {
         polygons={polygons}
         mode={mode}
         regions={regions}
+        download={download}
         basemap={basemap}
         onSelectMode={(m) => setMode((current) => (current === m ? null : m))}
         onDelete={deletePolygon}

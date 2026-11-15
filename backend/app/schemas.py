@@ -1,6 +1,9 @@
+from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
+
+TIFF_SUFFIXES = {".tif", ".tiff"}
 
 
 class AOIRequest(BaseModel):
@@ -45,6 +48,27 @@ class Job(BaseModel):
     error: str | None = None
     created_at: str
     updated_at: str
+
+    def output_paths(self) -> list[Path]:
+        """GeoTIFFs recorded in results: each output, then its local masked copy when present.
+
+        Index i of GET /api/jobs/{id}/files/{i} is element i of this list. Only paths the
+        extractor recorded are listed; client input never becomes a path.
+        """
+        paths: list[Path] = []
+        for result in self.results:
+            for output in result.get("outputs") or []:
+                for key in ("path", "masked_path"):
+                    value = output.get(key)
+                    if value and Path(value).suffix.lower() in TIFF_SUFFIXES:
+                        paths.append(Path(value))
+        return paths
+
+    @computed_field
+    @property
+    def files(self) -> list[str]:
+        """File names in download order; the UI links each one to /api/jobs/{id}/files/{index}."""
+        return [path.name for path in self.output_paths()]
 
 
 class EstimateRequest(BaseModel):

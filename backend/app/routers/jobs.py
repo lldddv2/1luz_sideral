@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi.responses import FileResponse
 
 from app.deps import ExtractorDep, InventoriesDirDep, JobsDep
 from app.nisar_extractor import Inventory, NisarExtractor
@@ -64,3 +65,18 @@ def get_job(job_id: str, jobs: JobsDep) -> Job:
     if job is None:
         raise HTTPException(status_code=404, detail="Unknown job")
     return job
+
+
+# Index into Job.output_paths(): the path comes from job results, never from the request.
+@router.get("/jobs/{job_id}/files/{index}")
+def get_job_file(job_id: str, index: int, jobs: JobsDep) -> FileResponse:
+    job = jobs.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Unknown job")
+    paths = job.output_paths()
+    if not 0 <= index < len(paths):  # negative indexes would otherwise wrap around
+        raise HTTPException(status_code=404, detail="No output file with that index")
+    path = paths[index]
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Output file is no longer on disk")
+    return FileResponse(path, media_type="image/tiff", filename=path.name)

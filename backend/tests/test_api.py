@@ -9,6 +9,7 @@ from app.deps import get_extractor, get_settings
 from app.main import app
 from app.nisar_extractor import Inventory, ProductRecord
 from app.nisar_extractor.geometry import region_to_record
+from app.schemas import JobCreate
 
 VARIABLE = "/science/LSAR/GCOV/grids/frequencyA/HHHH"
 PRODUCT_ID = "NISAR_FAKE_PRODUCT_001"
@@ -158,6 +159,72 @@ def test_job_rejects_unknown_or_malformed_inventory(client):
 
 def test_unknown_job_is_404(client):
     assert client.get("/api/jobs/does-not-exist").status_code == 404
+
+
+def finished_job(client, results):
+    jobs = client.app.state.jobs
+    job = jobs.create(JobCreate(inventory_id="0" * 32, product_ids=[PRODUCT_ID], variables=[VARIABLE]))
+    return jobs.update(job.id, state="done", results=results)
+
+
+def write_file(path, payload: bytes) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(payload)
+    return str(path)
+
+
+def test_job_files_serve_recorded_tiffs_in_order(client, tmp_path):
+    main = write_file(tmp_path / "HHHH.tif", b"II*\x00main")
+    masked = write_file(tmp_path / "HHHH_masked.tif", b"II*\x00masked")
+    job = finished_job(
+        client,
+        [{"product_id": PRODUCT_ID, "state": "downloaded", "outputs": [{"path": main, "masked_path": masked}]}],
+    )
+
+    assert client.get(f"/api/jobs/{job.id}").json()["files"] == ["HHHH.tif", "HHHH_masked.tif"]
+    first = client.get(f"/api/jobs/{job.id}/files/0")
+    assert first.status_code == 200
+    assert first.content == b"II*\x00main"
+    assert first.headers["content-type"] == "image/tiff"
+    assert first.headers["content-disposition"] == 'attachment; filename="HHHH.tif"'
+    assert client.get(f"/api/jobs/{job.id}/files/1").content == b"II*\x00masked"
+
+
+@pytest.mark.parametrize("index", [2, 99, -1])
+def test_job_file_index_outside_recorded_outputs_is_404(client, tmp_path, index):
+    tif = write_file(tmp_path / "a.tif", b"II*\x00")
+    job = finished_job(client, [{"product_id": PRODUCT_ID, "state": "downloaded", "outputs": [{"path": tif}]}])
+    assert client.get(f"/api/jobs/{job.id}/files/{index}").status_code == 404
+
+
+def test_job_files_skip_failed_products_and_non_tiff_outputs(client, tmp_path):
+    notes = write_file(tmp_path / "notes.txt", b"not a tiff")
+    tif = write_file(tmp_path / "ok.tif", b"II*\x00ok")
+    job = finished_job(
+        client,
+        [
+            {"product_id": "P1", "state": "error", "error": "boom"},
+            {"product_id": "P2", "state": "downloaded", "outputs": [{"path": notes}, {"path": tif}]},
+        ],
+    )
+    assert client.get(f"/api/jobs/{job.id}").json()["files"] == ["ok.tif"]
+    assert client.get(f"/api/jobs/{job.id}/files/0").content == b"II*\x00ok"
+    assert client.get(f"/api/jobs/{job.id}/files/1").status_code == 404
+
+
+def test_job_file_missing_on_disk_is_404(client, tmp_path):
+    job = finished_job(client, [{"product_id": PRODUCT_ID, "outputs": [{"path": str(tmp_path / "gone.tif")}]}])
+    assert client.get(f"/api/jobs/{job.id}/files/0").status_code == 404
+
+
+def test_job_file_before_job_finishes_is_404(client):
+    jobs = client.app.state.jobs
+    job = jobs.create(JobCreate(inventory_id="0" * 32, product_ids=[PRODUCT_ID], variables=[VARIABLE]))
+    assert client.get(f"/api/jobs/{job.id}/files/0").status_code == 404
+
+
+def test_unknown_job_file_is_404(client):
+    assert client.get("/api/jobs/does-not-exist/files/0").status_code == 404
 
 
 def test_earthdata_auth_needs_both_username_and_password(monkeypatch):

@@ -31,6 +31,10 @@
   --danger: #c0262d;
   --danger-soft: rgba(192, 38, 45, 0.08);
   --danger-border: rgba(192, 38, 45, 0.35);
+  --warn: #9a5b00;
+  --warn-ink: #6b3f00;
+  --warn-soft: rgba(245, 158, 11, 0.12);
+  --warn-border: rgba(245, 158, 11, 0.45);
 
   /* Radii */
   --radius-sm: 6px;
@@ -581,6 +585,10 @@ select {
 
 .segmented button {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 7px 4px;
   border: none;
   background: transparent;
@@ -711,6 +719,159 @@ select {
 .level-auto .active {
   color: var(--accent);
   font-weight: 600;
+}
+
+/* ============================================================
+   Download section (sidebar)
+   ============================================================ */
+.download-area {
+  margin: 0 0 12px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 13px;
+  transition: opacity var(--transition);
+}
+
+.stat-list[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.stat-list dt {
+  color: var(--text-dim);
+}
+
+.stat-list dd {
+  margin: 0;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.download-error {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.download-action {
+  width: 100%;
+  margin-top: 14px;
+  padding: 9px 10px;
+  font-size: 13px;
+}
+
+.download-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.download-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+  color: var(--warn-ink);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.download-warning svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--warn);
+}
+
+.download-warning ul {
+  margin: 2px 0 0;
+  padding-left: 16px;
+}
+
+.download-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.download-status svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.download-status.tone-ok {
+  color: var(--accent);
+}
+
+.download-status.tone-error {
+  color: var(--danger);
+}
+
+.file-list {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file-list li {
+  border-bottom: 1px solid var(--border);
+}
+
+.file-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 4px;
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.file-link:hover {
+  text-decoration: underline;
+}
+
+.file-link svg {
+  flex: 0 0 auto;
+}
+
+.file-link span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error-list {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 /* ============================================================

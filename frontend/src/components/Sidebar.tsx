@@ -1,29 +1,42 @@
 import { useState } from 'react'
 import {
   Activity,
+  Check,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  Download,
+  FileDown,
   Info,
   Layers,
+  Loader2,
   Map as MapIcon,
   PanelLeftClose,
   PanelLeftOpen,
   Pentagon,
+  Plus,
   RectangleHorizontal,
   Satellite,
   Trash2,
+  TriangleAlert,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { AoiPolygon, DrawMode } from '../types'
 import type { AdminLevel } from '../regions'
 import type { RegionPicker } from '../useRegionPicker'
+import type { DownloadController, RunPhase, RunState } from '../useDownload'
+import { MAX_SEARCH_PRODUCTS, POLL_MS, POLS, fileUrl, formatKm2, warningsFor } from '../download'
 import { BASEMAPS } from '../basemaps'
 import type { BasemapId } from '../basemaps'
 
-type SectionId = 'study' | 'nisar' | 'layers' | 'analysis' | 'about'
+type SectionId = 'study' | 'download' | 'nisar' | 'layers' | 'analysis' | 'about'
 
 interface Props {
   polygons: AoiPolygon[]
   mode: DrawMode | null
   regions: RegionPicker
+  download: DownloadController
   basemap: BasemapId
   onSelectMode: (mode: DrawMode) => void
   onDelete: (id: string) => void
@@ -33,6 +46,7 @@ interface Props {
 
 const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
   { id: 'study', label: 'Área de estudio', Icon: Pentagon },
+  { id: 'download', label: 'Descarga', Icon: Download },
   { id: 'nisar', label: 'Datos NISAR', Icon: Satellite },
   { id: 'layers', label: 'Capas', Icon: Layers },
   { id: 'analysis', label: 'Análisis', Icon: Activity },
@@ -324,11 +338,165 @@ function AboutSection() {
   )
 }
 
+const RUN_STATUS: Record<
+  Exclude<RunPhase, 'idle'>,
+  { label: string; Icon: LucideIcon; tone: 'busy' | 'ok' | 'error' | 'muted'; spin?: boolean }
+> = {
+  searching: { label: 'Buscando', Icon: Loader2, tone: 'busy', spin: true },
+  queued: { label: 'En cola', Icon: Clock, tone: 'busy' },
+  running: { label: 'Procesando', Icon: Loader2, tone: 'busy', spin: true },
+  done: { label: 'Listo', Icon: CircleCheck, tone: 'ok' },
+  failed: { label: 'Error', Icon: CircleX, tone: 'error' },
+  error: { label: 'Error', Icon: CircleX, tone: 'error' },
+  empty: { label: 'Sin datos NISAR para esta región y fechas', Icon: CircleAlert, tone: 'muted' },
+}
+
+function RunStatus({ run }: { run: RunState }) {
+  if (run.phase === 'idle') return null
+  const { label, Icon, tone, spin } = RUN_STATUS[run.phase]
+  const job = run.job
+  const failed = job?.results.filter((r) => r.state !== 'downloaded' && r.error) ?? []
+  return (
+    <>
+      <p className={`download-status tone-${tone}`} role="status">
+        <Icon size={16} className={spin ? 'spin' : undefined} aria-hidden="true" />
+        <span>
+          {label}
+          {run.message && `: ${run.message}`}
+        </span>
+      </p>
+      {job?.state === 'done' &&
+        (job.files.length > 0 ? (
+          <ul className="file-list">
+            {job.files.map((name, index) => (
+              <li key={index}>
+                <a className="file-link" href={fileUrl(job.id, index)} download>
+                  <FileDown size={16} aria-hidden="true" />
+                  <span title={name}>{name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="download-error">Ningún producto generó archivos.</p>
+        ))}
+      {failed.length > 0 && (
+        <ul className="error-list">
+          {failed.map((r) => (
+            <li key={r.product_id}>{r.error}</li>
+          ))}
+        </ul>
+      )}
+    </>
+  )
+}
+
+function DownloadSection({ download }: { download: DownloadController }) {
+  const { area, params, setDates, togglePol, datesOk, estimate, estimateError, estimating, run, canStart, start } =
+    download
+  const warnings = estimate ? warningsFor(estimate) : []
+  // Until the search fixes the product count, size is for one product.
+  const perProduct = run.productCount === null
+  return (
+    <>
+      {area ? (
+        <p className="download-area" title={area.name}>
+          {area.name}
+        </p>
+      ) : (
+        <p className="empty-state">Selecciona o dibuja un área en el mapa para estimar y descargar datos.</p>
+      )}
+
+      <div className="field">
+        <span className="field-label">Rango de fechas</span>
+        <div className="field-row">
+          <input
+            className="input"
+            type="date"
+            aria-label="Fecha inicial"
+            value={params.start}
+            onChange={(e) => setDates({ start: e.target.value })}
+          />
+          <input
+            className="input"
+            type="date"
+            aria-label="Fecha final"
+            value={params.end}
+            onChange={(e) => setDates({ end: e.target.value })}
+          />
+        </div>
+        {!datesOk && (
+          <p className="download-error">Revisa el rango: la fecha inicial no puede ser posterior a la final.</p>
+        )}
+      </div>
+
+      <div className="field">
+        <span className="field-label" id="download-pol-label">
+          Polarización
+        </span>
+        <div className="segmented" role="group" aria-labelledby="download-pol-label">
+          {POLS.map((pol) => {
+            const on = params.pols.includes(pol)
+            const Icon = on ? Check : Plus
+            return (
+              <button
+                key={pol}
+                type="button"
+                className={on ? 'active' : undefined}
+                aria-pressed={on}
+                onClick={() => togglePol(pol)}
+              >
+                <Icon size={16} aria-hidden="true" />
+                {pol}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <h3 className="section-title">Estimación</h3>
+      <dl className="stat-list" aria-busy={estimating}>
+        <dt>Área</dt>
+        <dd>{estimate ? formatKm2(estimate.area_km2) : '—'}</dd>
+        <dt>{perProduct ? 'Tamaño por producto' : 'Tamaño'}</dt>
+        <dd title={estimate?.assumptions}>{estimate?.human ?? '—'}</dd>
+        <dt>Productos</dt>
+        <dd title={perProduct ? 'Se conoce al buscar; la búsqueda devuelve hasta 10' : undefined}>
+          {run.productCount ?? `hasta ${MAX_SEARCH_PRODUCTS}`}
+        </dd>
+      </dl>
+      {estimateError && <p className="download-error">No se pudo estimar: {estimateError}</p>}
+
+      {warnings.length > 0 && (
+        <div className="download-warning" role="status">
+          <TriangleAlert size={16} aria-hidden="true" />
+          <div>
+            <strong>Atención</strong>
+            <ul>
+              {warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      <button type="button" className="btn btn-active download-action" disabled={!canStart} onClick={start}>
+        <Download size={16} aria-hidden="true" />
+        Descargar
+      </button>
+      <RunStatus run={run} />
+      <p className="hint">Harmony procesa cada producto. El estado se consulta cada {POLL_MS / 1000} s.</p>
+    </>
+  )
+}
+
 export default function Sidebar({
   polygons,
   mode,
   regions,
   basemap,
+  download,
   onSelectMode,
   onDelete,
   onHoverTool,
@@ -352,7 +520,7 @@ export default function Sidebar({
     store(STORAGE_SECTION, id)
   }
 
-  const active = SECTIONS.find((s) => s.id === section)!
+  const active = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0]
 
   return (
     <aside className="sidebar" data-collapsed={collapsed} aria-label="Panel de trabajo">
@@ -363,7 +531,7 @@ export default function Sidebar({
             type="button"
             className="rail-btn"
             aria-label={label}
-            aria-current={!collapsed && section === id ? 'true' : undefined}
+            aria-current={!collapsed && active.id === id ? 'true' : undefined}
             onClick={() => openSection(id)}
           >
             <Icon size={20} aria-hidden="true" />
@@ -410,7 +578,7 @@ export default function Sidebar({
 
         <div className="panel-body">
           <h2 className="panel-section-heading">{active.label}</h2>
-          {section === 'study' && (
+          {active.id === 'study' && (
             <StudyAreaSection
               polygons={polygons}
               mode={mode}
@@ -420,10 +588,11 @@ export default function Sidebar({
               onHoverTool={onHoverTool}
             />
           )}
-          {section === 'nisar' && <NisarSection />}
-          {section === 'layers' && <LayersSection basemap={basemap} onBasemapChange={onBasemapChange} />}
-          {section === 'analysis' && <AnalysisSection />}
-          {section === 'about' && <AboutSection />}
+          {active.id === 'download' && <DownloadSection download={download} />}
+          {active.id === 'nisar' && <NisarSection />}
+          {active.id === 'layers' && <LayersSection basemap={basemap} onBasemapChange={onBasemapChange} />}
+          {active.id === 'analysis' && <AnalysisSection />}
+          {active.id === 'about' && <AboutSection />}
         </div>
       </div>
     </aside>
