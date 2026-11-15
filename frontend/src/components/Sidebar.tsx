@@ -89,7 +89,7 @@ function FillSlider({ value, onChange }: { value: number; onChange: (v: number) 
   return (
     <div className="field">
       <span className="field-label">
-        Opacidad del relleno <span className="layer-pct">{value}%</span>
+        Fill opacity <span className="layer-pct">{value}%</span>
       </span>
       <input
         className="slider"
@@ -100,7 +100,7 @@ function FillSlider({ value, onChange }: { value: number; onChange: (v: number) 
         value={value}
         style={{ '--pct': `${value}%` } as CSSProperties}
         onChange={(e) => onChange(Number(e.target.value))}
-        aria-label="Opacidad del relleno"
+        aria-label="Fill opacity"
         aria-valuetext={`${value}%`}
       />
     </div>
@@ -108,33 +108,33 @@ function FillSlider({ value, onChange }: { value: number; onChange: (v: number) 
 }
 
 const SECTIONS: { id: SectionId; label: string; Icon: LucideIcon }[] = [
-  { id: 'study', label: 'Área de estudio', Icon: Pentagon },
-  { id: 'zones', label: 'Puntos de interés', Icon: MapPin },
-  { id: 'cover', label: 'Coberturas', Icon: Trees },
-  { id: 'download', label: 'Descarga', Icon: Download },
-  { id: 'water', label: 'Modelo propio', Icon: Plug },
-  { id: 'layers', label: 'Capas', Icon: Layers },
-  { id: 'about', label: 'Acerca', Icon: Info },
+  { id: 'study', label: 'Study area', Icon: Pentagon },
+  { id: 'zones', label: 'Points of interest', Icon: MapPin },
+  { id: 'cover', label: 'Land cover', Icon: Trees },
+  { id: 'download', label: 'Download', Icon: Download },
+  { id: 'water', label: 'Your model', Icon: Plug },
+  { id: 'layers', label: 'Layers', Icon: Layers },
+  { id: 'about', label: 'About', Icon: Info },
 ]
 
 // Shared with the map tool palette so icons and labels are never duplicated.
 export const TOOLS: { mode: DrawMode; label: string; Icon: LucideIcon }[] = [
-  { mode: 'polygon', label: 'Polígono', Icon: Pentagon },
-  { mode: 'rectangle', label: 'Rectángulo', Icon: RectangleHorizontal },
-  { mode: 'region', label: 'Región', Icon: MapIcon },
+  { mode: 'polygon', label: 'Polygon', Icon: Pentagon },
+  { mode: 'rectangle', label: 'Rectangle', Icon: RectangleHorizontal },
+  { mode: 'region', label: 'Region', Icon: MapIcon },
 ]
 
 const HINTS: Record<DrawMode, string> = {
   polygon:
-    'Clic para añadir vértices. Doble clic, Enter o clic en el primer vértice para cerrar. Retroceso borra el último vértice. Esc cancela.',
-  rectangle: 'Clic en una esquina y clic en la esquina opuesta. Esc cancela.',
+    'Click to add vertices. Double-click, Enter, or click the first vertex to close. Backspace removes the last vertex. Esc cancels.',
+  rectangle: 'Click one corner, then the opposite corner. Esc cancels.',
   region: '',
 }
 
 const LEVELS: { level: AdminLevel; label: string }[] = [
-  { level: 'ADM0', label: 'País' },
-  { level: 'ADM1', label: 'Depto./Estado' },
-  { level: 'ADM2', label: 'Municipio' },
+  { level: 'ADM0', label: 'Country' },
+  { level: 'ADM1', label: 'State/Province' },
+  { level: 'ADM2', label: 'Municipality' },
 ]
 
 // localStorage is unavailable in some privacy modes; the UI must still work.
@@ -171,7 +171,7 @@ function RegionOptions({ regions }: { regions: RegionPicker }) {
   return (
     <div className="region-options">
       <p className="hint level-auto">
-        Nivel automático:{' '}
+        Auto level:{' '}
         {LEVELS.map((l, i) => (
           <span key={l.level}>
             {i > 0 && ' | '}
@@ -183,10 +183,10 @@ function RegionOptions({ regions }: { regions: RegionPicker }) {
       <p className="hint">
         {status ??
           (level === 'ADM0'
-            ? 'Clic en un país para agregarlo.'
+            ? 'Click a country to add it.'
             : country
-              ? `${country.name}: clic en una subdivisión para agregarla, o en otro país para cambiar.`
-              : 'Clic en un país para ver sus subdivisiones.')}
+              ? `${country.name}: click a subdivision to add it, or another country to switch.`
+              : 'Click a country to see its subdivisions.')}
       </p>
     </div>
   )
@@ -205,7 +205,7 @@ function StudyAreaSection({
   return (
     <>
       <FillSlider value={aoiFill} onChange={onAoiFill} />
-      <h3 className="section-title">Herramientas de dibujo</h3>
+      <h3 className="section-title">Drawing tools</h3>
       <div className="btn-row">
         {TOOLS.map((t) => (
           <button
@@ -227,7 +227,7 @@ function StudyAreaSection({
       {mode === 'region' ? <RegionOptions regions={regions} /> : mode && <p className="hint">{HINTS[mode]}</p>}
 
       <h3 className="section-title">
-        Áreas de estudio
+        Study areas
         <span className="count">{polygons.length}</span>
       </h3>
       {polygons.length > 0 ? (
@@ -236,14 +236,14 @@ function StudyAreaSection({
             <li key={p.id}>
               <span className="polygon-name">
                 {p.name}
-                {p.kind === 'polygon' && <small> ({p.coords.length} vértices)</small>}
+                {p.kind === 'polygon' && <small> ({p.coords.length} vertices)</small>}
               </span>
               <button
                 type="button"
                 className="btn-icon"
                 onClick={() => onDelete(p.id)}
-                title={`Eliminar ${p.name}`}
-                aria-label={`Eliminar ${p.name}`}
+                title={`Delete ${p.name}`}
+                aria-label={`Delete ${p.name}`}
               >
                 <Trash2 size={16} />
               </button>
@@ -251,7 +251,7 @@ function StudyAreaSection({
           ))}
         </ul>
       ) : (
-        <p className="empty-state">Aún no hay áreas. Dibuja un polígono o elige una región.</p>
+        <p className="empty-state">No areas yet. Draw a polygon or pick a region.</p>
       )}
     </>
   )
@@ -286,7 +286,7 @@ function ZonesSection({
   return (
     <>
       <FillSlider value={zoneFill} onChange={onZoneFill} />
-      <h3 className="section-title">Marcar</h3>
+      <h3 className="section-title">Mark</h3>
       <div className="btn-row">
         <button
           type="button"
@@ -295,20 +295,20 @@ function ZonesSection({
           onClick={onToggleZonePlacing}
         >
           <MapPin size={16} aria-hidden="true" />
-          Marcar punto
+          Mark point
         </button>
       </div>
       <p className="hint">
         {zonePlacing
-          ? 'Haz clic en el mapa para fijar el centro. Esc cancela.'
+          ? 'Click the map to set the center. Esc cancels.'
           : zones.length
-            ? 'Arrastra un centro para mover su cuadrado y una esquina del seleccionado para cambiar el rango.'
-            : 'Señala puntos de interés con un rango cuadrado. No cambian el área de estudio.'}
+            ? 'Drag a center to move its square, or a corner of the selected one to change its range.'
+            : 'Mark points of interest with a square range. They do not change the study area.'}
       </p>
 
       {zones.length ? (
         <>
-          <h3 className="section-title">Puntos de interés</h3>
+          <h3 className="section-title">Points of interest</h3>
           <ul className="zone-list">
             {zones.map((zone, i) => {
               const selected = zone.id === selectedZoneId
@@ -321,7 +321,7 @@ function ZonesSection({
                     onClick={() => onSelectZone(selected ? null : zone.id)}
                   >
                     <MapPin size={14} aria-hidden="true" />
-                    <span className="zone-item-name">{zone.name || `Punto ${i + 1}`}</span>
+                    <span className="zone-item-name">{zone.name || `Point ${i + 1}`}</span>
                     <span className="zone-coords">
                       {zone.center[1].toFixed(3)}, {zone.center[0].toFixed(3)}
                     </span>
@@ -335,7 +335,7 @@ function ZonesSection({
           </ul>
         </>
       ) : (
-        <p className="empty-state">Aún no hay puntos. Pulsa «Marcar punto» y haz clic en el mapa.</p>
+        <p className="empty-state">No points yet. Press &quot;Mark point&quot; and click the map.</p>
       )}
     </>
   )
@@ -354,14 +354,14 @@ function ZoneEditor({
   return (
     <div className="zone-editor">
       <div className="field">
-        <span className="field-label">Centro</span>
+        <span className="field-label">Center</span>
         <span className="zone-coords">
           {zone.center[1].toFixed(5)}, {zone.center[0].toFixed(5)}
         </span>
       </div>
       <div className="field">
         <label className="field-row field-row-label" htmlFor="zone-side">
-          <span className="field-label">Rango (lado)</span>
+          <span className="field-label">Range (side)</span>
           <span className="zone-side-input">
             <input
               id="zone-side"
@@ -384,43 +384,43 @@ function ZoneEditor({
           step={0.5}
           value={sideKm}
           onChange={(e) => setSide(Number(e.target.value))}
-          aria-label="Rango"
+          aria-label="Range"
           aria-valuetext={`${sideKm} km`}
         />
       </div>
       <div className="field">
         <label className="field-label" htmlFor="zone-name">
-          Nombre
+          Name
         </label>
         <input
           id="zone-name"
           className="input"
           value={zone.name ?? ''}
-          placeholder="Opcional"
+          placeholder="Optional"
           onChange={(e) => onZoneChange({ ...zone, name: e.target.value || undefined })}
         />
       </div>
       <div className="field">
         <label className="field-label" htmlFor="zone-note">
-          Nota
+          Note
         </label>
         <textarea
           id="zone-note"
           className="input zone-note-input"
           rows={2}
           value={zone.note ?? ''}
-          placeholder="Opcional"
+          placeholder="Optional"
           onChange={(e) => onZoneChange({ ...zone, note: e.target.value || undefined })}
         />
       </div>
       <div className="btn-row">
         <button type="button" className="btn" onClick={() => onFocusZone(zone.id)}>
           <ScanSearch size={16} aria-hidden="true" />
-          Ir a
+          Go to
         </button>
         <button type="button" className="btn" onClick={() => onDeleteZone(zone.id)}>
           <Trash2 size={16} aria-hidden="true" />
-          Eliminar
+          Delete
         </button>
       </div>
     </div>
@@ -436,8 +436,8 @@ function LayersSection({
   const [waterOpen, setWaterOpen] = useState(true)
   return (
     <>
-      <h3 className="section-title">Mapa base</h3>
-      <div className="option-list" role="radiogroup" aria-label="Mapa base">
+      <h3 className="section-title">Basemap</h3>
+      <div className="option-list" role="radiogroup" aria-label="Basemap">
         {Object.values(BASEMAPS).map((b) => (
           <button
             key={b.id}
@@ -463,7 +463,7 @@ function LayersSection({
         aria-controls="water-layers"
         onClick={() => setWaterOpen((v) => !v)}
       >
-        <span>Capas de agua</span>
+        <span>Water layers</span>
         <ChevronDown size={16} className="section-chevron" aria-hidden="true" />
       </button>
       <div id="water-layers" className={waterOpen ? 'collapse collapse-open' : 'collapse'}>
@@ -492,7 +492,7 @@ function LayersSection({
               disabled={!st.on}
               style={{ '--pct': `${st.opacity}%` } as CSSProperties}
               onChange={(e) => onOverlayChange(id, { opacity: Number(e.target.value) })}
-              aria-label={`Opacidad ${o.label}`}
+              aria-label={`${o.label} opacity`}
               aria-valuetext={`${st.opacity}%`}
             />
             {o.needsDate && (
@@ -502,10 +502,10 @@ function LayersSection({
                 value={st.date}
                 disabled={!st.on}
                 onChange={(e) => e.target.value && onOverlayChange(id, { date: e.target.value })}
-                aria-label={`Fecha ${o.label}`}
+                aria-label={`${o.label} date`}
               />
             )}
-            {(id === 'nisar' || id === 'dswx') && <p className="layer-hint">Mosaico de 12 días hasta esta fecha</p>}
+            {(id === 'nisar' || id === 'dswx') && <p className="layer-hint">12-day mosaic up to this date</p>}
             {id === 'nisar' && (
               <div className="layer-sub">
               <label className="layer-check">
@@ -515,28 +515,28 @@ function LayersSection({
                   disabled={!st.on}
                   onChange={(e) => onOverlayChange(id, { outline: e.target.checked })}
                 />
-                <span>Contorno de órbitas</span>
+                <span>Orbit outline</span>
               </label>
               <p className="layer-hint">
-                {(st.outline ?? true) ? 'Alejado: contorno de órbitas · cerca: mosaico a color' : 'Mosaico visible al acercar'}
+                {(st.outline ?? true) ? 'Zoomed out: orbit outline · zoomed in: color mosaic' : 'Mosaic visible when zoomed in'}
               </p>
               </div>
             )}
             {id === 'nisar' && (
               // Orbit pass filter: its own group (it filters both the image and the outline).
               // At least one direction stays on: the last checked box is disabled.
-              <div className="layer-sub" role="group" aria-label="Pasadas NISAR">
-              <span className="layer-hint">Pasadas:</span>
+              <div className="layer-sub" role="group" aria-label="NISAR passes">
+              <span className="layer-hint">Passes:</span>
               {(
                 [
-                  ['asc', 'Ascendente', NISAR_ASC_COLOR],
-                  ['desc', 'Descendente', NISAR_DESC_COLOR],
+                  ['asc', 'Ascending', NISAR_ASC_COLOR],
+                  ['desc', 'Descending', NISAR_DESC_COLOR],
                 ] as const
               ).map(([k, label, color]) => {
                 const checked = st[k] ?? true
                 const other = (k === 'asc' ? st.desc : st.asc) ?? true
                 return (
-                  <label key={k} className="layer-check" title={checked && !other ? 'Debe quedar al menos una pasada' : undefined}>
+                  <label key={k} className="layer-check" title={checked && !other ? 'At least one pass must stay on' : undefined}>
                     <input
                       type="checkbox"
                       checked={checked}
@@ -548,15 +548,15 @@ function LayersSection({
                   </label>
                 )
               })}
-              <p className="layer-hint">Filtra imagen y contorno</p>
+              <p className="layer-hint">Filters image and outline</p>
               </div>
             )}
             {id === 'nisar' && (
-              <div className="segmented" role="group" aria-label="Modo NISAR">
+              <div className="segmented" role="group" aria-label="NISAR mode">
                 {(
                   [
-                    ['water', 'Agua (umbral)', Droplets],
-                    ['color', 'Color (suavizado)', Palette],
+                    ['water', 'Water (threshold)', Droplets],
+                    ['color', 'Color (smoothed)', Palette],
                   ] as const
                 ).map(([m, label, Icon]) => (
                   <button
@@ -575,7 +575,7 @@ function LayersSection({
             )}
             {id === 'nisar' && (st.mode ?? 'color') === 'water' && (
               <p className="layer-hint">
-                <span className="layer-dot layer-dot-sm" style={{ background: '#2b8cbe' }} aria-hidden="true" /> Azul = baja retrodispersión banda L (agua/superficie lisa)
+                <span className="layer-dot layer-dot-sm" style={{ background: '#2b8cbe' }} aria-hidden="true" /> Blue = low L-band backscatter (water/smooth surface)
               </p>
             )}
             <p className="layer-hint">{o.hint}</p>
@@ -616,7 +616,7 @@ function CodeBlock({ code, label, tall }: { code: string; label: string; tall?: 
   )
 }
 
-const JOB_LABEL = { queued: 'En cola', running: 'Procesando' } as const
+const JOB_LABEL = { queued: 'Queued', running: 'Processing' } as const
 
 const fmt = (v: number | undefined) =>
   v == null || !Number.isFinite(v) ? '—' : Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)
@@ -651,9 +651,9 @@ function ModelLegend({ result }: { result: WaterResult }) {
       ) : null}
       {stats && (
         <p className="hint">
-          mín {fmt(stats.min)} · máx {fmt(stats.max)} · media {fmt(stats.mean)}
+          min {fmt(stats.min)} · max {fmt(stats.max)} · mean {fmt(stats.mean)}
           {u}
-          {stats.fraction != null && output !== 'continuous' && <> · {(stats.fraction * 100).toFixed(1)} % del área</>}
+          {stats.fraction != null && output !== 'continuous' && <> · {(stats.fraction * 100).toFixed(1)} % of area</>}
         </p>
       )}
     </>
@@ -673,10 +673,10 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
   const ps = (...parts: string[]) => parts.join(' `\n  ')
   const hello = [
     '{',
-    '  "name": "mi-modelo",',
+    '  "name": "my-model",',
     '  "output": "probability",',
     '  "pols": ["HH"],',
-    '  "label": "Agua",',
+    '  "label": "Water",',
     '  "units": ""',
     '}',
   ]
@@ -690,7 +690,7 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
   const cmdInput = sh(`curl ${origin}${inputUrl}`, auth, '-o input.tif')
   const cmdResult = sh(`curl -X POST ${origin}/api/models/jobs/${jobId}/result`, auth, '-F "file=@result.tif;type=image/tiff"')
   const busy = state.status === 'job'
-  const desc = [model.name ?? 'modelo', model.label].filter(Boolean).join(' · ')
+  const desc = [model.name ?? 'model', model.label].filter(Boolean).join(' · ')
   const dim = token ? undefined : 'model-dim'
   const [guide, setGuide] = useState(false)
   useEffect(() => {
@@ -704,7 +704,7 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
   const connectBtn = (
     <button type="button" className="btn btn-active" onClick={water.regenerate}>
       <Plug size={16} aria-hidden="true" />
-      Conectar modelo
+      Connect model
     </button>
   )
   const tokenError = water.tokenError && (
@@ -717,18 +717,18 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
     <>
       <p className={model.connected ? 'model-status on' : 'model-status'} role="status">
         <span className="model-dot" aria-hidden="true" />
-        {model.connected ? `Conectado: ${desc}` : 'Desconectado'}
+        {model.connected ? `Connected: ${desc}` : 'Disconnected'}
       </p>
       {token ? (
         <>
           <div className="model-token-row">
             <code className="model-token" title={token}>{`${token.slice(0, 10)}…${token.slice(-4)}`}</code>
-            <CopyButton text={token} label="Copiar token" className="model-icon-btn" />
-            <button type="button" className="model-icon-btn" onClick={water.regenerate} title="Regenerar token" aria-label="Regenerar token">
+            <CopyButton text={token} label="Copy token" className="model-icon-btn" />
+            <button type="button" className="model-icon-btn" onClick={water.regenerate} title="Regenerate token" aria-label="Regenerate token">
               <RefreshCw size={16} aria-hidden="true" />
             </button>
           </div>
-          {!model.connected && <p className="hint">Usa la guía para conectar tu modelo con curl.</p>}
+          {!model.connected && <p className="hint">Use the guide to connect your model with curl.</p>}
         </>
       ) : (
         <div className="btn-row">{connectBtn}</div>
@@ -742,21 +742,21 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
           onClick={() => target && water.run(target.bbox)}
         >
           {busy ? <Loader2 size={16} className="spin" aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
-          Ejecutar modelo
+          Run model
         </button>
         {state.status !== 'idle' && (
           <button type="button" className="btn" onClick={water.clear}>
             <Trash2 size={16} aria-hidden="true" />
-            Quitar
+            Remove
           </button>
         )}
       </div>
       <p className="hint">
-        {!model.connected ? 'Conecta un modelo para ejecutarlo.' : target ? <>Área: {target.name}</> : 'Elige un área (máx. 60 km).'}
+        {!model.connected ? 'Connect a model to run it.' : target ? <>Area: {target.name}</> : 'Pick an area (max. 60 km).'}
       </p>
       <button type="button" className="btn model-guide-btn" onClick={() => setGuide(true)}>
         <BookOpen size={16} aria-hidden="true" />
-        Guía de uso
+        User guide
       </button>
       {guide && (
         <div className="model-modal-backdrop" onClick={() => setGuide(false)}>
@@ -768,51 +768,51 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
             onClick={(e) => e.stopPropagation()}
           >
             <div className="model-modal-head">
-              <h2 id="model-guide-title">Guía de uso</h2>
-              <button type="button" className="model-icon-btn" onClick={() => setGuide(false)} title="Cerrar" aria-label="Cerrar" autoFocus>
+              <h2 id="model-guide-title">User guide</h2>
+              <button type="button" className="model-icon-btn" onClick={() => setGuide(false)} title="Close" aria-label="Close" autoFocus>
                 <X size={16} aria-hidden="true" />
               </button>
             </div>
             <p className="body-text">
-              Tu modelo lee <code>input.tif</code> (dB, una banda por polarización) y devuelve un GeoTIFF de 1 banda.
+              Your model reads <code>input.tif</code> (dB, one band per polarization) and returns a 1-band GeoTIFF.
             </p>
             <ol className="body-text model-steps">
               <li>
-                Genera un token de sesión (2 h):
-                {token ? <p className="hint">Token listo; los comandos ya lo incluyen.</p> : <div className="btn-row">{connectBtn}</div>}
+                Generate a session token (2 h):
+                {token ? <p className="hint">Token ready; the commands already include it.</p> : <div className="btn-row">{connectBtn}</div>}
                 {tokenError}
               </li>
               <li className={dim}>
-                Presenta tu modelo:
-                <CodeBlock code={cmdHello} label="Copiar comando hello" />
+                Introduce your model:
+                <CodeBlock code={cmdHello} label="Copy hello command" />
                 <p className="hint">
-                  <code>output</code>: <code>probability</code> (0–1), <code>continuous</code> o <code>classes</code>.{' '}
-                  <code>pols</code>: polarizaciones que lee (HH, HV, VV, VH).
+                  <code>output</code>: <code>probability</code> (0–1), <code>continuous</code> or <code>classes</code>.{' '}
+                  <code>pols</code>: polarizations it reads (HH, HV, VV, VH).
                 </p>
                 <details>
                   <summary>Windows PowerShell</summary>
-                  <CodeBlock code={cmdHelloPs} label="Copiar comando hello (PowerShell)" />
+                  <CodeBlock code={cmdHelloPs} label="Copy hello command (PowerShell)" />
                 </details>
               </li>
-              <li className={dim}>Selecciona un área y pulsa «Ejecutar modelo».</li>
+              <li className={dim}>Select an area and press &quot;Run model&quot;.</li>
               <li className={dim}>
-                Toma el trabajo (devuelve <code>job_id</code> e <code>input_url</code>):
-                <CodeBlock code={cmdNext} label="Copiar comando jobs/next" />
+                Take the job (returns <code>job_id</code> and <code>input_url</code>):
+                <CodeBlock code={cmdNext} label="Copy jobs/next command" />
               </li>
               <li className={dim}>
-                Descarga la imagen:
-                <CodeBlock code={cmdInput} label="Copiar comando de descarga" />
+                Download the image:
+                <CodeBlock code={cmdInput} label="Copy download command" />
               </li>
               <li className={dim}>
-                Procesa <code>input.tif</code> con tu modelo → <code>result.tif</code> (misma malla, 1 banda float32).
+                Process <code>input.tif</code> with your model → <code>result.tif</code> (same grid, 1 float32 band).
               </li>
               <li className={dim}>
-                Sube el resultado; aparece en el mapa:
-                <CodeBlock code={cmdResult} label="Copiar comando de subida" />
+                Upload the result; it appears on the map:
+                <CodeBlock code={cmdResult} label="Copy upload command" />
               </li>
             </ol>
             <p className="hint">
-              Sin actividad en 30 s pasa a Desconectado; repite hello o jobs/next para reconectar. En Windows PowerShell usa{' '}
+              After 30 s of inactivity it becomes Disconnected; repeat hello or jobs/next to reconnect. In Windows PowerShell use{' '}
               <code>curl.exe</code>.
             </p>
           </div>
@@ -834,21 +834,21 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
         <>
           <p className="download-status tone-ok" role="status">
             <CircleCheck size={16} aria-hidden="true" />
-            <span>Listo{state.result.label ? `: ${state.result.label}` : ''}</span>
+            <span>Ready{state.result.label ? `: ${state.result.label}` : ''}</span>
           </p>
           {state.result.datetime && (
             <p className="hint" title={state.result.scene_id}>
-              Escena: {state.result.datetime.slice(0, 10)}
+              Scene: {state.result.datetime.slice(0, 10)}
             </p>
           )}
           <ModelLegend result={state.result} />
           <label className="field-label">
-            <input type="checkbox" checked={water.visible} onChange={(e) => water.setVisible(e.target.checked)} /> Mostrar
-            resultado del modelo
+            <input type="checkbox" checked={water.visible} onChange={(e) => water.setVisible(e.target.checked)} /> Show
+            model result
           </label>
           <div className="field">
             <span className="field-label">
-              Opacidad <span className="layer-pct">{water.opacity}%</span>
+              Opacity <span className="layer-pct">{water.opacity}%</span>
             </span>
             <input
               className="slider"
@@ -859,7 +859,7 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
               value={water.opacity}
               style={{ '--pct': `${water.opacity}%` } as CSSProperties}
               onChange={(e) => water.setOpacity(Number(e.target.value))}
-              aria-label="Opacidad del resultado del modelo"
+              aria-label="Model result opacity"
               aria-valuetext={`${water.opacity}%`}
             />
           </div>
@@ -872,21 +872,21 @@ function WaterSection({ water, target }: { water: WaterController; target: Props
 function AboutSection() {
   return (
     <>
-      <h3 className="section-title">¿Qué es NISAR?</h3>
+      <h3 className="section-title">What is NISAR?</h3>
       <p className="body-text">
-        NISAR es un satélite de radar de apertura sintética (SAR) desarrollado por la NASA y la ISRO. Mide
-        cambios milimétricos de la superficie terrestre: humedales, incendios, sismos, cultivos, glaciares y
-        hundimientos del terreno.
+        NISAR is a synthetic aperture radar (SAR) satellite built by NASA and ISRO. It measures
+        millimeter-scale changes of the Earth&apos;s surface: wetlands, wildfires, earthquakes, crops, glaciers
+        and land subsidence.
       </p>
       <p className="body-text">
-        El radar es activo: ilumina el terreno con microondas y escucha el eco. Por eso observa de día y de
-        noche, y atraviesa nubes, humo y lluvia ligera, algo imposible para un sensor óptico.
+        The radar is active: it lights the ground with microwaves and listens for the echo. So it sees day and
+        night, and through clouds, smoke and light rain, something an optical sensor cannot do.
       </p>
-      <h3 className="section-title">HH frente a HV</h3>
+      <h3 className="section-title">HH vs HV</h3>
       <p className="body-text">
-        <strong>HH</strong> emite y recibe en polarización horizontal: sensible a superficies rugosas y a la
-        estructura del suelo. <strong>HV</strong> emite en horizontal y recibe en vertical: sensible al volumen
-        de la vegetación y a la biomasa. Comparar ambas separa suelo desnudo de dosel vegetal.
+        <strong>HH</strong> transmits and receives in horizontal polarization: sensitive to rough surfaces and
+        soil structure. <strong>HV</strong> transmits horizontal and receives vertical: sensitive to vegetation
+        volume and biomass. Comparing both separates bare soil from vegetation canopy.
       </p>
       <p className="hint">NASA Space Apps Challenge 2026 · Dancing with the SARs</p>
     </>
@@ -897,7 +897,7 @@ function AboutSection() {
 function CoverSection({ cover }: { cover: LandcoverController }) {
   const { suggestions, toggle } = cover
   const { area, filter, classesError } = suggestions
-  if (!area) return <p className="empty-state">Selecciona o dibuja un área en el mapa para ver sus coberturas.</p>
+  if (!area) return <p className="empty-state">Select or draw an area on the map to see its land cover.</p>
   if (classesError) return <p className="download-error">Error: {classesError}</p>
   const entry = area.stats
   if (entry?.status === 'error') return <p className="download-error">Error: {entry.message}</p>
@@ -905,7 +905,7 @@ function CoverSection({ cover }: { cover: LandcoverController }) {
     return (
       <p className="cover-status">
         <Loader2 size={16} className="spin" aria-hidden="true" />
-        Consultando cobertura…
+        Loading land cover…
       </p>
     )
   }
@@ -926,7 +926,7 @@ function CoverSection({ cover }: { cover: LandcoverController }) {
                 type="button"
                 className={`cover-bar${on ? ' is-active' : ''}`}
                 aria-pressed={on}
-                title={on ? `Quitar ${c.name} del filtro` : `Filtrar el mapa por ${c.name}`}
+                title={on ? `Remove ${c.name} from filter` : `Filter map by ${c.name}`}
                 onClick={() => toggle(c.key)}
               >
                 <Icon size={16} aria-hidden="true" />
@@ -940,7 +940,7 @@ function CoverSection({ cover }: { cover: LandcoverController }) {
           )
         })}
       </ul>
-      <p className="hint">Clic en una cobertura para filtrar el mapa. Resolución {stats.resolution_m} m.</p>
+      <p className="hint">Click a land cover class to filter the map. Resolution {stats.resolution_m} m.</p>
     </>
   )
 }
@@ -949,13 +949,13 @@ const RUN_STATUS: Record<
   Exclude<RunPhase, 'idle'>,
   { label: string; Icon: LucideIcon; tone: 'busy' | 'ok' | 'error' | 'muted'; spin?: boolean }
 > = {
-  searching: { label: 'Buscando', Icon: Loader2, tone: 'busy', spin: true },
-  queued: { label: 'En cola', Icon: Clock, tone: 'busy' },
-  running: { label: 'Procesando', Icon: Loader2, tone: 'busy', spin: true },
-  done: { label: 'Listo', Icon: CircleCheck, tone: 'ok' },
+  searching: { label: 'Searching', Icon: Loader2, tone: 'busy', spin: true },
+  queued: { label: 'Queued', Icon: Clock, tone: 'busy' },
+  running: { label: 'Processing', Icon: Loader2, tone: 'busy', spin: true },
+  done: { label: 'Done', Icon: CircleCheck, tone: 'ok' },
   failed: { label: 'Error', Icon: CircleX, tone: 'error' },
   error: { label: 'Error', Icon: CircleX, tone: 'error' },
-  empty: { label: 'Sin datos NISAR para esta región y fechas', Icon: CircleAlert, tone: 'muted' },
+  empty: { label: 'No NISAR data for this region and dates', Icon: CircleAlert, tone: 'muted' },
 }
 
 function RunStatus({ run }: { run: RunState }) {
@@ -985,7 +985,7 @@ function RunStatus({ run }: { run: RunState }) {
             ))}
           </ul>
         ) : (
-          <p className="download-error">Ningún producto generó archivos.</p>
+          <p className="download-error">No product produced files.</p>
         ))}
       {failed.length > 0 && (
         <ul className="error-list">
@@ -1013,29 +1013,29 @@ function DownloadSection({ download, zoneCount }: { download: DownloadController
       {/* The download covers the square of the selected point of interest, not the study area. */}
       {area ? (
         <p className="download-area" title={area.name}>
-          {area.name} · {formatSideKm(area.sideKm)} de lado
+          {area.name} · {formatSideKm(area.sideKm)} per side
         </p>
       ) : (
         <p className="empty-state">
           {zoneCount > 0
-            ? 'Selecciona uno de tus puntos de interés (sección «Puntos de interés») para descargar su área.'
-            : 'Selecciona un punto de interés para descargar.'}
+            ? 'Select one of your points of interest (Points of interest section) to download its area.'
+            : 'Select a point of interest to download.'}
         </p>
       )}
       {area?.outsideStudy && (
         <div className="download-warning" role="status">
           <TriangleAlert size={16} aria-hidden="true" />
-          <div>El punto está fuera del área de estudio</div>
+          <div>The point is outside the study area</div>
         </div>
       )}
 
       <div className="field">
-        <span className="field-label">Rango de fechas</span>
+        <span className="field-label">Date range</span>
         <div className="field-row">
           <input
             className="input"
             type="date"
-            aria-label="Fecha inicial"
+            aria-label="Start date"
             value={params.start}
             max={params.end && params.end < latest ? params.end : latest}
             onChange={(e) => setDates({ start: e.target.value })}
@@ -1043,7 +1043,7 @@ function DownloadSection({ download, zoneCount }: { download: DownloadController
           <input
             className="input"
             type="date"
-            aria-label="Fecha final"
+            aria-label="End date"
             value={params.end}
             min={params.start || undefined}
             max={latest}
@@ -1051,13 +1051,13 @@ function DownloadSection({ download, zoneCount }: { download: DownloadController
           />
         </div>
         {!datesOk && (
-          <p className="download-error">Revisa el rango: la fecha inicial no puede ser posterior a la final.</p>
+          <p className="download-error">Check the range: the start date cannot be after the end date.</p>
         )}
       </div>
 
       <div className="field">
         <span className="field-label" id="download-pol-label">
-          Polarización
+          Polarization
         </span>
         <div className="segmented" role="group" aria-labelledby="download-pol-label">
           {POLS.map((pol) => {
@@ -1079,24 +1079,24 @@ function DownloadSection({ download, zoneCount }: { download: DownloadController
         </div>
       </div>
 
-      <h3 className="section-title">Estimación</h3>
+      <h3 className="section-title">Estimate</h3>
       <dl className="stat-list" aria-busy={estimating}>
-        <dt>Área</dt>
+        <dt>Area</dt>
         <dd>{estimate ? formatKm2(estimate.area_km2) : '—'}</dd>
-        <dt>{perProduct ? 'Tamaño por producto' : 'Tamaño'}</dt>
+        <dt>{perProduct ? 'Size per product' : 'Size'}</dt>
         <dd title={estimate?.assumptions}>{estimate?.human ?? '—'}</dd>
-        <dt>Productos</dt>
-        <dd title={perProduct ? 'Se conoce al buscar; la búsqueda devuelve hasta 10' : undefined}>
-          {run.productCount ?? `hasta ${MAX_SEARCH_PRODUCTS}`}
+        <dt>Products</dt>
+        <dd title={perProduct ? 'Known after searching; search returns up to 10' : undefined}>
+          {run.productCount ?? `up to ${MAX_SEARCH_PRODUCTS}`}
         </dd>
       </dl>
-      {estimateError && <p className="download-error">No se pudo estimar: {estimateError}</p>}
+      {estimateError && <p className="download-error">Could not estimate: {estimateError}</p>}
 
       {warnings.length > 0 && (
         <div className="download-warning" role="status">
           <TriangleAlert size={16} aria-hidden="true" />
           <div>
-            <strong>Atención</strong>
+            <strong>Warning</strong>
             <ul>
               {warnings.map((w) => (
                 <li key={w}>{w}</li>
@@ -1108,10 +1108,10 @@ function DownloadSection({ download, zoneCount }: { download: DownloadController
 
       <button type="button" className="btn btn-active download-action" disabled={!canStart} onClick={start}>
         <Download size={16} aria-hidden="true" />
-        Descargar
+        Download
       </button>
       <RunStatus run={run} />
-      <p className="hint">Harmony procesa cada producto. El estado se consulta cada {POLL_MS / 1000} s.</p>
+      <p className="hint">Harmony processes each product. Status is checked every {POLL_MS / 1000} s.</p>
     </>
   )
 }
@@ -1156,8 +1156,8 @@ export default function Sidebar({
   const active = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0]
 
   return (
-    <aside className="sidebar" data-collapsed={collapsed} aria-label="Panel de trabajo">
-      <nav className="rail" aria-label="Secciones" data-tour="rail">
+    <aside className="sidebar" data-collapsed={collapsed} aria-label="Workspace panel">
+      <nav className="rail" aria-label="Sections" data-tour="rail">
         {SECTIONS.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -1175,23 +1175,23 @@ export default function Sidebar({
           </button>
         ))}
         <div className="rail-spacer" />
-        <button type="button" className="rail-btn" data-tour="tour-btn" aria-label="Ver guía" onClick={() => startTour()}>
+        <button type="button" className="rail-btn" data-tour="tour-btn" aria-label="Start tour" onClick={() => startTour()}>
           <Compass size={20} aria-hidden="true" />
           <span className="rail-tooltip" aria-hidden="true">
-            Ver guía
+            Start tour
           </span>
         </button>
         <button
           type="button"
           className="rail-btn"
-          aria-label={collapsed ? 'Expandir panel' : 'Plegar panel'}
-          title={collapsed ? 'Expandir panel' : 'Plegar panel'}
+          aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
+          title={collapsed ? 'Expand panel' : 'Collapse panel'}
           aria-expanded={!collapsed}
           onClick={toggleCollapsed}
         >
           {collapsed ? <PanelLeftOpen size={20} aria-hidden="true" /> : <PanelLeftClose size={20} aria-hidden="true" />}
           <span className="rail-tooltip" aria-hidden="true">
-            {collapsed ? 'Expandir' : 'Plegar'}
+            {collapsed ? 'Expand' : 'Collapse'}
           </span>
         </button>
       </nav>
@@ -1208,8 +1208,8 @@ export default function Sidebar({
           <button
             type="button"
             className="btn-icon panel-toggle"
-            aria-label="Plegar panel"
-            title="Plegar panel"
+            aria-label="Collapse panel"
+            title="Collapse panel"
             onClick={toggleCollapsed}
           >
             <PanelLeftClose size={16} aria-hidden="true" />

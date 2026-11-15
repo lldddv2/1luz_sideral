@@ -15,7 +15,7 @@ export default function CoverChips({ chips, loading, error, onRemove, labels }: 
   if (chips.length === 0 && !labels) return null
   return (
     <div className="cover-filter">
-      <div className="cover-chips" role="group" aria-label="Filtro de cobertura">
+      <div className="cover-chips" role="group" aria-label="Land cover filter">
         {labels && (
           <span className="cover-chip">
             <Tags size={14} aria-hidden="true" />
@@ -24,8 +24,8 @@ export default function CoverChips({ chips, loading, error, onRemove, labels }: 
             <button
               type="button"
               className="cover-chip-remove"
-              title="Quitar etiquetas del mapa"
-              aria-label="Quitar etiquetas del mapa"
+              title="Remove labels from map"
+              aria-label="Remove labels from map"
               onClick={labels.onClear}
             >
               <X size={16} aria-hidden="true" />
@@ -44,8 +44,8 @@ export default function CoverChips({ chips, loading, error, onRemove, labels }: 
             <button
               type="button"
               className="cover-chip-remove"
-              title={`Quitar ${chip.name}`}
-              aria-label={`Quitar ${chip.name}`}
+              title={`Remove ${chip.name}`}
+              aria-label={`Remove ${chip.name}`}
               onClick={() => onRemove(chip.key)}
             >
               <X size={16} aria-hidden="true" />

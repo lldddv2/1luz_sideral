@@ -13,17 +13,31 @@ export interface NaturalFeature {
   bbox: BBox
 }
 
-// Plural Spanish labels for the "show all" row and the map chip.
+// Plural English labels for the "show all" row and the map chip.
 export const CATEGORY_PLURAL: Record<string, string> = {
-  desert: 'Desiertos',
-  wetland: 'Humedales',
-  glacier: 'Glaciares',
-  forest: 'Bosques',
-  jungle: 'Selvas',
-  mangrove: 'Manglares',
+  desert: 'Deserts',
+  wetland: 'Wetlands',
+  glacier: 'Glaciers',
+  forest: 'Forests',
+  jungle: 'Jungles',
+  mangrove: 'Mangroves',
   tundra: 'Tundras',
-  volcano: 'Volcanes',
+  volcano: 'Volcanoes',
 }
+
+// Singular English labels; the backend category_name is Spanish, so it is only a fallback.
+const CATEGORY_SINGULAR: Record<string, string> = {
+  desert: 'Desert',
+  wetland: 'Wetland',
+  glacier: 'Glacier',
+  forest: 'Forest',
+  jungle: 'Jungle',
+  mangrove: 'Mangrove',
+  tundra: 'Tundra',
+  volcano: 'Volcano',
+}
+
+export const categoryName = (f: NaturalFeature) => CATEGORY_SINGULAR[f.category] ?? f.category_name
 
 export const CATEGORY_COLOR: Record<string, string> = {
   desert: '#d97706',
@@ -76,7 +90,7 @@ export function aoiGeometries(polygons: AoiPolygon[]): RegionGeometry[] {
 // Chip and "show on map" label: the plural category name when all results share one category.
 export function groupLabel(results: NaturalFeature[]): string {
   const cat = results[0]?.category
-  return cat && results.every((f) => f.category === cat) ? CATEGORY_PLURAL[cat] ?? cat : 'Lugares naturales'
+  return cat && results.every((f) => f.category === cat) ? CATEGORY_PLURAL[cat] ?? cat : 'Natural places'
 }
 
 // Bounding box of each study area (drawn shape or region boundary).

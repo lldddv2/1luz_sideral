@@ -38,13 +38,13 @@ export function useRegionPicker(active: boolean, view: MapViewport): RegionPicke
 
   useEffect(() => {
     if (!active || countries) return
-    setStatus('Cargando países…')
+    setStatus('Loading countries…')
     loadCountries().then(
       (fc) => {
         setCountries(fc)
         setStatus(null)
       },
-      () => setStatus('No se pudieron cargar los países. Revisa la conexión.'),
+      () => setStatus('Could not load countries. Check your connection.'),
     )
   }, [active, countries])
 
@@ -59,7 +59,7 @@ export function useRegionPicker(active: boolean, view: MapViewport): RegionPicke
     }
     const key = `${country.iso}/${level}`
     request.current = key
-    setStatus(`Cargando subdivisiones de ${country.name}…`)
+    setStatus(`Loading subdivisions of ${country.name}…`)
     loadSubdivisions(country.iso, level).then(
       (fc) => {
         if (request.current !== key) return
@@ -68,7 +68,7 @@ export function useRegionPicker(active: boolean, view: MapViewport): RegionPicke
       },
       () => {
         if (request.current !== key) return
-        setStatus(`No hay límites ${level} disponibles para ${country.name}.`)
+        setStatus(`No ${level} boundaries available for ${country.name}.`)
       },
     )
   }, [active, country, level])

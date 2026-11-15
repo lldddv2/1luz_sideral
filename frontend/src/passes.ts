@@ -1,10 +1,10 @@
 import { DEFAULT_START, searchProducts, todayIso } from './download'
 import type { FlightDirection, RegionGeometry, SearchProduct } from './types'
 
-// Passes per area: the backend default, searched over the default window or over the Descarga range.
+// Passes per area: the backend default, searched over the default window or over the Download range.
 const PASS_MAX_RESULTS = 100
 const DAY_MS = 24 * 60 * 60 * 1000
-const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const DIRECTION_SHORT: Record<FlightDirection, string> = { ascending: 'Asc', descending: 'Desc' }
 
 // Colors per group; the palette wraps when an area crosses more groups than colors.
@@ -32,7 +32,7 @@ export interface PassGroup {
   products: SearchProduct[] // newest first
 }
 
-// Window searched for a Descarga range: the default window when the range lies inside it, else the range.
+// Window searched for a Download range: the default window when the range lies inside it, else the range.
 // The default window runs from DEFAULT_START to today.
 export function searchRange(range: DateRange): DateRange {
   const base = { start: DEFAULT_START, end: todayIso() }
@@ -97,16 +97,16 @@ export function groupsIn(products: SearchProduct[], range: DateRange): PassGroup
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-// Short UTC day, e.g. 30 oct.
+// Short UTC day, e.g. 30 Oct.
 export function shortDay(ms: number): string {
   const d = new Date(ms)
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
 }
 
-// UTC day with year, e.g. 30 oct 2026.
+// UTC day with year, e.g. 30 Oct 2026.
 const fullDay = (ms: number) => `${shortDay(ms)} ${new Date(ms).getUTCFullYear()}`
 
-// UTC day and time, e.g. 30 oct 2026 · 12:03 UTC; '—' when there is no time.
+// UTC day and time, e.g. 30 Oct 2026 · 12:03 UTC; '—' when there is no time.
 export function utcLabel(iso: string | null): string {
   const time = iso === null ? NaN : Date.parse(iso)
   if (Number.isNaN(time)) return '—'
@@ -167,14 +167,14 @@ export function revisitDays(groups: PassGroup[]): number | null {
   return gaps.length % 2 === 1 ? gaps[mid] : (gaps[mid - 1] + gaps[mid]) / 2
 }
 
-// One line over the timeline: acquisition count and median revisit, e.g. 12 adquisiciones · revisita mediana 12 días.
+// One line over the timeline: acquisition count and median revisit, e.g. 12 acquisitions · median revisit 12 days.
 export function passSummary(groups: PassGroup[]): string {
   const n = groups.reduce((sum, g) => sum + g.products.length, 0)
-  const parts = [`${n} ${n === 1 ? 'adquisición' : 'adquisiciones'}`]
+  const parts = [`${n} ${n === 1 ? 'acquisition' : 'acquisitions'}`]
   const revisit = revisitDays(groups)
   if (revisit !== null) {
     const days = Math.round(revisit)
-    parts.push(`revisita mediana ${days} ${days === 1 ? 'día' : 'días'}`)
+    parts.push(`median revisit ${days} ${days === 1 ? 'day' : 'days'}`)
   }
   return parts.join(' · ')
 }

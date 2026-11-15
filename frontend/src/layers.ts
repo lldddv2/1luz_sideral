@@ -30,7 +30,7 @@ export const OVERLAYS: Record<OverlayId, Overlay> = {
   dswx: {
     id: 'dswx',
     label: 'OPERA DSWx-S1',
-    hint: 'Agua superficial (Sentinel-1, banda C); mosaico de 12 días, el pase más reciente manda',
+    hint: 'Surface water (Sentinel-1, C-band); 12-day mosaic, newest pass wins',
     tiles: `${GIBS}/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/{time}/GoogleMapsCompatible_Level12/{z}/{y}/{x}.png`,
     maxzoom: 12,
     attribution: 'OPERA DSWx-S1 · NASA GIBS',
@@ -38,8 +38,8 @@ export const OVERLAYS: Record<OverlayId, Overlay> = {
   },
   nisar: {
     id: 'nisar',
-    label: 'NISAR GCOV (vista previa)',
-    hint: 'Retrodispersión banda L de GIBS; usa la fecha válida más cercana',
+    label: 'NISAR GCOV (preview)',
+    hint: 'L-band backscatter from GIBS; uses the nearest valid date',
     tiles: `${GIBS}/NISAR_L2_Geocoded_Polarimetric_Covariance/default/{time}/GoogleMapsCompatible_Level13/{z}/{y}/{x}.png`,
     maxzoom: 13,
     attribution: 'NISAR GCOV · NASA-ISRO · NASA GIBS',
@@ -47,8 +47,8 @@ export const OVERLAYS: Record<OverlayId, Overlay> = {
   },
   jrc: {
     id: 'jrc',
-    label: 'JRC agua histórica',
-    hint: 'Frecuencia de agua 1984–2021; separa agua permanente de inundación',
+    label: 'JRC historical water',
+    hint: 'Water occurrence 1984–2021; separates permanent water from flooding',
     tiles: 'https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/{z}/{x}/{y}.png',
     maxzoom: 13,
     attribution: 'EC JRC / Google Global Surface Water',

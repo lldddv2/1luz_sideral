@@ -92,7 +92,7 @@ export function useWater(): WaterController {
         setToken(body.token)
         setModel({ connected: false, name: null })
       })
-      .catch(() => setTokenError('No se pudo generar el token (¿backend actualizado?)'))
+      .catch(() => setTokenError('Could not generate the token (is the backend up to date?)'))
   }
 
   // Live status + job updates; opens only once the user generated a token (or one is stored). A 401 (expired token) closes the stream; get a new token.
@@ -121,7 +121,7 @@ export function useWater(): WaterController {
           setVisible(true)
         } else if (d.state === 'error') {
           jobRef.current = null
-          setState({ status: 'error', message: d.error ?? 'Error del modelo' })
+          setState({ status: 'error', message: d.error ?? 'Model error' })
         } else if (d.state === 'queued' || d.state === 'running') {
           setState({ status: 'job', job_id: d.job_id, state: d.state })
         }

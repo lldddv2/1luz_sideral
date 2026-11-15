@@ -9,7 +9,7 @@ export interface PlaceResult {
   id: string
   name: string
   label: string // full display name, e.g. "Antioquia, Colombia"
-  type: string // Spanish kind, e.g. "País" or "Departamento / Estado"
+  type: string // kind as sent by the backend (Spanish), e.g. "País" or "Departamento / Estado"
   bbox: BBox
   geometry: RegionGeometry | null // administrative boundary; null for points and lines
 }

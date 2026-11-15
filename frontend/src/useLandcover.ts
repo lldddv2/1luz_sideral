@@ -104,7 +104,7 @@ export function useLandcover(areas: AoiPolygon[]): LandcoverController {
     activeStats?.status === 'ready' ? (activeStats.stats.classes.find((c) => c.key === key)?.percent ?? null) : null
   const chips: CoverChip[] = filter.map((key) => {
     const cls = classes.find((c) => c.key === key)
-    return { key, name: cls?.name ?? key, color: cls?.color ?? '#6b7280', percent: percentOf(key) }
+    return { key, name: cls?.name_en || cls?.name || key, color: cls?.color ?? '#6b7280', percent: percentOf(key) }
   })
 
   const current = mask && mask.key === maskKey ? mask : null

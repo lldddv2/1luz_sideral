@@ -11,38 +11,38 @@ const q = (name: string) => `[data-tour="${name}"]`
 const SECTION_STEPS: { id: string; title: string; description: string }[] = [
   {
     id: 'study',
-    title: 'Área de estudio',
-    description: 'Dibuja un polígono o rectángulo, o elige un país o subdivisión en el mapa. Define dónde se analizan los datos.',
+    title: 'Study area',
+    description: 'Draw a polygon or rectangle, or pick a country or subdivision on the map. It sets where data is analyzed.',
   },
   {
     id: 'zones',
-    title: 'Puntos de interés',
-    description: 'Marca puntos con un rango cuadrado ajustable, con nombre y nota. Sirven para descargar y ejecutar modelos.',
+    title: 'Points of interest',
+    description: 'Mark points with an adjustable square range, a name and a note. Use them to download data and run models.',
   },
   {
     id: 'cover',
-    title: 'Coberturas',
-    description: 'Muestra el porcentaje de cada tipo de cobertura del área activa. Haz clic en una para filtrar el mapa.',
+    title: 'Land cover',
+    description: 'Shows the share of each land cover type in the active area. Click one to filter the map.',
   },
   {
     id: 'download',
-    title: 'Descarga',
-    description: 'Descarga productos NISAR del punto de interés seleccionado. Elige fechas y polarización, revisa la estimación y descarga.',
+    title: 'Download',
+    description: 'Download NISAR products for the selected point of interest. Pick dates and polarization, check the estimate and download.',
   },
   {
     id: 'water',
-    title: 'Modelo propio',
-    description: 'Pulsa Conectar modelo y sigue la Guía de uso para enviar resultados con curl.',
+    title: 'Your model',
+    description: 'Press Connect model and follow the usage guide to send results with curl.',
   },
   {
     id: 'layers',
-    title: 'Capas',
-    description: 'Cambia el mapa base y activa capas de agua: OPERA DSWx, NISAR GCOV y JRC. Ajusta fecha, pasadas, modo y opacidad.',
+    title: 'Layers',
+    description: 'Change the basemap and turn on water layers: OPERA DSWx, NISAR GCOV and JRC. Adjust date, passes, mode and opacity.',
   },
   {
     id: 'about',
-    title: 'Acerca',
-    description: 'Qué es NISAR y en qué se diferencian las polarizaciones HH y HV.',
+    title: 'About',
+    description: 'What NISAR is and how HH and HV polarizations differ.',
   },
 ]
 
@@ -58,25 +58,25 @@ function steps(): DriveStep[] {
   return [
     {
       popover: {
-        title: 'Bienvenido a Luzsi',
+        title: 'Welcome to Luzsi',
         description:
-          'Explora cambios en la superficie terrestre con datos de radar NISAR (NASA-ISRO). Te mostramos lo básico en un minuto.',
+          'Explore changes on the Earth surface with NISAR radar data (NASA-ISRO). Here are the basics in one minute.',
       },
     },
     {
       element: q('search'),
       popover: {
-        title: 'Buscar y fechas',
+        title: 'Search and dates',
         description:
-          'Busca un país, región o lugar natural y añádelo como área de estudio. Elige aquí el rango de fechas a analizar.',
+          'Search a country, region or natural place and add it as a study area. Pick the date range to analyze here.',
         side: 'bottom',
       },
     },
     {
       element: q('rail'),
       popover: {
-        title: 'Herramientas',
-        description: 'Esta barra abre cada sección del panel. Veámoslas una por una.',
+        title: 'Tools',
+        description: 'This bar opens each panel section. Let us go through them one by one.',
         side: 'right',
         onNextClick: (_el, _step, { driver: d }) => openSectionThen(SECTION_STEPS[0].id, d, 'next'),
       },
@@ -98,18 +98,18 @@ function steps(): DriveStep[] {
     {
       element: q('timeline'),
       popover: {
-        title: 'Línea de tiempo',
+        title: 'Timeline',
         description:
-          'Con un área definida aparecen aquí las pasadas NISAR. Elige una fecha o pulsa reproducir para ver la animación.',
+          'With an area set, NISAR passes show up here. Pick a date or press play to see the animation.',
         side: 'top',
       },
     },
     {
       element: q('map'),
       popover: {
-        title: 'El mapa',
+        title: 'The map',
         description:
-          'Haz clic para seleccionar áreas y puntos; usa clic derecho para más opciones. Arrastra y usa la rueda para moverte.',
+          'Click to select areas and points; right-click for more options. Drag and scroll to move around.',
         side: 'left',
         align: 'center',
       },
@@ -117,8 +117,8 @@ function steps(): DriveStep[] {
     {
       element: q('tour-btn'),
       popover: {
-        title: '¡Listo!',
-        description: 'Puedes volver a ver esta guía cuando quieras con este botón.',
+        title: 'All set!',
+        description: 'You can replay this guide anytime with this button.',
         side: 'right',
       },
     },
@@ -128,10 +128,10 @@ function steps(): DriveStep[] {
 export function startTour() {
   const d = driver({
     showProgress: true,
-    progressText: '{{current}} de {{total}}',
-    nextBtnText: 'Siguiente',
-    prevBtnText: 'Anterior',
-    doneBtnText: 'Listo',
+    progressText: '{{current}} of {{total}}',
+    nextBtnText: 'Next',
+    prevBtnText: 'Back',
+    doneBtnText: 'Done',
     overlayOpacity: 0.6,
     popoverClass: 'tour-popover',
     steps: steps(),

@@ -29,9 +29,9 @@ const FRAME_MS = 450;
 const noop = () => {};
 
 const LABELS: Record<DrawMode, string> = {
-  polygon: "Polígono",
-  rectangle: "Rectángulo",
-  region: "Región",
+  polygon: "Polygon",
+  rectangle: "Rectangle",
+  region: "Region",
 };
 
 export default function App() {
@@ -108,7 +108,7 @@ export default function App() {
     };
   }, [selectedZone, selectedIndex, zoneSquare, areaBoxes]);
   const download = useDownload(downloadTarget);
-  // The timeline spans the Descarga dates; null while they are incomplete or reversed.
+  // The timeline spans the Download dates; null while they are incomplete or reversed.
   const { start, end } = download.params;
   const range = useMemo(
     () => (download.datesOk ? { start, end } : null),
@@ -394,9 +394,9 @@ export default function App() {
           <AcquisitionTimeline
             range={range}
             entry={passes}
-            prefetch={prefetch ? { ...prefetch, stage: "Teselas" } : frames ? { ...frames, stage: "Imágenes" } : null}
+            prefetch={prefetch ? { ...prefetch, stage: "Tiles" } : frames ? { ...frames, stage: "Images" } : null}
             playing={playing}
-            loading={play === "loading" ? (prefetch ? { ...prefetch, stage: "Teselas" } : frames ?? { done: 0, total: 0 }) : null}
+            loading={play === "loading" ? (prefetch ? { ...prefetch, stage: "Tiles" } : frames ?? { done: 0, total: 0 }) : null}
             onTogglePlay={passDays.length > 1 ? togglePlay : undefined}
             picked={OVERLAY_IDS.filter((id) => id !== "jrc" && overlays[id].on).map((id) => overlays[id].date)}
             onPick={(day) =>

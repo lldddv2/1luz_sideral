@@ -24,10 +24,10 @@ interface Props {
 export default function AcquisitionTimeline({ range, entry, children, picked = [], onPick, prefetch, playing = false, loading = null, onTogglePlay }: Props) {
   if (!range) {
     return (
-      <section data-tour="timeline" className="acq-bar" aria-label="Adquisiciones NISAR">
+      <section data-tour="timeline" className="acq-bar" aria-label="NISAR acquisitions">
         <p className="acq-note">
           <TriangleAlert size={16} aria-hidden="true" />
-          <span>Revisa el rango de fechas en Descarga.</span>
+          <span>Check the date range in Download.</span>
         </p>
       </section>
     )
@@ -67,7 +67,7 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
     note = (
       <p className="acq-msg">
         <Loader2 size={16} className="spin" aria-hidden="true" />
-        <span>Consultando adquisiciones NISAR…</span>
+        <span>Querying NISAR acquisitions…</span>
       </p>
     )
   } else if (entry.status === 'error') {
@@ -78,11 +78,11 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
       </p>
     )
   } else if (points.length === 0) {
-    note = <p className="acq-msg">No se registraron adquisiciones NISAR en el periodo seleccionado.</p>
+    note = <p className="acq-msg">No NISAR acquisitions in the selected period.</p>
   }
 
   return (
-    <section data-tour="timeline" className="acq-bar" aria-label="Adquisiciones NISAR en el periodo">
+    <section data-tour="timeline" className="acq-bar" aria-label="NISAR acquisitions in the period">
       {children}
       {groups.length > 0 && (
         <div className="acq-head">
@@ -97,29 +97,29 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
           <span className="acq-summary">{passSummary(groups)}</span>
           {loading ? (
             <span className="acq-summary" role="status">
-              {`Preparando animación…${loading.total ? ` ${loading.stage ? loading.stage + " " : ""}${Math.min(loading.done, loading.total)}/${loading.total}` : ""}`}
+              {`Preparing animation…${loading.total ? ` ${loading.stage ? loading.stage + " " : ""}${Math.min(loading.done, loading.total)}/${loading.total}` : ""}`}
             </span>
           ) : prefetch && (
             <span className="acq-summary">
-              {prefetch.total ? `${prefetch.stage ?? "Precargando"} ${Math.min(prefetch.done, prefetch.total)}/${prefetch.total}${prefetch.paused ? " (en pausa)" : ""}` : "Preparando…"}
+              {prefetch.total ? `${prefetch.stage ?? "Preloading"} ${Math.min(prefetch.done, prefetch.total)}/${prefetch.total}${prefetch.paused ? " (paused)" : ""}` : "Preparing…"}
             </span>
           )}
           <span className="acq-nav">
             {onTogglePlay && (
               <button
                 type="button"
-                title={loading ? 'Cancelar precarga' : playing ? 'Pausar' : 'Reproducir'}
-                aria-label={loading ? 'Cancelar precarga' : playing ? 'Pausar' : 'Reproducir'}
+                title={loading ? 'Cancel preload' : playing ? 'Pause' : 'Play'}
+                aria-label={loading ? 'Cancel preload' : playing ? 'Pause' : 'Play'}
                 aria-pressed={playing}
                 onClick={onTogglePlay}
               >
                 {loading ? <Loader2 size={16} className="spin" aria-hidden="true" /> : playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
               </button>
             )}
-            <button type="button" title="Pasada anterior" aria-label="Pasada anterior" disabled={!prevDay} onClick={() => step(prevDay)}>
+            <button type="button" title="Previous pass" aria-label="Previous pass" disabled={!prevDay} onClick={() => step(prevDay)}>
               <ChevronLeft size={16} aria-hidden="true" />
             </button>
-            <button type="button" title="Pasada siguiente" aria-label="Pasada siguiente" disabled={!nextDay} onClick={() => step(nextDay)}>
+            <button type="button" title="Next pass" aria-label="Next pass" disabled={!nextDay} onClick={() => step(nextDay)}>
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </span>
@@ -136,7 +136,7 @@ export default function AcquisitionTimeline({ range, entry, children, picked = [
           <button
             type="button"
             key={p.key}
-            aria-label={`${p.tip}. Usar esta fecha en las capas de agua`}
+            aria-label={`${p.tip}. Use this date in the water layers`}
             aria-pressed={picked.includes(p.iso)}
             onClick={() => onPick?.(p.iso)}
             className={`acq-point ${p.f < 0.5 ? 'acq-point-start' : 'acq-point-end'}${picked.includes(p.iso) ? ' is-picked' : ''}`}

@@ -61,7 +61,7 @@ async function fetchAreaPlaces(shapes: RegionGeometry[], signal: AbortSignal): P
     .filter((el) => el.tags?.name && pointInShapes(el.lon, el.lat, shapes))
     .map((el) => ({
       id: el.id,
-      name: el.tags!['name:es'] ?? el.tags!.name,
+      name: el.tags!['name:en'] ?? el.tags!.name,
       rank: el.tags!.place as PlaceRank,
       lon: el.lon,
       lat: el.lat,

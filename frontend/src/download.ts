@@ -36,7 +36,7 @@ export function yesterdayIso(): string {
 }
 
 export function messageOf(err: unknown): string {
-  if (err instanceof TypeError) return 'Sin conexión con el backend'
+  if (err instanceof TypeError) return 'No connection to the backend'
   return err instanceof Error ? err.message : String(err)
 }
 
@@ -94,8 +94,8 @@ export const fileUrl = (jobId: string, index: number) =>
 // Warning lines for every limit an estimate exceeds.
 export function warningsFor(e: EstimateResult): string[] {
   const out: string[] = []
-  if (e.total_bytes > DOWNLOAD_LIMITS.totalBytes) out.push(`Descarga mayor a ${DOWNLOAD_LIMITS.totalBytes / MB} MB`)
-  if (e.area_km2 > DOWNLOAD_LIMITS.areaKm2) out.push(`Área mayor a ${DOWNLOAD_LIMITS.areaKm2} km²`)
+  if (e.total_bytes > DOWNLOAD_LIMITS.totalBytes) out.push(`Download larger than ${DOWNLOAD_LIMITS.totalBytes / MB} MB`)
+  if (e.area_km2 > DOWNLOAD_LIMITS.areaKm2) out.push(`Area larger than ${DOWNLOAD_LIMITS.areaKm2} km²`)
   return out
 }
 

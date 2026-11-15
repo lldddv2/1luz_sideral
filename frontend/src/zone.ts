@@ -40,4 +40,4 @@ export function zoneGeometry(zone: UserZone): Polygon {
 }
 
 // Name shown for a point: its own, or its 1-based position in the list.
-export const zoneLabel = (zone: UserZone, index: number) => zone.name?.trim() || `Punto ${index + 1}`
+export const zoneLabel = (zone: UserZone, index: number) => zone.name?.trim() || `Point ${index + 1}`

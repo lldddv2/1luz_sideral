@@ -85,7 +85,7 @@ interface Props {
   flyToBbox: { bbox: BBox; key: number } | null // camera target; a new key flies there again
   overlays: Record<OverlayId, OverlayState>
   coverMask: CoverMaskImage | null // land-cover classes of the filter, over the active area
-  waterOverlay?: { url: string; coordinates: [LngLat, LngLat, LngLat, LngLat]; opacity: number; visible: boolean } | null // Resultado del modelo (external model raster)
+  waterOverlay?: { url: string; coordinates: [LngLat, LngLat, LngLat, LngLat]; opacity: number; visible: boolean } | null // Model result (external model raster)
   featureLabels: NaturalFeature[] // natural features labelled on the map (one marker each)
   activeFeature: NaturalFeature | null // last feature picked; its label offers "add as study area"
   onFeatureClick: (feature: NaturalFeature) => void
@@ -495,7 +495,7 @@ export default function MapView({
       return
     }
     if (!feature) {
-      setMenu({ x: e.point.x, y: e.point.y, id: '', name: 'Contorno de búsqueda', preview: true })
+      setMenu({ x: e.point.x, y: e.point.y, id: '', name: 'Search outline', preview: true })
       return
     }
     setMenu({ x: e.point.x, y: e.point.y, id: feature.properties.id, name: feature.properties.name })
@@ -954,7 +954,7 @@ export default function MapView({
                 <button
                   type="button"
                   className="feature-label-main"
-                  title={`${f.category_name}: ir a ${f.name}`}
+                  title={`${f.category_name}: go to ${f.name}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     onFeatureClick(f)
@@ -967,14 +967,14 @@ export default function MapView({
                   <button
                     type="button"
                     className="feature-label-add"
-                    title="Agregar como área de estudio"
-                    aria-label={`Agregar ${f.name} como área de estudio`}
+                    title="Add as study area"
+                    aria-label={`Add ${f.name} as study area`}
                     onClick={(e) => {
                       e.stopPropagation()
                       onFeatureAdd(f)
                     }}
                   >
-                    <Plus size={14} aria-hidden="true" /> Área
+                    <Plus size={14} aria-hidden="true" /> Area
                   </button>
                 )}
               </span>
@@ -1212,8 +1212,8 @@ export default function MapView({
             <button
               type="button"
               className="zone-menu-toggle"
-              title="Herramientas del punto de interés"
-              aria-label="Herramientas del punto de interés"
+              title="Point of interest tools"
+              aria-label="Point of interest tools"
               aria-haspopup="menu"
               aria-expanded={zoneMenuOpen}
               onClick={() => setZoneMenuOpen((open) => !open)}
@@ -1221,7 +1221,7 @@ export default function MapView({
               <EllipsisVertical size={14} aria-hidden="true" />
             </button>
             {zoneMenuOpen && (
-              <ul className="zone-menu-list" role="menu" aria-label="Herramientas del punto de interés">
+              <ul className="zone-menu-list" role="menu" aria-label="Point of interest tools">
                 <li>
                   <button
                     type="button"
@@ -1233,7 +1233,7 @@ export default function MapView({
                     }}
                   >
                     <Trash2 size={14} aria-hidden="true" />
-                    Eliminar punto de interés
+                    Delete point of interest
                   </button>
                 </li>
               </ul>
@@ -1309,7 +1309,7 @@ export default function MapView({
           ref={paletteRef}
           className="map-toolbar"
           role="toolbar"
-          aria-label="Herramientas de dibujo"
+          aria-label="Drawing tools"
           style={{ left: palette.x, top: palette.y }}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
@@ -1346,7 +1346,7 @@ export default function MapView({
             }}
           >
             <Trash2 size={16} />
-            {menu.preview ? 'Quitar contorno' : 'Eliminar'}
+            {menu.preview ? 'Remove outline' : 'Delete'}
           </button>
         </div>
       )}

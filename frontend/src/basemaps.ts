@@ -17,8 +17,8 @@ interface Basemap {
 export const BASEMAPS: Record<BasemapId, Basemap> = {
   gray: {
     id: 'gray',
-    label: 'Esri Gris claro',
-    hint: 'Neutro, deja resaltar las capas de radar',
+    label: 'Esri Light Gray',
+    hint: 'Neutral, lets radar layers stand out',
     labels: {
       tiles: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
       maxzoom: 16,
@@ -40,8 +40,8 @@ export const BASEMAPS: Record<BasemapId, Basemap> = {
   // EOX Sentinel-2 cloudless: one cloud-free annual mosaic (keyless), not tied to any date.
   s2cloudless: {
     id: 's2cloudless',
-    label: 'Óptico',
-    hint: 'Sentinel-2 2025, mosaico anual, no es de la fecha',
+    label: 'Optical',
+    hint: 'Sentinel-2 2025 annual mosaic, not from the selected date',
     labels: {
       tiles: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
       maxzoom: 19,

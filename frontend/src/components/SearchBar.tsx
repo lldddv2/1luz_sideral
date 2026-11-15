@@ -6,7 +6,7 @@ import type { RegionGeometry } from '../types'
 import { yesterdayIso } from '../download'
 import { formatPercent, matchCover } from '../landcover'
 import type { CoverSuggestions } from '../landcover'
-import { CATEGORY_COLOR, fetchFeatures, groupLabel } from '../features'
+import { CATEGORY_COLOR, categoryName, fetchFeatures, groupLabel } from '../features'
 import type { NaturalFeature } from '../features'
 
 interface Props {
@@ -172,7 +172,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
     } catch (err) {
       if (ac.signal.aborted) return
       setResults(null)
-      setError(`No se pudo buscar (${err instanceof Error ? err.message : String(err)}).`)
+      setError(`Search failed (${err instanceof Error ? err.message : String(err)}).`)
     } finally {
       if (!ac.signal.aborted) setLoading(false)
     }
@@ -213,20 +213,20 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
           ref={input}
           className="search-input"
           type="text"
-          placeholder="Buscar lugar, humedales, glaciares, desiertos…"
-          aria-label="Buscar lugar o cobertura"
+          placeholder="Search places, wetlands, glaciers, deserts…"
+          aria-label="Search place or land cover"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setOpen(true)}
         />
         {query ? (
-          <button type="button" className="search-clear" aria-label="Limpiar búsqueda" onClick={clear}>
+          <button type="button" className="search-clear" aria-label="Clear search" onClick={clear}>
             <X size={15} />
           </button>
         ) : (
           <kbd className="search-kbd">Ctrl K</kbd>
         )}
-        <button type="submit" className="search-submit" aria-label="Buscar" disabled={loading || !query.trim()}>
+        <button type="submit" className="search-submit" aria-label="Search" disabled={loading || !query.trim()}>
           <Search size={15} />
         </button>
       </form>
@@ -235,7 +235,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
         <input
           className="search-date"
           type="date"
-          aria-label="Fecha inicial"
+          aria-label="Start date"
           aria-invalid={!datesOk}
           max={startMax}
           value={start}
@@ -245,7 +245,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
         <input
           className="search-date"
           type="date"
-          aria-label="Fecha final"
+          aria-label="End date"
           aria-invalid={!datesOk}
           min={start || undefined}
           max={latest}
@@ -256,14 +256,14 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
       </div>
       {listOpen && (
         <ul className="search-results">
-          {showNatural && <li className="search-group">{groupLabel(natural)} ({scoped ? 'en el área' : 'mundo'})</li>}
-          {naturalEmpty && <li className="search-status">Ningún lugar natural en el área seleccionada.</li>}
+          {showNatural && <li className="search-group">{groupLabel(natural)} ({scoped ? 'in area' : 'worldwide'})</li>}
+          {naturalEmpty && <li className="search-status">No natural places in the selected area.</li>}
           {showNatural && natural.length > 1 && (
             <li className="search-row">
               <button
                 type="button"
                 className="search-row-main"
-                title="Mostrar una etiqueta por lugar en el mapa"
+                title="Show a label per place on the map"
                 onClick={() => {
                   onShowFeatures(natural)
                   setOpen(false)
@@ -272,7 +272,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
                 <Tags size={16} aria-hidden="true" />
                 <span className="search-text">
                   <span className="search-name">
-                    Mostrar {natural.length} {groupLabel(natural).toLowerCase()} en el mapa
+                    Show {natural.length} {groupLabel(natural).toLowerCase()} on map
                   </span>
                 </span>
               </button>
@@ -284,7 +284,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
                 <button
                   type="button"
                   className="search-row-main"
-                  title={`Ir a ${f.name}`}
+                  title={`Go to ${f.name}`}
                   onClick={() => {
                     onShowFeatures([f])
                     onPickFeature(f)
@@ -294,14 +294,14 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
                   <Mountain size={16} color={CATEGORY_COLOR[f.category]} aria-hidden="true" />
                   <span className="search-text">
                     <span className="search-name">{f.name}</span>
-                    <span className="search-type">{f.category_name}</span>
+                    <span className="search-type">{categoryName(f)}</span>
                   </span>
                 </button>
                 <button
                   type="button"
                   className="search-add"
-                  title="Agregar como área de estudio"
-                  aria-label={`Agregar ${f.name} como área de estudio`}
+                  title="Add as study area"
+                  aria-label={`Add ${f.name} as study area`}
                   onClick={() => {
                     onAddFeature(f)
                     setOpen(false)
@@ -313,7 +313,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
             ))}
           {showCover && (
             <li className={`search-group${area ? '' : ' is-disabled'}`}>
-              {area ? `Coberturas en ${area.name}` : 'Coberturas'}
+              {area ? `Land cover in ${area.name}` : 'Land cover'}
             </li>
           )}
           {showCover && classesError && <li className="search-status search-error">Error: {classesError}</li>}
@@ -330,7 +330,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
                     type="button"
                     className="search-row-main"
                     aria-pressed={on}
-                    title={on ? `Quitar ${cls.name} del filtro` : `Filtrar el mapa por ${cls.name}`}
+                    title={on ? `Remove ${cls.name_en || cls.name} from filter` : `Filter map by ${cls.name_en || cls.name}`}
                     onClick={() => {
                       onPickCover(cls.key)
                       setQuery('')
@@ -339,7 +339,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
                   >
                     <Circle size={16} fill={cls.color} stroke={cls.color} aria-hidden="true" />
                     <span className="search-text">
-                      <span className="search-name">{cls.name}</span>
+                      <span className="search-name">{cls.name_en || cls.name}</span>
                     </span>
                     {percent !== undefined && <span className="cover-percent">{formatPercent(percent)}</span>}
                     {percent === undefined && entry?.status === 'loading' && (
@@ -350,12 +350,12 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
               )
             })}
           {(loading || error || results) && (
-            <li className="search-group">Lugares ({scoped ? 'en el área' : 'mundo'})</li>
+            <li className="search-group">Places ({scoped ? 'in area' : 'worldwide'})</li>
           )}
-          {loading && <li className="search-status">Buscando…</li>}
+          {loading && <li className="search-status">Searching…</li>}
           {!loading && error && <li className="search-status search-error">{error}</li>}
-          {placesEmpty && <li className="search-status">Ningún lugar en el área seleccionada.</li>}
-          {!loading && !scoped && results?.length === 0 && <li className="search-status">Sin resultados.</li>}
+          {placesEmpty && <li className="search-status">No places in the selected area.</li>}
+          {!loading && !scoped && results?.length === 0 && <li className="search-status">No results.</li>}
           {!loading &&
             results?.map((r) => (
               <li key={r.id} className={`search-row${activeId === r.id ? ' is-active' : ''}`}>
@@ -379,8 +379,8 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
                   <button
                     type="button"
                     className="search-add"
-                    title="Agregar como área de estudio"
-                    aria-label={`Agregar ${r.name} como área de estudio`}
+                    title="Add as study area"
+                    aria-label={`Add ${r.name} as study area`}
                     onClick={() => {
                       onAdd(r)
                       setOpen(false)
@@ -397,7 +397,7 @@ export default function SearchBar({ start, end, onDatesChange, onClearPreview, o
               <button type="button" className="search-row-main" onClick={() => setWorldwide(true)}>
                 <Search size={16} aria-hidden="true" />
                 <span className="search-text">
-                  <span className="search-name">Buscar en todo el mundo</span>
+                  <span className="search-name">Search worldwide</span>
                 </span>
               </button>
             </li>

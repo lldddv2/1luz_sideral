@@ -1,12 +1,12 @@
 import type { LngLat, RegionGeometry } from './types'
 
-// ESA WorldCover 2021 land cover, served by /api/landcover. The classes come from the backend; the Spanish
-// synonyms below only map words typed in the search bar to class keys.
+// ESA WorldCover 2021 land cover, served by /api/landcover. The classes come from the backend; the English
+// and Spanish synonyms below only map words typed in the search bar to class keys.
 
 export interface LandcoverClass {
   code: number
   key: string // stable id, e.g. wetland; the backend filters by it
-  name: string // Spanish label
+  name: string // Spanish label; the UI shows name_en
   name_en: string // ESA legend label
   color: string // #rrggbb
 }
@@ -54,20 +54,20 @@ export interface CoverSuggestions {
   area: { name: string; stats: StatsEntry | undefined } | null // null when no area is active
 }
 
-// Spanish words per class key, as typed in the search bar. Plural forms are listed because a prefix
+// English and Spanish words per class key, as typed in the search bar. Plural forms are listed because a prefix
 // match needs the full word once the user has typed it.
 export const SYNONYMS: Record<string, string[]> = {
-  wetland: ['humedal', 'humedales', 'pantano', 'ciénaga', 'turbera', 'marisma'],
-  tree: ['bosque', 'bosques', 'selva', 'árboles', 'forestal'],
-  snow_ice: ['glaciar', 'glaciares', 'hielo', 'nieve'],
-  water: ['agua', 'lago', 'laguna', 'río', 'embalse'],
-  cropland: ['cultivo', 'cultivos', 'agrícola', 'agricultura'],
-  built_up: ['urbano', 'ciudad', 'construido'],
-  mangrove: ['manglar', 'manglares'],
-  grassland: ['pastizal', 'pradera', 'pasto'],
-  shrubland: ['matorral', 'arbustos'],
-  bare: ['desierto', 'suelo desnudo', 'árido'],
-  moss: ['musgo', 'liquen', 'tundra'],
+  wetland: ['wetland', 'wetlands', 'swamp', 'marsh', 'bog', 'peatland', 'humedal', 'humedales', 'pantano', 'ciénaga', 'turbera', 'marisma'],
+  tree: ['forest', 'forests', 'tree', 'trees', 'jungle', 'woodland', 'bosque', 'bosques', 'selva', 'árboles', 'forestal'],
+  snow_ice: ['glacier', 'glaciers', 'ice', 'snow', 'glaciar', 'glaciares', 'hielo', 'nieve'],
+  water: ['water', 'lake', 'lagoon', 'river', 'reservoir', 'agua', 'lago', 'laguna', 'río', 'embalse'],
+  cropland: ['cropland', 'crop', 'crops', 'farmland', 'agriculture', 'cultivo', 'cultivos', 'agrícola', 'agricultura'],
+  built_up: ['urban', 'city', 'built-up', 'built up', 'urbano', 'ciudad', 'construido'],
+  mangrove: ['mangrove', 'mangroves', 'manglar', 'manglares'],
+  grassland: ['grassland', 'grass', 'meadow', 'prairie', 'pastizal', 'pradera', 'pasto'],
+  shrubland: ['shrubland', 'shrub', 'shrubs', 'scrub', 'matorral', 'arbustos'],
+  bare: ['desert', 'bare', 'bare soil', 'arid', 'desierto', 'suelo desnudo', 'árido'],
+  moss: ['moss', 'lichen', 'tundra', 'musgo', 'liquen'],
 }
 
 // Lowercase without accents: 'Ciénaga' becomes 'cienaga'.
@@ -88,15 +88,15 @@ export function matchCover(query: string): string[] {
     .map(([key]) => key)
 }
 
-const PERCENT = new Intl.NumberFormat('es', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const PERCENT = new Intl.NumberFormat('en', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-// Spanish decimal comma, e.g. 12,4 %.
-export const formatPercent = (value: number) => (value > 0 && value < 0.1 ? '< 0,1 %' : `${PERCENT.format(value)} %`)
+// Decimal point, e.g. 12.4 %.
+export const formatPercent = (value: number) => (value > 0 && value < 0.1 ? '< 0.1 %' : `${PERCENT.format(value)} %`)
 
-// The backend detail is English and only the status matters here, so errors are worded in Spanish by status.
+// The backend detail is English and only the status matters here, so errors are worded by status.
 const ERROR_TEXT: Record<number, string> = {
-  422: 'Área no válida o demasiado grande.',
-  502: 'No se pudo leer la cobertura WorldCover.',
+  422: 'Invalid or too large area.',
+  502: 'Could not read WorldCover land cover.',
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
