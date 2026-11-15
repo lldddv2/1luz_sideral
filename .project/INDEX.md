@@ -19,3 +19,4 @@
 - [離模客](model-service.md) — model_service/water_unet 獨程 U-Net 客、跑法、測
 - [外模前端](model-ui.md) — 節「Modelo propio」：token、SSE、工態、命令片
 - [部署](deploy.md) — Lightsail 容器 luzsi、ECR、deploy_lightsail.sh、URL、秘於 SSM
+- [文檔](../docs/index.md) — Sphinx RTD 文檔於 docs/，建：sphinx-build -W -b html docs docs/_build/html

@@ -1,5 +1,11 @@
 # 錄（倒序）
 - 2026-11-15 claude: README 填全，含 readthedocs 鏈。用戶請。
+- 2026-11-15 claude: 部署 Lightsail（鏡 20261115172757）：Water model 鈕＋水層移頂。/api/health 200，新 bundle 含 Water model。
+- 2026-11-15 claude: 水 U-Net 疊移 MapView 中 aoi-polygons 後、無 beforeId，使居 NISAR/DSWx 疊（皆插 aoi-region-fill 前）之上。本機 New Orleans 點 Water model，藍疊可見；tsc、build 過。修前不可見未親證（疑層序）。
+- 2026-11-15 claude: 節 Your model 頂加「Water model」鈕（Droplets），呼 useWater.runBuiltin 即 POST /api/water，共 state 與 overlay。舊 Water(U-Net) 節前已除，故 handler 新置 water.ts。
+- 2026-11-15 claude: 連 water_unet 客至 Lightsail（用戶 token），connected。backend/.venv 無 torch，另建 scratchpad venv（torch CPU、numpy、rasterio、requests）。
+- 2026-11-15 claude: 察 SSM EARTHDATA 秘：二參數皆等 .env、皆不等誤串，無需覆；重部署 Lightsail（鏡 20261115170105）ACTIVE，/api/health 200，POST /api/water 200（HH，Earthdata 通）。因：疑 SSM 秘誤，實不誤，前部署舊鏡/舊 env 故。
+- 2026-11-15 claude: 文檔移 Sphinx（docs/，MyST、sphinx_rtd_theme、autodoc、.readthedocs.yaml），英文，32 頁；pydantic 不 mock（SecretStr | None 敗）。sphinx-build -W 零警。因：用戶令 RTD 式。
 - 2026-11-15 claude: 容器 NISAR 502 拒憑修：啟時 ensure_netrc 由 EARTHDATA env 寫臨時 netrc 設 NETRC（requests 唯讀 netrc）。新測四過；全測 130 過，test_dem 二敗舊。因：Lightsail 唯傳 env。
 - 2026-11-15 claude: 前端全譯英（四子代理並行分檔），html lang=en，地覆示 name_en，搜同義詞西英並存。tsc、build 過；未瀏覽器驗。後端 regions type 與 water 錯訊仍西，未觸（範圍外）。因：用戶令。
 - 2026-11-15 claude: 部署 AWS Lightsail 容器 luzsi（micro），一鏡像前後同源，ECR 拉，Earthdata 秘自 SSM 入 env。因：App Runner 帳戶不許（SubscriptionRequired），勿 S3。

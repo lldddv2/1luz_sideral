@@ -8,3 +8,4 @@
 - 鈕「Ejecutar modelo」未連禁。結果：Listo: label、Escena、ModelLegend（漸條 viridis min–max+units，或 classes 色塊）、stats 一行、Mostrar resultado、透明度滑桿。
 - 碼塊 `.model-code`：複製鈕 `.model-copy` 絕對置右上；`.tall` max-height 320 可 resize。樣在 styles.css 末 `.model-*`。
 - 疑：漸條色固 viridis，若後端色表異則需對。POST 返 job_id 前 queued 事或失（無害）。
+- 節頂「Water model」鈕（Droplets）：`runBuiltin(bbox)` POST /api/water，共 state（busy/error/ready）與 overlay；無區或忙則禁，title 示由。
