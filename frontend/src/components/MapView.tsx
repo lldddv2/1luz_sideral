@@ -70,6 +70,9 @@ interface HandleProps {
   key: string
 }
 
+// Shape fills: editable shapes and administrative regions live in separate sources.
+const isAoiFill = (layerId: string) => layerId === 'aoi-fill' || layerId === 'aoi-region-fill'
+
 interface ContextMenu {
   x: number
   y: number
@@ -182,7 +185,7 @@ export default function MapView({
 
   const handleContextMenu = (e: MapLayerMouseEvent) => {
     e.originalEvent.preventDefault()
-    const feature = e.features?.find((f) => f.layer.id === 'aoi-fill')
+    const feature = e.features?.find((f) => isAoiFill(f.layer.id))
     if (drawing || !feature) {
       setMenu(null)
       return
@@ -198,6 +201,17 @@ export default function MapView({
     setHoverRegion(null)
     onHoverRegion(null)
   }, [mode]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Region hover uses feature-state: only the hovered feature is repainted, not the whole layer.
+  useEffect(() => {
+    const map = mapRef.current?.getMap()
+    if (!map || !hoverRegion) return
+    const target = { source: hoverRegion.startsWith('s:') ? 'region-sub' : 'region-countries', id: hoverRegion }
+    if (map.getSource(target.source)) map.setFeatureState(target, { hover: true })
+    return () => {
+      if (map.getSource(target.source)) map.setFeatureState(target, { hover: false })
+    }
+  }, [hoverRegion])
 
   // Fly to a search result. Keyed by `key`, so the same result can be flown to again.
   const flyKey = flyToBbox?.key
@@ -317,7 +331,7 @@ export default function MapView({
     }
     const top = e.features?.[0]
     const handle = top?.layer.id === 'edit-handles' ? (top.properties as HandleProps) : null
-    const fill = e.features?.find((f) => f.layer.id === 'aoi-fill')
+    const fill = e.features?.find((f) => isAoiFill(f.layer.id))
     const overSelected = !!fill && fill.properties.id === selectedId
 
     // Disable map panning over editable parts, so pressing there edits the shape, not the map.
@@ -359,16 +373,25 @@ export default function MapView({
     }
   }, [selected, drag])
 
-  const polygonsGeo = useMemo<FeatureCollection>(
-    () => ({
-      type: 'FeatureCollection',
-      features: polygons.map((p) => ({
-        type: 'Feature',
-        properties: { id: p.id, name: p.name, kind: p.kind },
-        geometry: shapeGeometry(p),
-      })),
-    }),
-    [polygons],
+  const toCollection = (list: AoiPolygon[]): FeatureCollection => ({
+    type: 'FeatureCollection',
+    features: list.map((p) => ({
+      type: 'Feature',
+      properties: { id: p.id, name: p.name, kind: p.kind },
+      geometry: shapeGeometry(p),
+    })),
+  })
+
+  // Editable shapes change on every drag frame; administrative regions never change after being added.
+  // Keeping them in separate sources means a drag re-tiles only the small shapes, not large boundaries.
+  const polygonsGeo = useMemo(() => toCollection(polygons.filter((p) => p.kind !== 'region')), [polygons])
+  const regionKey = polygons
+    .filter((p) => p.kind === 'region')
+    .map((p) => p.id)
+    .join('|')
+  const regionsGeo = useMemo(
+    () => toCollection(polygons.filter((p) => p.kind === 'region')),
+    [regionKey], // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const previewGeo = useMemo<FeatureCollection>(
@@ -460,46 +483,46 @@ export default function MapView({
             ]
           : drawing
             ? []
-            : ['edit-handles', 'aoi-fill']
+            : ['edit-handles', 'aoi-fill', 'aoi-region-fill']
       }
     >
       {/* OSM license requires attribution; kept bottom-left so the right corner is free for InfoBox. */}
       <AttributionControl position="bottom-left" compact />
       {/* Region picker layers; beforeId keeps them under the AOI shapes even when mounted later. */}
       {mode === 'region' && regionCountries && (
-        <Source id="region-countries" type="geojson" data={regionCountries}>
+        <Source id="region-countries" type="geojson" data={regionCountries} promoteId="rid">
           <Layer
             id="region-countries-fill"
             type="fill"
-            beforeId="aoi-fill"
+            beforeId="aoi-region-fill"
             paint={{
               'fill-color': '#7c3aed',
-              'fill-opacity': ['case', ['==', ['get', 'rid'], hoverRegion ?? ''], 0.25, 0.03],
+              'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.25, 0.03],
             }}
           />
           <Layer
             id="region-countries-line"
             type="line"
-            beforeId="aoi-fill"
+            beforeId="aoi-region-fill"
             paint={{ 'line-color': '#7c3aed', 'line-width': 1 }}
           />
         </Source>
       )}
       {mode === 'region' && regionSubdivisions && (
-        <Source id="region-sub" type="geojson" data={regionSubdivisions}>
+        <Source id="region-sub" type="geojson" data={regionSubdivisions} promoteId="rid">
           <Layer
             id="region-sub-fill"
             type="fill"
-            beforeId="aoi-fill"
+            beforeId="aoi-region-fill"
             paint={{
               'fill-color': '#7c3aed',
-              'fill-opacity': ['case', ['==', ['get', 'rid'], hoverRegion ?? ''], 0.25, 0.03],
+              'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.25, 0.03],
             }}
           />
           <Layer
             id="region-sub-line"
             type="line"
-            beforeId="aoi-fill"
+            beforeId="aoi-region-fill"
             paint={{ 'line-color': '#7c3aed', 'line-width': 0.8 }}
           />
         </Source>
@@ -512,6 +535,10 @@ export default function MapView({
           type="line"
           paint={{ 'line-color': '#0ea5e9', 'line-width': 2, 'line-dasharray': [2, 2] }}
         />
+      </Source>
+      <Source id="aoi-regions" type="geojson" data={regionsGeo}>
+        <Layer id="aoi-region-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.25 }} />
+        <Layer id="aoi-region-outline" type="line" paint={{ 'line-color': '#ff7a00', 'line-width': 2 }} />
       </Source>
       <Source id="aoi-polygons" type="geojson" data={polygonsGeo}>
         <Layer id="aoi-fill" type="fill" paint={{ 'fill-color': '#ff7a00', 'fill-opacity': 0.25 }} />

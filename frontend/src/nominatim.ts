@@ -30,7 +30,8 @@ interface NominatimItem {
 export async function searchPlaces(q: string, signal?: AbortSignal): Promise<PlaceResult[]> {
   const url =
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}` +
-    '&format=jsonv2&polygon_geojson=1&limit=8&accept-language=es'
+    // polygon_threshold simplifies outlines server-side (degrees, ~500 m): Colombia drops from 1.6 MB to 45 KB.
+    '&format=jsonv2&polygon_geojson=1&polygon_threshold=0.005&limit=8&accept-language=es'
   const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const items = (await res.json()) as NominatimItem[]
