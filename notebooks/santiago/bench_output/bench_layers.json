@@ -1,0 +1,94 @@
+{
+ "GIBS MODIS Terra truecolor (diario)": {
+  "status": 200,
+  "bytes": 6283,
+  "type": "image/jpeg",
+  "cors": "*",
+  "ms_median": 4070.0,
+  "z": 9
+ },
+ "GIBS VIIRS NOAA20 truecolor (diario)": {
+  "status": 200,
+  "bytes": 10586,
+  "type": "image/jpeg",
+  "cors": "*",
+  "ms_median": 572.0,
+  "z": 9
+ },
+ "GIBS HLS Sentinel-2 30m": {
+  "status": 200,
+  "bytes": 334,
+  "type": "image/png",
+  "cors": "*",
+  "ms_median": 535.0,
+  "z": 12
+ },
+ "EOX Sentinel-2 cloudless 2016": {
+  "status": 200,
+  "bytes": 17555,
+  "type": "image/jpeg",
+  "cors": "http://localhost:5173",
+  "ms_median": 969.0,
+  "z": 13
+ },
+ "Esri World Imagery": {
+  "status": 200,
+  "bytes": 18950,
+  "type": "image/jpeg",
+  "cors": "*",
+  "ms_median": 323.0,
+  "z": 13
+ },
+ "JRC Global Surface Water occurrence": {
+  "status": 200,
+  "bytes": 2252,
+  "type": "image/png",
+  "cors": "*",
+  "ms_median": 338.0,
+  "z": 12
+ },
+ "Hansen forest loss v1.11": {
+  "status": 200,
+  "bytes": 340,
+  "type": "image/png",
+  "cors": "*",
+  "ms_median": 371.0,
+  "z": 12
+ },
+ "ESA WorldCover 2021": {
+  "error": "ConnectionError",
+  "ms_median": null,
+  "z": 12
+ },
+ "GIBS VIIRS fire anomalies": {
+  "status": 400,
+  "bytes": 431,
+  "type": "text/xml",
+  "cors": "*",
+  "ms_median": 522.0,
+  "z": 9
+ },
+ "Esri World Hillshade": {
+  "status": 200,
+  "bytes": 7314,
+  "type": "image/jpeg",
+  "cors": "*",
+  "ms_median": 310.0,
+  "z": 12
+ },
+ "AWS Terrarium DEM (raster-dem)": {
+  "status": 200,
+  "bytes": 102449,
+  "type": "image/png",
+  "cors": "*",
+  "ms_median": 652.0,
+  "z": 12
+ },
+ "USGS sismos 30 d\u00edas (GeoJSON)": {
+  "status": 200,
+  "bytes": 7029261,
+  "features": 9917,
+  "cors": "*",
+  "ms": 924
+ }
+}
