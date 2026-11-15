@@ -281,6 +281,7 @@ export default function SearchBar({ start, end, onDatesChange, onPreview, onAdd,
                   onClick={() => {
                     onShowFeatures([f])
                     onPickFeature(f)
+                    setOpen(false)
                   }}
                 >
                   <Mountain size={16} color={CATEGORY_COLOR[f.category]} aria-hidden="true" />
@@ -358,6 +359,7 @@ export default function SearchBar({ start, end, onDatesChange, onPreview, onAdd,
                   onClick={() => {
                     setActiveId(r.id)
                     onPreview(r)
+                    setOpen(false)
                   }}
                 >
                   <MapPin size={16} />
