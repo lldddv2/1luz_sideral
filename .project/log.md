@@ -1,5 +1,34 @@
 # 錄（倒序）
 
+- 2026-11-15 claude: 去代理聊天；諸改入 main。因用戶不整合代理。
+- 2026-11-15 claude: 再併 origin/main（5 commit：tile 預載與快取、NISAR 升降軌分示、軌框勾選、GIBS 壞 tile 重試）入 backend；ff c20ea0a 至 6f8203b，本地改經 stash 重放。衝突唯 Sidebar.tsx import，兩存（NISAR_ASC/DESC_COLOR 並 zone 函）。MapView 本地 prop `nisarFootprints` 蔽 main 同名函，以 `fetchNisarFootprints` 別名 import 解。因用戶令再同步。build 過，pytest 121 過。備份 refs/backup/pre-sync-2。
+- 2026-11-15 claude: 地名搜限 study areas：/api/regions 加可選 viewbox（bounded=1），前端以區併 bbox 搜後依區形濾；空則一鈕全球，與自然地物共用。因用戶求搜限選區。build 過；pytest regions 4 過；Nominatim viewbox 實返 Antioquia 內者。瀏覽器未驗。
+- 2026-11-15 claude: 地名限 study area：自然地物 label 改以真形濾（inShapes）；有區則隱 Esri raster labels，代以 Overpass 區內 place 名（HTML Marker，依級 minzoom，上限 200）。因 raster 不可逐名濾裁。build 過；Overpass Antioquia bbox 返 205 點；瀏覽器未驗。
+- 2026-11-15 claude: 重定語義：下載用選中興趣點之方，study area 唯限搜。Descarga 示目標名與邊長，無選中則禁；方出 study area 則黃警。因用戶令。build 過；/api/estimate 收方 200；瀏覽器未驗。
+- 2026-11-15 claude: 興趣點由單改多：各點自有心、範圍、名、註，各自 pin/方換示；Sidebar「Puntos de interés」列表，選中者展編輯；角把手唯選中者。因用戶求多點。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 興趣點遠縮化為 pin：方屏上邊 <36 px 示 pin（可拖、點則縮至方），>44 px 示方與把手（滯回免閃）。因用戶求大縮放時見標記。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 興趣區改為單點加方形範圍（心可拖移，角可拖改範圍，邊 1–100 km，預設 10）；刪多區列表與 ZoneForm；Sidebar 段改「Punto de interés」。因用戶改令。build 過；瀏覽器未驗。
+- 2026-11-15 claude: 加用戶興趣區（UserZone 矩形，拖拽成框，名必註選，列/聚焦/改名/刪；僅標記，不作 AOI、不存、不導出）。Sidebar 新段「Zonas de interés」；MapView 層 user-zones 置 aoi 上、labels 下。因用戶求標記。build 過；瀏覽器驗用戶拒，未驗。
+- 2026-11-15 claude: 再併 origin/main（水層 overlays＋layers.ts、底圖 labels、POI 時間軸）入 backend；fast-forward 09a79b2 至 c20ea0a，本地改經 stash 重放。衝突 App.tsx/MapView.tsx/Sidebar.tsx 皆加性，兩存（overlays 與 landcover/nisar/features 並）；預設底圖取 main 之 gray；本地 color 底圖補 labels（World_Boundaries_and_Places, withOverlaysOnly）以合 main 新型。因用戶令以 main 為先。build 過；瀏覽器未驗。備份 refs/backup/pre-sync。
+- 2026-11-15 claude: 加 /api/regions 行政區搜（Nominatim 代理、1 req/s、快取、簡化）與搜欄「Regiones」去抖段；點飛往畫輪廓、+ 設 AOI。因用戶求搜國／省／市。pytest 118、tsc、build 過；實網 Antioquia/Chocó/Perú 得多邊形（4–8 KB）；瀏覽器未驗。
+- 2026-11-15 claude: 增 AWS 管線：EC2 一次機（t3.small，free tier 拒 t3.medium）於 us-west-2 以 s3credentials 暫憑、s3fs+h5py 範圍讀 GCOV freqA HH/HV，裁 Lake Pontchartrain AOI，COG 存 s3://luz-sideral-nisar-9828/nisar/gcov/。因用戶令「haz que se descarguen en aws」。4 PR granule（10-23 ×2、10-31、11-04）皆 HH+HV，處理 11.5 s，機總約 4 分，產 16 MB；EC2 已 terminate。後端 source=nisar 讀 S3 index 與 /vsis3/ COG；測 109 過；實試 query 5.9 s（冷），png 128 首 8.8 s 後 1.3 s。awscli 本機呼 secretsmanager 掛，改 boto3。EDL 認經 netrc（requests 跨域轉向棄 auth）。見 aws-pipeline.md。
+- 2026-11-15 claude: 自然地物加簡化多邊形（features.json 177 KB、8188 點）；AOI 濾改 POST /api/features/search 以 shapely 相交；GET /api/features/{id} 回輪廓；選者繪多邊形、+Área 以多邊形為 region。因 bbox 過大、下載重。pytest 116、tsc、build 過；瀏覽器未驗。
+- 2026-11-15 claude: 自然地物搜限於 AOI（後端 bbox 參、前傳 AOI bbox、多 labels 隨濾、無果可越至全球）。因用戶求有區則唯區內。pytest、tsc、build 過；瀏覽器未驗（用戶拒）。
+- 2026-11-15 claude: 併 origin/main（POI＋PoiPanel）入 backend 支；fast-forward 至 09a79b2，無 merge commit。衝突 App.tsx/MapView.tsx/styles.css 兩存、CLAUDE.md 取本地；MapView setHovered 改 onHover；POI 板開時 .acq-bar 上移避掩。因整合二方前端。tsc、build、pytest 113 過；瀏覽器驗用戶拒。
+- 2026-11-15 claude: 增全球自然地物目錄（NE 10m＋手補，211 條）、GET /api/features、搜欄類/名搜、圖上 label、點飛往、+Área 設 AOI；地覆列降為有區時次選。因用戶厭覆蓋率法，求全球名地物。測 113 過（含 features 4），tsc、build 過，瀏覽器驗 volcanes 27 label、飛往、設 AOI 成。
+- 2026-11-15 claude: landcover MAX_AREA_KM2 50 000→2 000 000（唯防呆），前 422 文改「Área no válida o demasiado grande.」。因大林區誤報；格本降解至 2048 px，無須另作單 label。測 109 過，tsc 過；Darién 2.5°×2.6° 實試 200，10 s，160 m。
+- 2026-11-15 claude: 增 /api/scenes（query 依區與日尋景、data 裁區定尺寸出 png/geotiff/json）。因前端需依區時取影像。無伺服態，data 直受 geometry。測 104 過；實試 query 0.04 s，png 128x128 0.08 s 9.6 KB，geotiff 512x615 0.07 s 674 KB。
+- 2026-11-15 claude: 合 origin/main 前端與本地 landcover/passes/timeline。因用戶請共存。
+- 2026-11-15 claude: 增 /api/samples（列、元、檔、preview.png、上傳），目 backend/data/samples，時取序旁檔→tag→檔名→none。因用戶欲置測試 GeoTIFF 於圖與時序。preview 投 3857 合 MapLibre。測 96 過；uvicorn 實試諸端皆成。
+- 2026-11-14 claude: 增 Copernicus DEM 90m API（/api/dem：metadata、file、crop）。因用戶求自 AWS 公開桶交 DEM。/vsicurl/ 讀頭；file 以 httpx 流代；crop 限單瓦，越則 422；瓦缺 404。實網：metadata 7.1 s、file 4.6 MB 7.6 s、crop 0.3° 5.3 s。
+- 2026-11-14 claude: 試 AWS 公開桶：Copernicus DEM 90m COG（N19 W100，含墨西哥城）免簽 curl，4.4 MB 費 11.76 s，入 notebooks/lucho/。另取 rasterio RGB.byte.tif 為輕樣。子代理改用 opus low，勿 haiku。因：用戶求速。NISAR 本身在 ASF 需 Earthdata，非 AWS 公開。
+- 2026-11-14 claude: 地覆濾前端成：搜欄合一、chip、mask 層、Sidebar「Coberturas」節。因：依 landcover-ui.md。搜欄寬 380→440 px，免 placeholder 截。遺：編輯區幾何不刷 stats、mask；422、502 態未測。
+- 2026-11-14 claude: 增 WorldCover 地覆 API（/api/landcover：classes、stats、mask）。因前端濾區需地覆數。mask 用 JSON base64，免 CORS expose；瓦缺（404）計 nodata。
+- 2026-11-14 claude: 過境列移圖下緣為單行條（AcquisitionTimeline，去 InfoBox 之 PassInfo）。軸域取 Descarga 起訖；越已搜窗則以該窗重搜，快取鍵含窗。因：用戶令。條抬至 bottom 42px，避展開之 OSM 屬名（寬約 415 px）。遺：上限 100 恐截，Boulder 與哥倫比亞區皆恰 100；錯態未測。
+
+- 2026-11-14 claude: 去圖上過境 swath，唯留 timeline。用戶求。
+- 2026-11-14 claude: 過境列改時間軸。行為 track+方向，點為過境；懸點示 UTC 日時並獨亮其 swath。因：用戶嫌列難讀。InfoBox 增 wide（寬 560、不逾屏）。遺：error 態未測；同刻異幀點重疊；summary 計數 100 等於 max_results 上限，恐截斷，未查。
+- 2026-11-14 claude: 區建即背景搜過境（max_results 100，快取以區 id，刪區去之）；懸區示 swath 與 UTC 日期列。因：用戶令。search 增 max_results（默 100、上限 200），返 track、direction、frame。discover 上限另置 max_discover_results=200，免改 max_products（抽取限）。Descarga 仍搜 10。swath 唯同 track+frame 之最新品填，餘唯框，免疊填全遮底圖。懸列可捲，離則去層。實測 Boulder 小矩：約 30 s 得 Track 019 Asc 32、Track 027 Desc 32。遺：改形不重請；error 態未測。
 - 2026-11-14 claude: 區域分源（aoi-regions），hover 用 feature-state，Nominatim 加 polygon_threshold=0.005。因：拖形時重鋪大界慢；國界 1.6 MB→45 KB。
 - 2026-11-14 claude: 圖上中鍵開具板（選 A：DOM 疊於點，零依）；右鍵仍刪，側欄具鈕存，Shift+T 為鍵代。因：中鍵 MapLibre 不用，右鍵已佔，無輪鼠須備。
 - 2026-11-14 claude: Descarga 節常現；無區示註（Selecciona o dibuja un área…）、鈕禁，有區同前。因：用戶（協調者）令。原僅有區現，今改。
