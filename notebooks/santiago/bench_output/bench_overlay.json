@@ -1,0 +1,141 @@
+{
+ "1.5km": {
+  "A": {
+   "src_px": [
+    149,
+    150
+   ],
+   "src_crs": "EPSG:32613",
+   "warp_ms": 9.0,
+   "out_px": [
+    149,
+    150
+   ],
+   "png": 30440,
+   "png_ms": 20.0,
+   "webp_lossless": 18906,
+   "webp_ll_ms": 43.8,
+   "webp_q80": 9096,
+   "webp_q80_ms": 4.4,
+   "no_warp_max_err_m": 0.04,
+   "pixel_m": 10.0
+  },
+  "B": {
+   "cog_ms": 21.2,
+   "fit_zoom": 15,
+   "tiles_initial": 9,
+   "bytes_initial": 38059,
+   "ms_initial": 57.6,
+   "tiles_3zooms": 85,
+   "bytes_3zooms": 175833,
+   "ms_3zooms": 541.1
+  },
+  "tif_bytes": 88280
+ },
+ "5km": {
+  "A": {
+   "src_px": [
+    498,
+    500
+   ],
+   "src_crs": "EPSG:32613",
+   "warp_ms": 12.7,
+   "out_px": [
+    499,
+    499
+   ],
+   "png": 313846,
+   "png_ms": 50.7,
+   "webp_lossless": 204484,
+   "webp_ll_ms": 78.0,
+   "webp_q80": 95168,
+   "webp_q80_ms": 45.7,
+   "no_warp_max_err_m": 0.41,
+   "pixel_m": 10.0
+  },
+  "B": {
+   "cog_ms": 75.3,
+   "fit_zoom": 14,
+   "tiles_initial": 10,
+   "bytes_initial": 271198,
+   "ms_initial": 107.3,
+   "tiles_3zooms": 169,
+   "bytes_3zooms": 1190805,
+   "ms_3zooms": 1119.3
+  },
+  "tif_bytes": 904722
+ },
+ "10km": {
+  "A": {
+   "src_px": [
+    996,
+    1000
+   ],
+   "src_crs": "EPSG:32613",
+   "warp_ms": 36.4,
+   "out_px": [
+    998,
+    999
+   ],
+   "png": 1242639,
+   "png_ms": 186.4,
+   "webp_lossless": 909528,
+   "webp_ll_ms": 321.1,
+   "webp_q80": 381320,
+   "webp_q80_ms": 183.2,
+   "no_warp_max_err_m": 1.65,
+   "pixel_m": 10.0
+  },
+  "B": {
+   "cog_ms": 336.5,
+   "fit_zoom": 13,
+   "tiles_initial": 14,
+   "bytes_initial": 449239,
+   "ms_initial": 196.8,
+   "tiles_3zooms": 195,
+   "bytes_3zooms": 3062112,
+   "ms_3zooms": 1621.6
+  },
+  "tif_bytes": 4789908
+ },
+ "20km": {
+  "A": {
+   "src_px": [
+    1993,
+    2004
+   ],
+   "src_crs": "EPSG:32613",
+   "warp_ms": 146.7,
+   "out_px": [
+    1998,
+    2003
+   ],
+   "png": 4937069,
+   "png_ms": 758.8,
+   "webp_lossless": 3663152,
+   "webp_ll_ms": 1817.3,
+   "webp_q80": 1507700,
+   "webp_q80_ms": 729.7,
+   "no_warp_max_err_m": 6.64,
+   "pixel_m": 10.0
+  },
+  "B": {
+   "cog_ms": 1423.3,
+   "fit_zoom": 12,
+   "tiles_initial": 12,
+   "bytes_initial": 473666,
+   "ms_initial": 271.0,
+   "tiles_3zooms": 186,
+   "bytes_3zooms": 6572637,
+   "ms_3zooms": 2642.5
+  },
+  "tif_bytes": 20378486
+ },
+ "series_6dates_10km": {
+  "A_webp_q80_total": 2287050,
+  "A_png_total": 7446753,
+  "A_warp_encode_ms_total": 1332.5,
+  "B_bytes_initial_per_date": 449239,
+  "B_bytes_initial_6dates": 2695434
+ }
+}

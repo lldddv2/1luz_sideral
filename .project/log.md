@@ -1,5 +1,7 @@
 # 錄（倒序）
 
+- 2026-11-14 claude: 區域分源（aoi-regions），hover 用 feature-state，Nominatim 加 polygon_threshold=0.005。因：拖形時重鋪大界慢；國界 1.6 MB→45 KB。
+- 2026-11-14 claude: 圖上中鍵開具板（選 A：DOM 疊於點，零依）；右鍵仍刪，側欄具鈕存，Shift+T 為鍵代。因：中鍵 MapLibre 不用，右鍵已佔，無輪鼠須備。
 - 2026-11-14 claude: Descarga 節常現；無區示註（Selecciona o dibuja un área…）、鈕禁，有區同前。因：用戶（協調者）令。原僅有區現，今改。
 - 2026-11-14 claude: 去估時全：後端 /api/estimate 之 estimated_seconds、其常數、測、assumptions 時句；前端 Tiempo 列與時閾。因：用戶（協調者）令。警閾唯 500 MB、2500 km²。「加 Descarga 節」條之時模句作廢。
 - 2026-11-14 claude: 加 Descarga 節（前端）、/api/estimate 之 estimated_seconds、GET /api/jobs/{id}/files/{i}（Job 增 files）。因：用戶求。時模：143 s + 127 s × 品（bench_extract.json 之 6 品×2 變 906.8 s；單品 4–5 分，用戶言），不計變數與面積。搜前估單品，搜後估搜得品數。區取列末（無選取態）。實測 Boulder 小矩：搜、job（約 4.5 分）、檔連結、404 皆通；空窗示「Sin datos」；大區警現。見缺：harmony_service 輸出名不含 request_key，同品同變異區重用舊檔（job cfeb2592…：reused=true，80×105，非所選區）；masked 亦由舊檔生。未 commit。
