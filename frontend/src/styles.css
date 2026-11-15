@@ -1425,8 +1425,8 @@ select {
 .poi-tl-plot { position: relative; height: 22px; margin: 0 7px; cursor: pointer; user-select: none; touch-action: none; }
 .poi-tl-bar { position: absolute; left: 0; right: 0; top: 50%; height: 6px; transform: translateY(-50%); border-radius: 3px; background: var(--border); }
 .poi-tl-event { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; border-radius: 2px; box-shadow: 0 0 0 1px var(--surface); }
-.poi-tl-dot { position: absolute; top: 50%; width: 8px; height: 8px; border: 1.5px solid var(--text-dim); border-radius: 50%; background: var(--surface); transform: translate(-50%, -50%); pointer-events: none; }
-.poi-tl-dot.active { width: 11px; height: 11px; border-color: var(--accent); background: var(--accent); }
+.poi-tl-dot { position: absolute; top: 50%; width: 2px; height: 10px; border-radius: 1px; background: var(--text-dim); opacity: 0.45; transform: translate(-50%, -50%); pointer-events: none; }
+.poi-tl-dot.active { width: 4px; height: 16px; border-radius: 2px; background: var(--accent); opacity: 1; z-index: 2; }
 .poi-tl-tip { position: absolute; bottom: 100%; margin-bottom: 4px; padding: 2px 6px; border-radius: var(--radius-sm); background: var(--text); color: var(--surface); font-size: 11px; white-space: nowrap; transform: translateX(-50%); pointer-events: none; }
 .poi-tl-axis { display: flex; justify-content: space-between; margin: 3px 7px 0; color: var(--text-dim); font-size: 11px; font-variant-numeric: tabular-nums; }
 

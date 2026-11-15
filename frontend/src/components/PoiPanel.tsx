@@ -99,21 +99,18 @@ function sarFrame(poiSeed: number, frameSeed: number, gain: number): string {
   return canvas.toDataURL();
 }
 
-// 5-6 frame days inside [lo, hi], spaced by the repeat cycle around the POI date.
-// The window shifts to fit the range; a short range spreads the frames evenly instead.
-function frameDays(p: PoiProps, lo: number, hi: number): number[] {
-  const count = 5 + (hashId(p.id) % 2);
-  const span = (count - 1) * REPEAT_DAYS;
-  if (hi - lo <= span) {
-    return Array.from({ length: count }, (_, i) =>
-      Math.round(lo + ((hi - lo) * i) / (count - 1)),
-    );
-  }
-  const event = clamp(dayOf(p.date), lo, hi);
-  // Event sits near the end of the window (frames before and one after), like the prototype.
-  const first = clamp(event - span + REPEAT_DAYS, lo, hi - span);
-  return Array.from({ length: count }, (_, i) => first + i * REPEAT_DAYS);
+// Mock acquisition days: one every REPEAT_DAYS across [lo, hi], with the grid
+// aligned so the POI date is exactly one frame. A range too short for two
+// frames falls back to [lo, hi].
+// TODO: once the backend is wired, replace this with the acquisition dates the API returns.
+function frameDays(eventDay: number, lo: number, hi: number): number[] {
+  const first = eventDay + Math.ceil((lo - eventDay) / REPEAT_DAYS) * REPEAT_DAYS;
+  const days: number[] = [];
+  for (let d = first; d <= hi; d += REPEAT_DAYS) days.push(d);
+  return days.length >= 2 ? days : [lo, hi];
 }
+
+const MAX_TICKS = 100; // above this, ticks blur into the bar; draw only the active mark
 
 export default function PoiPanel({ poi, start, end, onClose }: Props) {
   const p = poi.properties;
@@ -126,14 +123,10 @@ export default function PoiPanel({ poi, start, end, onClose }: Props) {
   const eventDay = dayOf(p.date);
   const pctOf = (day: number) => clamp(((day - lo) / (hi - lo)) * 100, 0, 100);
 
-  const frames = useMemo(() => {
-    const seed = hashId(p.id);
-    const gain = 10 ** (p.change_db / 10); // mock change, applied from the POI date on
-    return frameDays(p, lo, hi).map((day, i) => ({
-      day,
-      src: sarFrame(seed, seed * 31 + i + 1, day >= eventDay ? gain : 1),
-    }));
-  }, [p, lo, hi, eventDay]);
+  const frames = useMemo(
+    () => frameDays(eventDay, lo, hi).map((day) => ({ day })),
+    [lo, hi, eventDay],
+  );
   const n = frames.length;
 
   const nearestIndex = (day: number) => {
@@ -158,6 +151,32 @@ export default function PoiPanel({ poi, start, end, onClose }: Props) {
   }, [frames]);
 
   const goTo = (k: number) => setActive(k);
+
+  // Images are generated lazily, only for the frame on screen, and cached by day.
+  // The seed depends on (POI, day), so a given day always renders the same image.
+  const srcCache = useRef(new Map<number, string>());
+  const cacheKey = useRef("");
+  const key = `${p.id}|${p.change_db}|${lo}|${hi}`;
+  if (cacheKey.current !== key) {
+    // Clear synchronously so a new POI never reads the previous POI's images.
+    cacheKey.current = key;
+    srcCache.current = new Map();
+  }
+  const activeDay = frames[active]?.day;
+  const activeSrc = useMemo(() => {
+    if (activeDay === undefined) return "";
+    const cached = srcCache.current.get(activeDay);
+    if (cached !== undefined) return cached;
+    const seed = hashId(p.id);
+    const gain = 10 ** (p.change_db / 10); // mock change, applied from the POI date on
+    const src = sarFrame(
+      seed,
+      (Math.imul(seed, 31) + activeDay) >>> 0,
+      activeDay >= eventDay ? gain : 1,
+    );
+    srcCache.current.set(activeDay, src);
+    return src;
+  }, [activeDay, p.id, p.change_db, eventDay]);
 
   const fractionAt = (clientX: number) => {
     const rect = plotRef.current!.getBoundingClientRect();
@@ -217,7 +236,7 @@ export default function PoiPanel({ poi, start, end, onClose }: Props) {
             {frames[active] && (
               <>
                 <img
-                  src={frames[active].src}
+                  src={activeSrc}
                   alt={`Imagen de ejemplo, ${fmtDay(frames[active].day)}`}
                   draggable={false}
                 />
@@ -280,13 +299,20 @@ export default function PoiPanel({ poi, start, end, onClose }: Props) {
                   title={`Fecha del evento: ${fmtDay(eventDay)}`}
                 />
               )}
-              {frames.map((f, i) => (
-                <span
-                  key={f.day}
-                  className={`poi-tl-dot${i === active ? " active" : ""}`}
-                  style={{ left: `${pctOf(f.day)}%` }}
-                />
-              ))}
+              {n <= MAX_TICKS
+                ? frames.map((f, i) => (
+                    <span
+                      key={f.day}
+                      className={`poi-tl-dot${i === active ? " active" : ""}`}
+                      style={{ left: `${pctOf(f.day)}%` }}
+                    />
+                  ))
+                : activeDay !== undefined && (
+                    <span
+                      className="poi-tl-dot active"
+                      style={{ left: `${pctOf(activeDay)}%` }}
+                    />
+                  )}
               {tip && (
                 <div className="poi-tl-tip" style={{ left: tip.x }}>
                   {fmtDay(tip.day)}
