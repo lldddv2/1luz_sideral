@@ -1,0 +1,1163 @@
+{
+ "layers": {
+  "NISAR GCOV": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level13",
+   "ranges": [
+    "2025-10-29/2026-03-01/P1D",
+    "2026-03-04/2026-03-29/P1D",
+    "2026-04-01/2026-04-12/P1D",
+    "2026-04-14/2026-07-27/P1D",
+    "2026-08-10/2026-11-13/P1D"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 814.5,
+    "tiles_with_pixels": 3,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 798,
+      "bytes": 106530,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.832,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-01-12/GoogleMapsCompatible_Level13/10/582/602.png"
+     },
+     {
+      "status": 200,
+      "ms": 831,
+      "bytes": 134331,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-01-12/GoogleMapsCompatible_Level13/10/584/601.png"
+     },
+     {
+      "status": 200,
+      "ms": 546,
+      "bytes": 288,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-01-12/GoogleMapsCompatible_Level13/10/579/604.png"
+     },
+     {
+      "status": 200,
+      "ms": 860,
+      "bytes": 126842,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-01-12/GoogleMapsCompatible_Level13/10/579/601.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 827,
+    "tiles_with_pixels": 3,
+    "n_tiles": 3,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 827,
+      "bytes": 190719,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.75,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-10-01/GoogleMapsCompatible_Level13/10/455/230.png"
+     },
+     {
+      "status": 200,
+      "ms": 2208,
+      "bytes": 247372,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.982,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-10-01/GoogleMapsCompatible_Level13/10/456/229.png"
+     },
+     {
+      "status": 200,
+      "ms": 643,
+      "bytes": 206685,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.942,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-10-01/GoogleMapsCompatible_Level13/10/455/229.png"
+     }
+    ]
+   }
+  },
+  "OPERA DSWx-S1": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level12",
+   "ranges": [
+    "2023-12-15/2023-12-15/P1D",
+    "2023-12-18/2023-12-20/P1D",
+    "2023-12-24/2023-12-24/P1D",
+    "2024-08-21/2024-10-04/P1D",
+    "2024-10-06/2024-11-10/P1D",
+    "2024-11-12/2024-11-22/P1D",
+    "2024-11-24/2025-02-17/P1D",
+    "2025-02-19/2025-08-25/P1D",
+    "2025-08-27/2025-09-04/P1D",
+    "2025-09-06/2025-09-15/P1D",
+    "2025-09-17/2025-10-22/P1D",
+    "2025-10-24/2026-11-15/P1D"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 555.5,
+    "tiles_with_pixels": 2,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 577,
+      "bytes": 41160,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.21,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/582/602.png"
+     },
+     {
+      "status": 200,
+      "ms": 534,
+      "bytes": 1189,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/584/601.png"
+     },
+     {
+      "status": 200,
+      "ms": 650,
+      "bytes": 1435,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.801,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/579/604.png"
+     },
+     {
+      "status": 200,
+      "ms": 499,
+      "bytes": 1189,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/579/601.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 612,
+    "tiles_with_pixels": 3,
+    "n_tiles": 3,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 612,
+      "bytes": 2120,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-10-01/GoogleMapsCompatible_Level12/10/455/230.png"
+     },
+     {
+      "status": 200,
+      "ms": 3815,
+      "bytes": 3143,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.834,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-10-01/GoogleMapsCompatible_Level12/10/456/229.png"
+     },
+     {
+      "status": 200,
+      "ms": 532,
+      "bytes": 2196,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.655,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-10-01/GoogleMapsCompatible_Level12/10/455/229.png"
+     }
+    ]
+   }
+  },
+  "OPERA DSWx-HLS": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level12",
+   "ranges": [
+    "2016-01-07/2020-08-15/P1D",
+    "2023-01-01/2023-01-04/P1D",
+    "2023-01-06/2024-06-02/P1D",
+    "2024-06-04/2025-08-06/P1D",
+    "2025-08-08/2026-11-05/P1D"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 564.0,
+    "tiles_with_pixels": 3,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 600,
+      "bytes": 74833,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.742,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-HLS/default/2026-01-12/GoogleMapsCompatible_Level12/10/582/602.png"
+     },
+     {
+      "status": 200,
+      "ms": 528,
+      "bytes": 456,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-HLS/default/2026-01-12/GoogleMapsCompatible_Level12/10/584/601.png"
+     },
+     {
+      "status": 200,
+      "ms": 511,
+      "bytes": 15474,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.667,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-HLS/default/2026-01-12/GoogleMapsCompatible_Level12/10/579/604.png"
+     },
+     {
+      "status": 200,
+      "ms": 649,
+      "bytes": 152481,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.677,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-HLS/default/2026-01-12/GoogleMapsCompatible_Level12/10/579/601.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 625,
+    "tiles_with_pixels": 2,
+    "n_tiles": 3,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 484,
+      "bytes": 935,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-HLS/default/2026-10-01/GoogleMapsCompatible_Level12/10/455/230.png"
+     },
+     {
+      "status": 200,
+      "ms": 625,
+      "bytes": 3837,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.742,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-HLS/default/2026-10-01/GoogleMapsCompatible_Level12/10/456/229.png"
+     },
+     {
+      "status": 200,
+      "ms": 1842,
+      "bytes": 148357,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.742,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-HLS/default/2026-10-01/GoogleMapsCompatible_Level12/10/455/229.png"
+     }
+    ]
+   }
+  },
+  "OPERA RTC-S1": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level12",
+   "ranges": [
+    "2025-01-10/2025-01-10/P1D",
+    "2025-01-13/2025-01-13/P1D",
+    "2025-01-16/2025-01-16/P1D",
+    "2025-01-21/2025-01-22/P1D",
+    "2025-01-29/2025-01-29/P1D",
+    "2025-01-31/2025-02-01/P1D",
+    "2025-02-11/2025-02-13/P1D",
+    "2025-02-17/2025-02-17/P1D",
+    "2025-02-27/2025-02-27/P1D",
+    "2025-03-21/2025-03-21/P1D",
+    "2025-03-26/2025-03-26/P1D",
+    "2025-03-28/2025-03-28/P1D",
+    "2025-04-02/2025-04-03/P1D",
+    "2025-04-09/2025-05-17/P1D",
+    "2025-05-20/2025-09-19/P1D",
+    "2025-09-22/2025-10-26/P1D",
+    "2025-10-28/2025-11-02/P1D",
+    "2025-11-04/2026-01-03/P1D",
+    "2026-01-05/2026-11-15/P1D"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 525.5,
+    "tiles_with_pixels": 0,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 495,
+      "bytes": 334,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L2_Radiometric_Terrain_Corrected_SAR_Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/582/602.png"
+     },
+     {
+      "status": 200,
+      "ms": 536,
+      "bytes": 1189,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L2_Radiometric_Terrain_Corrected_SAR_Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/584/601.png"
+     },
+     {
+      "status": 200,
+      "ms": 752,
+      "bytes": 334,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L2_Radiometric_Terrain_Corrected_SAR_Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/579/604.png"
+     },
+     {
+      "status": 200,
+      "ms": 515,
+      "bytes": 155,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L2_Radiometric_Terrain_Corrected_SAR_Sentinel-1/default/2026-01-12/GoogleMapsCompatible_Level12/10/579/601.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": true,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 795,
+    "tiles_with_pixels": 3,
+    "n_tiles": 3,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 867,
+      "bytes": 187801,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L2_Radiometric_Terrain_Corrected_SAR_Sentinel-1/default/2026-10-01/GoogleMapsCompatible_Level12/10/455/230.png"
+     },
+     {
+      "status": 200,
+      "ms": 795,
+      "bytes": 161369,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.835,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L2_Radiometric_Terrain_Corrected_SAR_Sentinel-1/default/2026-10-01/GoogleMapsCompatible_Level12/10/456/229.png"
+     },
+     {
+      "status": 200,
+      "ms": 695,
+      "bytes": 125897,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.655,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L2_Radiometric_Terrain_Corrected_SAR_Sentinel-1/default/2026-10-01/GoogleMapsCompatible_Level12/10/455/229.png"
+     }
+    ]
+   }
+  },
+  "VIIRS Combined Flood 3-Day": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level9",
+   "ranges": [
+    "2025-06-03/2025-06-07/P1D",
+    "2025-06-24/2026-11-15/P1D"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": true,
+    "z": 8,
+    "statuses": [
+     200
+    ],
+    "ms_median": 649.0,
+    "tiles_with_pixels": 4,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 787,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/145/150.png"
+     },
+     {
+      "status": 200,
+      "ms": 695,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/146/150.png"
+     },
+     {
+      "status": 200,
+      "ms": 573,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/144/151.png"
+     },
+     {
+      "status": 200,
+      "ms": 603,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/144/150.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": true,
+    "z": 8,
+    "statuses": [
+     200
+    ],
+    "ms_median": 747.5,
+    "tiles_with_pixels": 2,
+    "n_tiles": 2,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 881,
+      "bytes": 2912,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.946,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Combined_Flood_3-Day/default/2026-10-01/GoogleMapsCompatible_Level9/8/113/57.png"
+     },
+     {
+      "status": 200,
+      "ms": 614,
+      "bytes": 2099,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.99,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Combined_Flood_3-Day/default/2026-10-01/GoogleMapsCompatible_Level9/8/114/57.png"
+     }
+    ]
+   }
+  },
+  "MODIS Combined Flood 3-Day": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level9",
+   "ranges": [
+    "2021-01-01/2021-01-04/P1D",
+    "2021-03-05/2021-03-07/P1D",
+    "2021-03-22/2021-12-20/P1D",
+    "2021-12-23/2023-07-20/P1D",
+    "2023-07-26/2025-09-05/P1D",
+    "2025-09-07/2026-11-15/P1D"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": true,
+    "z": 8,
+    "statuses": [
+     200
+    ],
+    "ms_median": 670.5,
+    "tiles_with_pixels": 4,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 737,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/145/150.png"
+     },
+     {
+      "status": 200,
+      "ms": 3895,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/146/150.png"
+     },
+     {
+      "status": 200,
+      "ms": 530,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/144/151.png"
+     },
+     {
+      "status": 200,
+      "ms": 604,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_Flood_3-Day/default/2026-01-12/GoogleMapsCompatible_Level9/8/144/150.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": true,
+    "z": 8,
+    "statuses": [
+     200
+    ],
+    "ms_median": 754.0,
+    "tiles_with_pixels": 2,
+    "n_tiles": 2,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 888,
+      "bytes": 1638,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_Flood_3-Day/default/2026-10-01/GoogleMapsCompatible_Level9/8/113/57.png"
+     },
+     {
+      "status": 200,
+      "ms": 620,
+      "bytes": 1611,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 1.0,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_Flood_3-Day/default/2026-10-01/GoogleMapsCompatible_Level9/8/114/57.png"
+     }
+    ]
+   }
+  },
+  "GRACE LWE mascon": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level6",
+   "ranges": [
+    "2002-04-04/2002-04-04/P28D",
+    "2002-05-02/2002-05-02/P17D",
+    "2002-08-01/2003-04-01/P1M",
+    "2003-05-01/2003-05-01/P21D",
+    "2003-07-01/2003-12-01/P1M",
+    "2004-01-01/2004-01-01/P13D",
+    "2004-02-04/2004-02-04/P26D",
+    "2004-03-01/2010-11-01/P1M",
+    "2010-12-01/2010-12-01/P27D",
+    "2011-02-08/2011-02-08/P21D",
+    "2011-03-01/2011-04-01/P1M",
+    "2011-05-01/2011-05-01/P31D",
+    "2011-07-05/2011-07-05/P27D",
+    "2011-08-01/2011-09-01/P1M",
+    "2011-10-01/2011-10-01/P16D",
+    "2011-10-17/2011-10-17/P31D",
+    "2011-12-17/2011-12-17/P15D",
+    "2012-01-01/2012-02-01/P1M",
+    "2012-03-01/2012-03-01/P19D",
+    "2012-03-20/2012-03-20/P31D",
+    "2012-06-01/2012-08-01/P1M",
+    "2012-09-01/2012-09-01/P24D",
+    "2012-11-06/2012-11-06/P25D",
+    "2012-12-01/2013-01-01/P1M",
+    "2013-02-01/2013-02-01/P26D",
+    "2013-04-11/2013-04-11/P20D",
+    "2013-05-01/2013-06-01/P1M",
+    "2013-07-01/2013-07-01/P31D",
+    "2013-10-01/2013-12-01/P1M",
+    "2014-01-01/2014-01-01/P17D",
+    "2014-03-01/2014-05-01/P1M",
+    "2014-06-01/2014-06-01/P24D",
+    "2014-08-01/2014-10-01/P1M",
+    "2014-11-01/2014-11-01/P32D",
+    "2015-01-13/2015-01-13/P19D",
+    "2015-02-01/2015-03-01/P1M",
+    "2015-04-01/2015-04-01/P11D",
+    "2015-04-12/2015-04-12/P30D",
+    "2015-06-29/2015-06-29/P33D",
+    "2015-08-01/2015-08-01/P1M",
+    "2015-09-01/2015-09-01/P27D",
+    "2015-12-12/2015-12-12/P23D",
+    "2016-01-04/2016-01-04/P25D",
+    "2016-01-29/2016-01-29/P32D",
+    "2016-03-01/2016-03-01/P31D",
+    "2016-05-08/2016-05-08/P24D",
+    "2016-06-01/2016-06-01/P1M",
+    "2016-07-01/2016-07-01/P29D",
+    "2016-08-08/2016-08-08/P27D",
+    "2016-11-14/2016-12-11/P27D",
+    "2017-01-07/2017-01-07/P28D",
+    "2017-03-17/2017-03-17/P24D",
+    "2017-04-10/2017-04-10/P22D",
+    "2017-05-02/2017-05-02/P21D",
+    "2017-05-23/2017-05-23/P38D",
+    "2018-06-01/2018-06-01/P1M",
+    "2018-07-01/2018-07-01/P18D",
+    "2018-10-22/2018-10-22/P10D",
+    "2018-11-01/2018-12-01/P1M",
+    "2019-01-01/2019-01-01/P25D",
+    "2019-01-26/2019-01-26/P34D",
+    "2019-03-01/2022-12-01/P1M",
+    "2020-01-20/2020-01-10/P1M",
+    "2020-02-01/2022-07-01/P1M"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2022-12-01",
+    "in_time_domain": false,
+    "z": 5,
+    "statuses": [
+     404
+    ],
+    "ms_median": 493,
+    "tiles_with_pixels": 0,
+    "n_tiles": 1,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 404,
+      "ms": 493,
+      "bytes": 196,
+      "cors": "*",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GRACE_Tellus_Liquid_Water_Equivalent_Thickness_Mascon_CRI/default/2022-12-01/GoogleMapsCompatible_Level6/5/18/18.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2022-12-01",
+    "in_time_domain": false,
+    "z": 5,
+    "statuses": [
+     404
+    ],
+    "ms_median": 496,
+    "tiles_with_pixels": 0,
+    "n_tiles": 1,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 404,
+      "ms": 496,
+      "bytes": 196,
+      "cors": "*",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GRACE_Tellus_Liquid_Water_Equivalent_Thickness_Mascon_CRI/default/2022-12-01/GoogleMapsCompatible_Level6/5/14/7.png"
+     }
+    ]
+   }
+  },
+  "GLDAS soil moisture (subsuelo)": {
+   "caps_found": true,
+   "tms": "GoogleMapsCompatible_Level6",
+   "ranges": [
+    "2000-04-19/2000-04-19/P1M",
+    "2000-04-20/2000-04-20/P1M",
+    "2000-04-21/2000-04-21/P1M",
+    "2000-04-22/2000-04-22/P1M",
+    "2000-04-23/2000-04-23/P1M",
+    "2000-04-24/2000-04-24/P1M",
+    "2000-04-25/2000-04-25/P1M",
+    "2000-04-26/2000-04-26/P1M",
+    "2000-04-27/2000-04-27/P1M",
+    "2000-04-28/2000-04-28/P1M",
+    "2000-04-29/2000-04-29/P1M",
+    "2000-04-30/2000-04-30/P1M",
+    "2000-05-01/2000-05-01/P1M",
+    "2000-05-03/2000-05-03/P1M",
+    "2000-05-04/2000-05-04/P1M",
+    "2000-05-05/2000-05-05/P1M",
+    "2000-05-06/2000-05-06/P1M",
+    "2000-05-07/2000-05-07/P1M",
+    "2000-05-08/2000-05-08/P1M",
+    "2000-05-11/2000-05-11/P1M",
+    "2000-05-12/2000-05-12/P1M",
+    "2000-05-13/2000-05-13/P1M",
+    "2000-05-14/2000-05-14/P1M",
+    "2000-05-15/2000-05-15/P1M",
+    "2000-05-16/2000-05-16/P1M",
+    "2000-05-17/2000-05-17/P1M",
+    "2000-05-18/2000-05-18/P1M",
+    "2000-05-19/2000-05-19/P1M",
+    "2000-05-20/2000-05-20/P1M",
+    "2000-05-21/2000-05-21/P1M",
+    "2000-05-22/2000-05-22/P1M",
+    "2000-05-23/2000-05-23/P1M",
+    "2000-05-24/2000-05-24/P1M",
+    "2000-05-25/2000-05-25/P1M",
+    "2000-05-26/2000-05-26/P1M",
+    "2000-05-27/2000-05-27/P1M",
+    "2000-05-28/2000-05-28/P1M",
+    "2000-05-29/2000-05-29/P1M",
+    "2000-05-30/2000-05-30/P1M",
+    "2000-06-01/2025-04-01/P1M",
+    "2025-04-02/2025-04-02/P1M",
+    "2025-04-06/2025-04-06/P1M",
+    "2025-04-09/2025-04-09/P1M",
+    "2025-04-10/2025-04-10/P1M",
+    "2025-04-11/2025-04-11/P1M",
+    "2025-04-12/2025-04-12/P1M",
+    "2025-04-13/2025-04-13/P1M",
+    "2025-04-14/2025-04-14/P1M",
+    "2025-04-15/2025-04-15/P1M",
+    "2025-04-16/2025-04-16/P1M",
+    "2025-04-17/2025-04-17/P1M",
+    "2025-04-18/2025-04-18/P1M",
+    "2025-04-19/2025-04-19/P1M",
+    "2025-04-20/2025-04-20/P1M",
+    "2025-04-21/2025-04-21/P1M",
+    "2025-04-22/2025-04-22/P1M",
+    "2025-04-23/2025-04-23/P1M",
+    "2025-04-24/2025-04-24/P1M",
+    "2025-04-25/2025-04-25/P1M",
+    "2025-04-26/2025-04-26/P1M",
+    "2025-04-27/2025-04-27/P1M",
+    "2025-04-28/2025-04-28/P1M",
+    "2025-04-29/2025-04-29/P1M",
+    "2025-04-30/2025-04-30/P1M",
+    "2025-05-01/2025-05-01/P1M",
+    "2025-05-02/2025-05-02/P1M",
+    "2025-05-03/2025-05-03/P1M",
+    "2025-05-04/2025-05-04/P1M",
+    "2025-05-05/2025-05-05/P1M",
+    "2025-05-06/2025-05-06/P1M",
+    "2025-05-07/2025-05-07/P1M",
+    "2025-05-08/2025-05-08/P1M",
+    "2025-05-09/2025-05-09/P1M",
+    "2025-05-10/2025-05-10/P1M",
+    "2025-05-11/2025-05-11/P1M",
+    "2025-05-12/2025-05-12/P1M",
+    "2025-05-13/2025-05-13/P1M",
+    "2025-05-14/2025-05-14/P1M",
+    "2025-05-15/2025-05-15/P1M",
+    "2025-05-16/2025-05-16/P1M",
+    "2025-05-17/2025-05-17/P1M",
+    "2025-05-18/2025-05-18/P1M",
+    "2025-05-19/2025-05-19/P1M",
+    "2025-05-20/2025-05-20/P1M",
+    "2025-05-21/2025-05-21/P1M",
+    "2025-05-22/2025-05-22/P1M",
+    "2025-05-23/2025-05-23/P1M",
+    "2025-05-24/2025-05-24/P1M",
+    "2025-05-25/2025-05-25/P1M",
+    "2025-05-26/2025-05-26/P1M",
+    "2025-05-27/2025-05-27/P1M",
+    "2025-05-28/2025-05-28/P1M",
+    "2025-05-29/2025-05-29/P1M",
+    "2025-05-30/2025-05-30/P1M",
+    "2025-05-31/2025-05-31/P1M",
+    "2025-06-01/2025-06-01/P1M",
+    "2025-06-02/2025-06-02/P1M",
+    "2025-06-03/2025-06-03/P1M",
+    "2025-06-04/2025-06-04/P1M",
+    "2025-07-01/2026-06-01/P1M"
+   ],
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": true,
+    "z": 5,
+    "statuses": [
+     200
+    ],
+    "ms_median": 602,
+    "tiles_with_pixels": 1,
+    "n_tiles": 1,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 602,
+      "bytes": 1966,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.876,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GLDAS_Underground_Soil_Moisture_Monthly/default/2026-01-12/GoogleMapsCompatible_Level6/5/18/18.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-06-01",
+    "in_time_domain": false,
+    "z": 5,
+    "statuses": [
+     200
+    ],
+    "ms_median": 1758,
+    "tiles_with_pixels": 1,
+    "n_tiles": 1,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 1758,
+      "bytes": 1664,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.399,
+      "method": "PIL",
+      "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GLDAS_Underground_Soil_Moisture_Monthly/default/2026-06-01/GoogleMapsCompatible_Level6/5/14/7.png"
+     }
+    ]
+   }
+  },
+  "JRC GSW occurrence": {
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": null,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 333.5,
+    "tiles_with_pixels": 1,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 558,
+      "bytes": 4447,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.031,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/602/582.png"
+     },
+     {
+      "status": 200,
+      "ms": 327,
+      "bytes": 722,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.001,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/601/584.png"
+     },
+     {
+      "status": 200,
+      "ms": 310,
+      "bytes": 440,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.0,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/604/579.png"
+     },
+     {
+      "status": 200,
+      "ms": 340,
+      "bytes": 621,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.001,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/601/579.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": null,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 336,
+    "tiles_with_pixels": 2,
+    "n_tiles": 3,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 345,
+      "bytes": 3014,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.02,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/230/455.png"
+     },
+     {
+      "status": 200,
+      "ms": 333,
+      "bytes": 624,
+      "cors": "*",
+      "has_pixels": false,
+      "opaque_frac": 0.001,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/229/456.png"
+     },
+     {
+      "status": 200,
+      "ms": 336,
+      "bytes": 1207,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.004,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/229/455.png"
+     }
+    ]
+   }
+  },
+  "JRC GSW change": {
+   "kruger_limpopo": {
+    "date_used": "2026-01-12",
+    "in_time_domain": null,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 360.0,
+    "tiles_with_pixels": 4,
+    "n_tiles": 4,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 350,
+      "bytes": 6049,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.04,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/602/582.png"
+     },
+     {
+      "status": 200,
+      "ms": 1507,
+      "bytes": 1429,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.004,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/601/584.png"
+     },
+     {
+      "status": 200,
+      "ms": 351,
+      "bytes": 601,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.001,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/604/579.png"
+     },
+     {
+      "status": 200,
+      "ms": 369,
+      "bytes": 1056,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.003,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/601/579.png"
+     }
+    ]
+   },
+   "cdmx": {
+    "date_used": "2026-10-01",
+    "in_time_domain": null,
+    "z": 10,
+    "statuses": [
+     200
+    ],
+    "ms_median": 337,
+    "tiles_with_pixels": 3,
+    "n_tiles": 3,
+    "cors": [
+     "*"
+    ],
+    "probes": [
+     {
+      "status": 200,
+      "ms": 335,
+      "bytes": 5979,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.034,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/230/455.png"
+     },
+     {
+      "status": 200,
+      "ms": 370,
+      "bytes": 916,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.002,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/229/456.png"
+     },
+     {
+      "status": 200,
+      "ms": 337,
+      "bytes": 2120,
+      "cors": "*",
+      "has_pixels": true,
+      "opaque_frac": 0.008,
+      "method": "PIL",
+      "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/229/455.png"
+     }
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,701 @@
+{
+ "nisar_ranges": [
+  "2025-10-29/2026-03-01/P1D",
+  "2026-03-04/2026-03-29/P1D",
+  "2026-04-01/2026-04-12/P1D",
+  "2026-04-14/2026-07-27/P1D",
+  "2026-08-10/2026-11-13/P1D"
+ ],
+ "dswx_ranges_tail": [
+  "2025-02-19/2025-08-25/P1D",
+  "2025-08-27/2025-09-04/P1D",
+  "2025-09-06/2025-09-15/P1D",
+  "2025-09-17/2025-10-22/P1D",
+  "2025-10-24/2026-11-15/P1D"
+ ],
+ "regions": {
+  "la_mojana": {
+   "bbox": [
+    -75.2,
+    8.2,
+    -74.4,
+    9.0
+   ],
+   "nisar": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 2134.5,
+     "tiles_with_pixels": 0,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-13/GoogleMapsCompatible_Level13/8/121/74.png",
+       "status": 200,
+       "ms": 3729,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      },
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-13/GoogleMapsCompatible_Level13/8/122/74.png",
+       "status": 200,
+       "ms": 540,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-13"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 646.5,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-01/GoogleMapsCompatible_Level13/8/121/74.png",
+       "status": 200,
+       "ms": 752,
+       "bytes": 72709,
+       "has_pixels": true,
+       "opaque_frac": 0.486,
+       "method": "PIL"
+      },
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-01/GoogleMapsCompatible_Level13/8/122/74.png",
+       "status": 200,
+       "ms": 541,
+       "bytes": 34815,
+       "has_pixels": true,
+       "opaque_frac": 0.245,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-01"
+    }
+   ],
+   "dswx": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 565.0,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-11-01/GoogleMapsCompatible_Level12/8/121/74.png",
+       "status": 200,
+       "ms": 619,
+       "bytes": 2191,
+       "has_pixels": true,
+       "opaque_frac": 0.068,
+       "method": "PIL"
+      },
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-11-01/GoogleMapsCompatible_Level12/8/122/74.png",
+       "status": 200,
+       "ms": 511,
+       "bytes": 2946,
+       "has_pixels": true,
+       "opaque_frac": 0.274,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-01"
+    }
+   ],
+   "jrc": {
+    "occurrence": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 1243.5,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/299/487.png",
+       "status": 200,
+       "ms": 1801,
+       "bytes": 7239,
+       "has_pixels": true,
+       "opaque_frac": 0.038,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/298/488.png",
+       "status": 200,
+       "ms": 686,
+       "bytes": 19819,
+       "has_pixels": true,
+       "opaque_frac": 0.183,
+       "method": "PIL"
+      }
+     ]
+    },
+    "change": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 679.5,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/299/487.png",
+       "status": 200,
+       "ms": 746,
+       "bytes": 17786,
+       "has_pixels": true,
+       "opaque_frac": 0.109,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/298/488.png",
+       "status": 200,
+       "ms": 613,
+       "bytes": 30359,
+       "has_pixels": true,
+       "opaque_frac": 0.273,
+       "method": "PIL"
+      }
+     ]
+    }
+   },
+   "nisar_date_with_data": "2026-11-01",
+   "dswx_date_with_data": "2026-11-01"
+  },
+  "cienaga_grande_santa_marta": {
+   "bbox": [
+    -74.6,
+    10.6,
+    -74.2,
+    11.1
+   ],
+   "nisar": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 3736,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-13/GoogleMapsCompatible_Level13/8/120/75.png",
+       "status": 200,
+       "ms": 3736,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-13"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 791,
+     "tiles_with_pixels": 1,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-01/GoogleMapsCompatible_Level13/8/120/75.png",
+       "status": 200,
+       "ms": 791,
+       "bytes": 118532,
+       "has_pixels": true,
+       "opaque_frac": 0.894,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-01"
+    }
+   ],
+   "dswx": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 554,
+     "tiles_with_pixels": 1,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-11-01/GoogleMapsCompatible_Level12/8/120/75.png",
+       "status": 200,
+       "ms": 554,
+       "bytes": 7038,
+       "has_pixels": true,
+       "opaque_frac": 1.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-01"
+    }
+   ],
+   "jrc": {
+    "occurrence": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 602.5,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/300/480.png",
+       "status": 200,
+       "ms": 601,
+       "bytes": 20591,
+       "has_pixels": true,
+       "opaque_frac": 0.759,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/300/481.png",
+       "status": 200,
+       "ms": 604,
+       "bytes": 12867,
+       "has_pixels": true,
+       "opaque_frac": 0.178,
+       "method": "PIL"
+      }
+     ]
+    },
+    "change": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 660.5,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/300/480.png",
+       "status": 200,
+       "ms": 712,
+       "bytes": 13708,
+       "has_pixels": true,
+       "opaque_frac": 0.784,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/300/481.png",
+       "status": 200,
+       "ms": 609,
+       "bytes": 17610,
+       "has_pixels": true,
+       "opaque_frac": 0.214,
+       "method": "PIL"
+      }
+     ]
+    }
+   },
+   "nisar_date_with_data": "2026-11-01",
+   "dswx_date_with_data": "2026-11-01"
+  },
+  "depresion_momposina": {
+   "bbox": [
+    -74.8,
+    8.9,
+    -74.2,
+    9.4
+   ],
+   "nisar": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 1147.0,
+     "tiles_with_pixels": 0,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-13/GoogleMapsCompatible_Level13/8/121/75.png",
+       "status": 200,
+       "ms": 1775,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      },
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-13/GoogleMapsCompatible_Level13/8/121/74.png",
+       "status": 200,
+       "ms": 519,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-13"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 777.5,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-01/GoogleMapsCompatible_Level13/8/121/75.png",
+       "status": 200,
+       "ms": 865,
+       "bytes": 143837,
+       "has_pixels": true,
+       "opaque_frac": 1.0,
+       "method": "PIL"
+      },
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-01/GoogleMapsCompatible_Level13/8/121/74.png",
+       "status": 200,
+       "ms": 690,
+       "bytes": 72709,
+       "has_pixels": true,
+       "opaque_frac": 0.486,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-01"
+    }
+   ],
+   "dswx": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 588.0,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-11-01/GoogleMapsCompatible_Level12/8/121/75.png",
+       "status": 200,
+       "ms": 634,
+       "bytes": 7059,
+       "has_pixels": true,
+       "opaque_frac": 0.987,
+       "method": "PIL"
+      },
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-11-01/GoogleMapsCompatible_Level12/8/121/74.png",
+       "status": 200,
+       "ms": 542,
+       "bytes": 2191,
+       "has_pixels": true,
+       "opaque_frac": 0.068,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-01"
+    }
+   ],
+   "jrc": {
+    "occurrence": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 527.0,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/300/485.png",
+       "status": 200,
+       "ms": 512,
+       "bytes": 19080,
+       "has_pixels": true,
+       "opaque_frac": 0.163,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/299/486.png",
+       "status": 200,
+       "ms": 542,
+       "bytes": 60284,
+       "has_pixels": true,
+       "opaque_frac": 0.672,
+       "method": "PIL"
+      }
+     ]
+    },
+    "change": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 764.0,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/300/485.png",
+       "status": 200,
+       "ms": 750,
+       "bytes": 30238,
+       "has_pixels": true,
+       "opaque_frac": 0.226,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/299/486.png",
+       "status": 200,
+       "ms": 778,
+       "bytes": 79025,
+       "has_pixels": true,
+       "opaque_frac": 0.781,
+       "method": "PIL"
+      }
+     ]
+    }
+   },
+   "nisar_date_with_data": "2026-11-01",
+   "dswx_date_with_data": "2026-11-01"
+  },
+  "llanos_arauca_casanare": {
+   "bbox": [
+    -71.5,
+    5.5,
+    -70.0,
+    6.8
+   ],
+   "nisar": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 3749,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-13/GoogleMapsCompatible_Level13/8/123/77.png",
+       "status": 200,
+       "ms": 3749,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-13"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 2224,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-11-01/GoogleMapsCompatible_Level13/8/123/77.png",
+       "status": 200,
+       "ms": 2224,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-01"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 767,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-10-20/GoogleMapsCompatible_Level13/8/123/77.png",
+       "status": 200,
+       "ms": 767,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-10-20"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 695,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-10-08/GoogleMapsCompatible_Level13/8/123/77.png",
+       "status": 200,
+       "ms": 695,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-10-08"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 1748,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-09-26/GoogleMapsCompatible_Level13/8/123/77.png",
+       "status": 200,
+       "ms": 1748,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-09-26"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 674,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-09-14/GoogleMapsCompatible_Level13/8/123/77.png",
+       "status": 200,
+       "ms": 674,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-09-14"
+    },
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 622,
+     "tiles_with_pixels": 0,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/NISAR_L2_Geocoded_Polarimetric_Covariance/default/2026-09-02/GoogleMapsCompatible_Level13/8/123/77.png",
+       "status": 200,
+       "ms": 622,
+       "bytes": 288,
+       "has_pixels": false,
+       "opaque_frac": 0.0,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-09-02"
+    }
+   ],
+   "dswx": [
+    {
+     "statuses": [
+      200
+     ],
+     "ms_median": 629,
+     "tiles_with_pixels": 1,
+     "n_tiles": 1,
+     "probes": [
+      {
+       "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1/default/2026-11-13/GoogleMapsCompatible_Level12/8/123/77.png",
+       "status": 200,
+       "ms": 629,
+       "bytes": 1661,
+       "has_pixels": true,
+       "opaque_frac": 0.101,
+       "method": "PIL"
+      }
+     ],
+     "date": "2026-11-13"
+    }
+   ],
+   "jrc": {
+    "occurrence": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 619.5,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/310/494.png",
+       "status": 200,
+       "ms": 675,
+       "bytes": 7253,
+       "has_pixels": true,
+       "opaque_frac": 0.043,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/occurrence/10/309/495.png",
+       "status": 200,
+       "ms": 564,
+       "bytes": 4718,
+       "has_pixels": true,
+       "opaque_frac": 0.024,
+       "method": "PIL"
+      }
+     ]
+    },
+    "change": {
+     "statuses": [
+      200
+     ],
+     "ms_median": 620.0,
+     "tiles_with_pixels": 2,
+     "n_tiles": 2,
+     "probes": [
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/310/494.png",
+       "status": 200,
+       "ms": 622,
+       "bytes": 22581,
+       "has_pixels": true,
+       "opaque_frac": 0.136,
+       "method": "PIL"
+      },
+      {
+       "url": "https://storage.googleapis.com/global-surface-water/tiles2021/change/10/309/495.png",
+       "status": 200,
+       "ms": 618,
+       "bytes": 13568,
+       "has_pixels": true,
+       "opaque_frac": 0.072,
+       "method": "PIL"
+      }
+     ]
+    }
+   },
+   "nisar_date_with_data": null,
+   "dswx_date_with_data": "2026-11-13"
+  }
+ },
+ "tiles_used": 39
+}
